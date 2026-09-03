@@ -1,0 +1,38 @@
+{
+  "artifacts": [
+    {
+      "archiveRoot": "wine-runtime",
+      "sha256": "8bc048c5cff513b34734ac00bbadd762a88516bfab0e8e5ebc6c99b1f832fe0d",
+      "size": 43294468,
+      "url": "https://github.com/enginefuture/indie/releases/download/runtime-wine-11.0.0/indie-wine-11.0.0-macos-x86_64.tar.xz"
+    }
+  ],
+  "capabilities": {
+    "architectures": ["i386", "x86_64"],
+    "renderers": ["d3dmetal", "dxmt", "wined3d"],
+    "supportsMSync": true,
+    "supportsWoW64": true
+  },
+  "channel": "experimental",
+  "displayName": "Indie Wine 11 开源游戏引擎",
+  "hostArchitecture": "x86_64",
+  "id": "org.indie.wine11",
+  "licenses": [
+    {
+      "correspondingSourceURL": "https://media.codeweavers.com/pub/crossover/source/crossover-sources-26.3.0.tar.gz",
+      "identifier": "LGPL-2.1-or-later",
+      "name": "Wine GNU LGPL",
+      "sourceURL": "https://www.codeweavers.com/crossover/source"
+    },
+    {
+      "correspondingSourceURL": "https://ftp.gnu.org/gnu/nettle/nettle-3.10.tar.gz",
+      "identifier": "LGPL-3.0-or-later",
+      "name": "GnuTLS, GMP and Nettle licenses",
+      "sourceURL": "https://www.gnutls.org/"
+    }
+  ],
+  "minimumMacOS": {"major": 15, "minor": 0, "patch": 0},
+  "publishedAt": "2026-09-03T16:00:00Z",
+  "schemaVersion": 1,
+  "version": {"major": 11, "minor": 0, "patch": 0}
+}

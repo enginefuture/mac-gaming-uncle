@@ -5,7 +5,7 @@ indie_root=${0:A:h:h}
 indie_output="$indie_root/.build/runtime-support"
 indie_compiler=${INDIE_MINGW_CC:-/opt/homebrew/bin/x86_64-w64-mingw32-gcc}
 indie_prebuilt="$indie_root/RuntimeSupport/SteamWebHelperWrapper/steamwebhelper-wrapper.exe"
-indie_prebuilt_sha256="83522d75ecc1df696c3474682a198d62d6af88d0b4bc31a932a22a8df1a409c0"
+indie_prebuilt_sha256="7128a560c0347dd360a16697bc17abccdef5c3dac6769a058bf3196c40fe5b80"
 
 if [[ ! -x "$indie_compiler" ]]; then
   indie_compiler=$(command -v x86_64-w64-mingw32-gcc || true)

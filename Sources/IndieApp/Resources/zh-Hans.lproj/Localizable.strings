@@ -27,7 +27,7 @@
 "runtime.gptk.detail" = "D3DMetal 是 Apple 官方 GPTK 中的 DirectX 11/12 → Metal 转译层。Indie 只导入并验证你从 Apple 获取的副本。";
 "runtime.downloadGPTK" = "打开 Apple 下载页";
 "runtime.importGPTK" = "导入 GPTK";
-"runtime.wine.detail" = "正式运行时通过签名 Manifest 安装。仓库不包含 Wine 或商业 CrossOver 二进制。";
+"runtime.wine.detail" = "Indie 从公开对应源码构建 Wine 11；不封装或分发商业 CrossOver 二进制。";
 "runtime.importWine" = "导入本地 Wine";
 "runtime.importDXMT" = "导入 DXMT";
 "runtime.importDXVK" = "导入 DXVK";

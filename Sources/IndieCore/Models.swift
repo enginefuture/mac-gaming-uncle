@@ -303,16 +303,14 @@ public struct RendererProfile: Codable, Hashable, Sendable {
     public let dllOverrides: [String: String]
     public let arguments: [String]
     public let highResolution: Bool
-    public let metalHUD: Bool?
 
-    public init(renderer: RendererKind, syncBackend: SyncBackend = .automatic, environment: [String: String] = [:], dllOverrides: [String: String] = [:], arguments: [String] = [], highResolution: Bool = true, metalHUD: Bool? = nil) {
+    public init(renderer: RendererKind, syncBackend: SyncBackend = .automatic, environment: [String: String] = [:], dllOverrides: [String: String] = [:], arguments: [String] = [], highResolution: Bool = true) {
         self.renderer = renderer
         self.syncBackend = syncBackend
         self.environment = environment
         self.dllOverrides = dllOverrides
         self.arguments = arguments
         self.highResolution = highResolution
-        self.metalHUD = metalHUD
     }
 }
 

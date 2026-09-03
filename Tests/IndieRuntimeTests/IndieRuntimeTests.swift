@@ -40,11 +40,12 @@ final class IndieRuntimeTests: XCTestCase {
         )
         let plan = try LaunchPlanBuilder.build(
             executable: executable, bottle: bottle,
-            profile: LaunchProfile(runtimeID: "wine", preferredRenderer: .d3dMetal, arguments: ["Game"]),
+            profile: LaunchProfile(runtimeID: "wine", preferredRenderer: .d3dMetal, arguments: ["Game"], metalHUD: true),
             analysis: analysis, recipe: recipe,
             installed: InstalledRenderers(available: [.d3dMetal])
         )
         XCTAssertEqual(plan.arguments, ["Game", "-norhithread"])
+        XCTAssertEqual(plan.environment["MTL_HUD_ENABLED"], "1")
     }
 
     func testSubprocessEnvironmentDoesNotLeakUnrelatedSecrets() {
@@ -86,15 +87,103 @@ final class IndieRuntimeTests: XCTestCase {
         XCTAssertEqual(CommunityDXVKBootstrapper.release.sha256.count, 64)
     }
 
-    func testSikarugirGamingRuntimeManifestIsPinned() {
-        let manifest = CommunitySikarugirBootstrapper.manifest
-        XCTAssertEqual(manifest.id, "org.indie.wine.sikarugir")
-        XCTAssertEqual(manifest.artifacts.count, 2)
+    func testIndieWine11RuntimeManifestIsPinned() {
+        let manifest = CommunityIndieWineBootstrapper.manifest
+        XCTAssertEqual(manifest.id, "org.indie.wine11")
+        XCTAssertEqual(manifest.version, SemanticVersion(major: 11, minor: 0))
+        XCTAssertEqual(manifest.artifacts.count, 1)
         XCTAssertTrue(manifest.artifacts.allSatisfy { $0.sha256.count == 64 && $0.size > 0 })
         XCTAssertTrue(manifest.capabilities.renderers.contains(.d3dMetal))
+        XCTAssertTrue(manifest.capabilities.supportsWoW64)
+        XCTAssertTrue(manifest.capabilities.supportsMSync)
     }
 
-    func testLocalWineImporterFindsSikarugirBundleLayout() throws {
+    func testIndieWine11LocalBuildInstallation() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("indie-wine11-local-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let paths = IndiePaths(root: root.appendingPathComponent("data"))
+        let payload = root.appendingPathComponent("build/wine-runtime")
+        for relativePath in [
+            "bin/wine", "bin/wineserver", "lib/wine/x86_64-unix/ntdll.so",
+            "lib/wine/i386-windows/ntdll.dll", "lib/libgnutls.30.dylib",
+        ] {
+            let file = payload.appendingPathComponent(relativePath)
+            try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try Data().write(to: file)
+        }
+        for executable in ["bin/wine", "bin/wineserver"] {
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: payload.appendingPathComponent(executable).path)
+        }
+
+        let installed = try await CommunityIndieWineBootstrapper(paths: paths).installLocalBuild(
+            from: payload.deletingLastPathComponent()
+        )
+        XCTAssertEqual(installed.manifest.id, CommunityIndieWineBootstrapper.runtimeID)
+        XCTAssertTrue(CommunityIndieWineBootstrapper.isCompleteRuntime(installed.root))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: installed.root.appendingPathComponent("local-runtime.json").path))
+    }
+
+    func testD3DMetalEnvironmentUsesWine11HostHooks() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("indie-d3dmetal-env-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let renderer = root.appendingPathComponent("renderer")
+        let runtime = root.appendingPathComponent("runtime")
+        for relativePath in [
+            "external/libd3dshared.dylib",
+            "wine/x86_64-windows/dxgi.dll",
+            "wine/x86_64-windows/d3d11.dll",
+            "wine/x86_64-windows/d3d12.dll",
+        ] {
+            let file = renderer.appendingPathComponent(relativePath)
+            try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try Data().write(to: file)
+        }
+        try FileManager.default.createDirectory(at: runtime.appendingPathComponent("lib"), withIntermediateDirectories: true)
+
+        let environment = try D3DMetalLaunchEnvironment.make(
+            rendererRoot: renderer,
+            runtimeRoot: runtime,
+            metalHUD: true,
+            metalFX: true
+        )
+
+        XCTAssertEqual(environment["CX_ACTIVE_GRAPHICS_BACKEND"], "d3dmetal")
+        XCTAssertEqual(environment["CX_APPLEGPTK_LIBD3DSHARED_PATH"], renderer.appendingPathComponent("external/libd3dshared.dylib").path)
+        XCTAssertEqual(environment["WINEDLLPATH_PREPEND"], renderer.appendingPathComponent("wine").path)
+        XCTAssertNil(environment["WINEDLLPATH"])
+        XCTAssertEqual(environment["MTL_HUD_ENABLED"], "1")
+        XCTAssertEqual(environment["D3DM_SHOW_HUD_STATS"], "1")
+        XCTAssertEqual(environment["D3DM_ENABLE_METALFX"], "1")
+        XCTAssertTrue(environment["DYLD_FALLBACK_LIBRARY_PATH"]?.contains(runtime.appendingPathComponent("lib").path) == true)
+    }
+
+    func testD3DMetalLaunchPlanPreservesNativeAndPEBridgePaths() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("indie-d3dm-plan-\(UUID().uuidString)")
+        let renderer = root.appendingPathComponent("renderer")
+        let bridge = renderer.appendingPathComponent("wine")
+        let external = renderer.appendingPathComponent("external")
+        let runtimeLibraries = root.appendingPathComponent("runtime/lib")
+        let bottle = BottleRecord(name: "D3DMetal", root: root.appendingPathComponent("bottle"), runtimeID: "org.indie.wine11")
+        let analysis = GameAnalysis(
+            identity: GameIdentity(executableName: "game.exe"), architecture: .x86_64,
+            directX: .d3d12, antiCheat: .none, importedLibraries: ["d3d12.dll"]
+        )
+        let fallback = "\(external.path):\(runtimeLibraries.path)"
+        let plan = try LaunchPlanBuilder.build(
+            executable: root.appendingPathComponent("game.exe"), bottle: bottle,
+            profile: LaunchProfile(
+                runtimeID: "org.indie.wine11", preferredRenderer: .d3dMetal,
+                environment: ["WINEDLLPATH_PREPEND": bridge.path, "DYLD_FALLBACK_LIBRARY_PATH": fallback]
+            ),
+            analysis: analysis, recipe: nil,
+            installed: InstalledRenderers(available: [.d3dMetal], overlayPaths: [.d3dMetal: bridge])
+        )
+        XCTAssertEqual(plan.environment["WINEDLLPATH_PREPEND"], bridge.path)
+        XCTAssertEqual(plan.environment["WINEDLLPATH"], bridge.path)
+        XCTAssertEqual(plan.environment["DYLD_FALLBACK_LIBRARY_PATH"], fallback)
+    }
+
+    func testLocalWineImporterFindsNestedBundleLayout() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("indie-sikarugir-layout-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: root) }
         let wine = root.appendingPathComponent("wswine.bundle/bin/wine")

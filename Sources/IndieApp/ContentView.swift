@@ -436,7 +436,7 @@ struct LibraryView: View {
                     }
                     Spacer()
                     if model.d3dMetalRuntimeAvailable {
-                        Button("D3DMetal 启动", systemImage: "play.fill") { Task { await model.launchSteamGame(game) } }
+                        Button("智能启动", systemImage: "play.fill") { Task { await model.launchSteamGame(game) } }
                             .disabled(model.isWorking)
                     } else {
                         Button("升级 GPTK 4", systemImage: "arrow.down.circle") {
@@ -444,7 +444,7 @@ struct LibraryView: View {
                         }
                     }
                     Menu {
-                        Button("通过 Steam / DXVK 启动", systemImage: "gamecontroller") {
+                        Button("通过 Steam 启动", systemImage: "gamecontroller") {
                             Task { await model.launchSteam(appID: game.appID) }
                         }
                     } label: { Image(systemName: "ellipsis") }
@@ -549,7 +549,7 @@ private struct RuntimeSettingsContent: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                advancedSection(title: "Wine 运行环境", detail: "负责运行 Windows 程序。首页的一键准备会自动安装经过 SHA-256 验证的最新社区构建。") {
+                advancedSection(title: "Wine 运行环境", detail: "Indie 自行从 LGPL 源码构建 Wine 11 新 WoW64 运行时；不封装或分发 CrossOver 应用。") {
                     ForEach(model.wineRuntimes) { runtime in componentRow(name: runtime.manifest.displayName, status: "已安装") }
                     HStack {
                         Button("自动安装最新版本") { Task { await model.prepareEnvironment() } }.buttonStyle(.borderedProminent)
@@ -633,7 +633,9 @@ private struct PreferencesContent: View {
             Picker("更新通道", selection: $releaseChannel) {
                 Text("稳定版").tag(ReleaseChannel.stable.rawValue); Text("候选版").tag(ReleaseChannel.candidate.rawValue); Text("实验版").tag(ReleaseChannel.experimental.rawValue)
             }
-            Toggle("启动游戏时显示 Metal 性能信息", isOn: $metalHUD)
+            Toggle("启动游戏时显示 Apple Metal HUD", isOn: $metalHUD)
+            Text("D3DMetal 游戏会在同一个 Indie Wine 11 + Steam 会话中显示 Apple 官方 FPS、GPU 时间、内存和帧间隔；非 D3DMetal 兼容回退不会显示该 HUD。")
+                .font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText)
             Toggle("使用 MetalFX 兼容游戏的 DLSS", isOn: $metalFX)
             Text("需要 GPTK 4/D3DMetal，且仍需在游戏画面设置中开启 DLSS。Apple GPU 实际执行的是 MetalFX。")
                 .font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText)

@@ -16,7 +16,6 @@
         "WINEMSYNC": "1"
       },
       "highResolution": true,
-      "metalHUD": false,
       "renderer": "d3dmetal",
       "syncBackend": "msync"
     }

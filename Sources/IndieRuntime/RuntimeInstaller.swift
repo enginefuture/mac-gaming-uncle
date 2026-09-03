@@ -86,6 +86,30 @@ public actor RuntimeInstaller {
         } else {
             try FileManager.default.copyItem(at: temporaryURL, to: staging.appendingPathComponent(artifact.url.lastPathComponent))
         }
+        if let archiveRoot = artifact.archiveRoot {
+            try promoteArchiveRoot(archiveRoot, in: staging)
+        }
+    }
+
+    private func promoteArchiveRoot(_ relativePath: String, in staging: URL) throws {
+        let normalized = relativePath.replacingOccurrences(of: "\\", with: "/")
+        let components = normalized.split(separator: "/", omittingEmptySubsequences: false)
+        guard !normalized.isEmpty, !normalized.hasPrefix("/"), !components.contains("..") else {
+            throw IndieError.securityViolation("运行时 archiveRoot 非法：\(relativePath)")
+        }
+        let payload = staging.appendingPathComponent(normalized, isDirectory: true).standardizedFileURL
+        guard payload.path.hasPrefix(staging.standardizedFileURL.path + "/"),
+              FileManager.default.fileExists(atPath: payload.path) else {
+            throw IndieError.invalidData("运行时压缩包缺少 archiveRoot：\(relativePath)")
+        }
+        for item in try FileManager.default.contentsOfDirectory(at: payload, includingPropertiesForKeys: nil) {
+            let destination = staging.appendingPathComponent(item.lastPathComponent)
+            guard !FileManager.default.fileExists(atPath: destination.path) else {
+                throw IndieError.invalidData("多个运行时制品包含同名路径：\(item.lastPathComponent)")
+            }
+            try FileManager.default.moveItem(at: item, to: destination)
+        }
+        try FileManager.default.removeItem(at: payload)
     }
 
     private enum ArchiveKind { case zip, tar }

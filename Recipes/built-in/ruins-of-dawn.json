@@ -13,7 +13,6 @@
       "dllOverrides": {},
       "environment": {"WINEESYNC": "1", "WINEMSYNC": "1"},
       "highResolution": true,
-      "metalHUD": false,
       "renderer": "d3dmetal",
       "syncBackend": "msync"
     }

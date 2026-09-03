@@ -35,8 +35,13 @@ public struct WineRuntimeProvider: RuntimeProvider, Sendable {
     }
 
     private var hostEnvironment: [String: String] {
-        guard let frameworks = CommunitySikarugirBootstrapper.frameworksRoot(in: root) else { return [:] }
-        return ["DYLD_LIBRARY_PATH": frameworks.path]
+        var libraryRoots: [URL] = []
+        let packagedLibraries = root.appendingPathComponent("lib", isDirectory: true)
+        if FileManager.default.fileExists(atPath: packagedLibraries.path) {
+            libraryRoots.append(packagedLibraries)
+        }
+        guard !libraryRoots.isEmpty else { return [:] }
+        return ["DYLD_LIBRARY_PATH": libraryRoots.map(\.path).joined(separator: ":")]
     }
 
     public func probeInstallation(at root: URL) async -> [ProbeItem] {

@@ -12,7 +12,9 @@ Indie does not redistribute these components in this repository. When users or r
 | Apple D3DMetal / GPTK | Direct3D 11/12 to Metal | Apple license supplied with GPTK; user-provided only |
 | Steam | Store client and game delivery | Valve/Steam terms; user-installed only |
 | Steam WebHelper wrapper | Forces Wine-compatible CEF process mode | MIT, copyright 2026 notpop |
-| Sikarugir Wine engine / wrapper runtime | D3DMetal-capable Wine host and macOS dependency set | Wine LGPL-2.1-or-later and component-specific notices; downloaded from upstream GitHub releases |
+| Indie Wine 11 runtime | Wine 11 macOS host, new WoW64, MSync and Indie patches | Wine LGPL-2.1-or-later; corresponding CodeWeavers FOSS source and patch set are published with the runtime |
+| FreeType | Wine font rendering | FreeType License or GPL-2.0-only |
+| GnuTLS, GMP, Nettle | Wine TLS and cryptography support | LGPL-2.1-or-later / LGPL-3.0-or-later and component-specific notices |
 
 The interface includes the Steam logo asset retrieved from Valve's official
 Steam static asset host (`store.fastly.steamstatic.com`) solely to identify the

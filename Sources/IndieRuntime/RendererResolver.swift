@@ -73,8 +73,15 @@ public enum LaunchPlanBuilder {
         if profile.metalHUD { environment["MTL_HUD_ENABLED"] = "1" }
         if profile.syncBackend == .msync || recipeProfile?.syncBackend == .msync { environment["WINEMSYNC"] = "1" }
         if let overlay = installed.overlayPaths[resolution.renderer] {
-            environment["WINEDLLPATH"] = overlay.path
-            if resolution.renderer == .d3dMetal {
+            // D3DMetalLaunchEnvironment supplies two deliberately different
+            // paths: the Wine PE bridge and the native `external` libraries.
+            // Preserve those values instead of collapsing both to the overlay
+            // root at the final LaunchPlan assembly step.
+            if environment["WINEDLLPATH"] == nil {
+                environment["WINEDLLPATH"] = overlay.path
+            }
+            if resolution.renderer == .d3dMetal,
+               environment["DYLD_FALLBACK_LIBRARY_PATH"] == nil {
                 environment["DYLD_FALLBACK_LIBRARY_PATH"] = overlay.path
             }
         }

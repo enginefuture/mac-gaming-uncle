@@ -25,8 +25,7 @@
           "environment": {"type": "object", "additionalProperties": {"type": "string"}},
           "dllOverrides": {"type": "object", "additionalProperties": {"type": "string"}},
           "arguments": {"type": "array", "items": {"type": "string"}},
-          "highResolution": {"type": "boolean"},
-          "metalHUD": {"type": ["boolean", "null"]}
+          "highResolution": {"type": "boolean"}
         }
       }
     },

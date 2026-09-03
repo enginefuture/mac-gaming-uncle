@@ -36,9 +36,13 @@ struct IndieCLI {
                 if arguments.first == "latest" {
                     output = AnyEncodable(try await CommunityWineBootstrapper(paths: .userDefault).latest())
                 } else if arguments.first == "gaming-install" {
-                    output = AnyEncodable(try await CommunitySikarugirBootstrapper(paths: .userDefault).installLatest())
+                    output = AnyEncodable(try await CommunityIndieWineBootstrapper(paths: .userDefault).installLatest())
+                } else if arguments.first == "local-install", arguments.count >= 2 {
+                    output = AnyEncodable(try await CommunityIndieWineBootstrapper(paths: .userDefault).installLocalBuild(
+                        from: URL(fileURLWithPath: arguments[1], isDirectory: true)
+                    ))
                 } else {
-                    throw IndieError.invalidArgument("wine latest | wine gaming-install")
+                    throw IndieError.invalidArgument("wine latest | wine gaming-install | wine local-install <runtime-root>")
                 }
             case "dxvk":
                 guard arguments.first == "install", arguments.count >= 2 else {
@@ -62,10 +66,10 @@ struct IndieCLI {
                     throw IndieError.invalidArgument("fonts repair <bottle-root> <runtime-root>")
                 }
                 let bottle = BottleRecord(
-                    name: "Fonts", root: URL(fileURLWithPath: arguments[1], isDirectory: true), runtimeID: CommunitySikarugirBootstrapper.runtimeID
+                    name: "Fonts", root: URL(fileURLWithPath: arguments[1], isDirectory: true), runtimeID: CommunityIndieWineBootstrapper.runtimeID
                 )
                 let provider = WineRuntimeProvider(
-                    manifest: CommunitySikarugirBootstrapper.manifest,
+                    manifest: CommunityIndieWineBootstrapper.manifest,
                     root: URL(fileURLWithPath: arguments[2], isDirectory: true)
                 )
                 try await provider.prepareBottleForInstaller(bottle)
@@ -98,6 +102,7 @@ struct IndieCLI {
       gptk import <apple-gptk.dmg|mounted-directory>
       wine latest
       wine gaming-install
+      wine local-install <runtime-root>
       dxvk install <bottle-root>
       steam repair <bottle-root> [wrapper.exe]
       fonts repair <bottle-root> <runtime-root>

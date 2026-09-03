@@ -1,0 +1,30 @@
+diff --git a/dlls/ntdll/unix/loader.c b/dlls/ntdll/unix/loader.c
+--- a/dlls/ntdll/unix/loader.c
++++ b/dlls/ntdll/unix/loader.c
+@@ -386,13 +386,26 @@ void prepend_dll_path(const char *path)
+ static void set_dll_path(void)
+ {
+     char *p, *path = getenv( "WINEDLLPATH" );
++    char *prepend_path = getenv( "WINEDLLPATH_PREPEND" );
+     int i, count = 0;
+ 
+     if (path) for (p = path, count = 1; *p; p++) if (*p == ':') count++;
++    if (prepend_path)
++    {
++        count++;
++        for (p = prepend_path; *p; p++) if (*p == ':') count++;
++    }
+ 
+     dll_paths = malloc( (count + 2) * sizeof(*dll_paths) );
+     count = 0;
+ 
++    if (prepend_path)
++    {
++        prepend_path = strdup(prepend_path);
++        for (p = strtok( prepend_path, ":" ); p; p = strtok( NULL, ":" )) dll_paths[count++] = strdup( p );
++        free( prepend_path );
++    }
++
+     if (!build_dir) dll_paths[count++] = dll_dir;
+ 
+     if (path)

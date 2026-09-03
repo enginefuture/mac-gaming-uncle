@@ -41,6 +41,20 @@ final class IndieCatalogTests: XCTestCase {
         XCTAssertEqual(RecipeRepository(recipes: [byName, bySteam]).match(analysis)?.id, "steam")
     }
 
+    func testGrimDawnAvoidsKnownD3DMetalUIRegression() throws {
+        let repository = try RecipeRepository.builtIn()
+        let analysis = GameAnalysis(
+            identity: GameIdentity(steamAppID: 219990, executableName: "Grim Dawn.exe"),
+            architecture: .x86_64,
+            directX: .d3d11,
+            antiCheat: .none,
+            importedLibraries: ["d3d11.dll"]
+        )
+        let recipe = try XCTUnwrap(repository.match(analysis))
+        XCTAssertEqual(recipe.profiles.map(\.renderer), [.dxmt, .wineD3D])
+        XCTAssertFalse(recipe.profiles.contains { $0.renderer == .d3dMetal })
+    }
+
     func testBuiltInRecipesLoad() throws {
         let repository = try RecipeRepository.builtIn()
         XCTAssertTrue(repository.recipes.contains { $0.id == "indie.compatibility-lab.d3d12" })
@@ -52,7 +66,6 @@ final class IndieCatalogTests: XCTestCase {
         let recipe = repository.match(analysis)
         XCTAssertEqual(recipe?.id, "indie.steam.4364910.ruins-of-dawn")
         XCTAssertTrue(recipe?.profiles.first?.arguments.contains("-norhithread") == true)
-        XCTAssertEqual(recipe?.profiles.first?.metalHUD, false)
     }
 
     func testSteamScannerMapsWindowsDriveInsideBottle() throws {

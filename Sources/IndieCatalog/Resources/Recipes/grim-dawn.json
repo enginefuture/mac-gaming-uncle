@@ -1,0 +1,42 @@
+{
+  "antiCheat": "none",
+  "executableNames": ["grim dawn.exe"],
+  "id": "indie.steam.219990.grim-dawn",
+  "knownIssues": [
+    "D3DMetal 4 在部分 Grim Dawn 场景会漏绘 2D UI；Indie 优先使用 DXMT，未安装 DXMT 时回退到 WineD3D。"
+  ],
+  "name": "Grim Dawn",
+  "profiles": [
+    {
+      "arguments": [],
+      "dllOverrides": {
+        "d3d10core": "n,b",
+        "d3d11": "n,b",
+        "dxgi": "n,b"
+      },
+      "environment": {},
+      "highResolution": true,
+      "renderer": "dxmt",
+      "syncBackend": "msync"
+    },
+    {
+      "arguments": [],
+      "dllOverrides": {
+        "d3d10": "b",
+        "d3d10core": "b",
+        "d3d11": "b",
+        "d3d12": "b",
+        "dxgi": "b"
+      },
+      "environment": {
+        "CX_ACTIVE_GRAPHICS_BACKEND": "wined3d"
+      },
+      "highResolution": true,
+      "renderer": "wined3d",
+      "syncBackend": "msync"
+    }
+  ],
+  "provenance": [],
+  "schemaVersion": 1,
+  "steamAppIDs": [219990]
+}

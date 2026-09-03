@@ -21,7 +21,7 @@
 #include <wchar.h>
 
 #define REAL_BINARY L"steamwebhelper_real.exe"
-#define EXTRA_FLAGS L"--disable-gpu --single-process --no-sandbox"
+#define EXTRA_FLAGS L"--disable-gpu --in-process-gpu --no-sandbox"
 #define WRAPPER_MARKER "INDIE_STEAM_WEBHELPER_WRAPPER_V1"
 
 static const wchar_t *forwarded_arguments(void)

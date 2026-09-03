@@ -13,7 +13,7 @@
 
 Indie is currently a `0.1.0` research preview for Apple Silicon and macOS 15 or later. The native app covers environment setup, Windows Steam installation, Steam library discovery, and D3DMetal game launching.
 
-Hardware validation: Apple M3 Max, macOS 26.6.2, GPTK 4.0 beta 2, and Sikarugir Wine 10. `Ruins of Dawn` has been validated through its main menu with Steam integration enabled.
+Hardware validation: Apple M3 Max, macOS 26.6.2, GPTK 4.0 beta 2, and Indie Wine 11. `Ruins of Dawn` has been validated through its main menu with Steam integration and Apple's in-game Metal HUD.
 
 ## Features
 
@@ -21,13 +21,14 @@ Hardware validation: Apple M3 Max, macOS 26.6.2, GPTK 4.0 beta 2, and Sikarugir 
 - Downloads the Windows Steam installer from Valve's official CDN.
 - Opens Apple's official download page, watches for GPTK 4, and automatically verifies the DMG, SHA-256, and Apple code signature.
 - Imports the complete D3DMetal framework, Wine PE bridge, and Unix bridge without redistributing Apple binaries.
-- Installs pinned, checksummed Sikarugir Wine gaming runtimes and the macOS DXVK overlay.
+- Builds and installs Indie Wine 11 from corresponding public source, with new WoW64, MSync, Steam CEF fixes, and a native D3DMetal bridge path.
 - Repairs Steam CEF compatibility and installs CJK fonts with DirectWrite font linking.
 - Waits for Steam authentication, then resolves and launches the real `*-Win64-Shipping.exe` executable.
 - Invalidates shader caches when the GPTK version, source hash, MetalFX, DXR, Metal 4, macOS version, or compatibility arguments change.
 - Auditable game recipes matched by Steam AppID and executable name.
 - Static PE architecture, DirectX import, and anti-cheat inspection; kernel anti-cheat is blocked before launch.
-- SQLite state, isolated Wine bottles, recoverable backups, CLI diagnostics, and 31 automated tests.
+- Apple Metal Performance HUD in the same Indie Wine 11 process that runs the game.
+- SQLite state, isolated Wine bottles, recoverable backups, CLI diagnostics, and automated tests.
 
 ## How it works
 
@@ -72,13 +73,15 @@ INDIE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 
 ### First run
 
-1. Select “Prepare environment” to install the open-source Wine runtime.
+1. Select “Prepare environment” to install Indie's reproducibly built open-source Wine 11 runtime.
 2. Select “Install GPTK 4.” Indie opens the official Apple page. After the user signs in and starts the download, verification and import continue automatically.
 3. Select “Install Steam,” complete the Windows Steam installer inside Wine, and sign in.
 4. Install a game in Steam, return to Indie's Library, and scan Steam.
-5. Select “Launch with D3DMetal.” The first graphics-cache build may take several minutes.
+5. Select “Smart launch.” Indie selects D3DMetal, DXMT, or WineD3D from the game recipe. The first graphics-cache build may take several minutes.
 
 MetalFX/DLSS mapping is experimental and disabled by default. It can only help games that already implement DLSS. Keep it disabled if a game shows a black screen or GPU timeout.
+
+“Show Apple Metal HUD” passes Apple's HUD environment to the game process launched by Indie Wine 11. It no longer switches to Apple Evaluation Wine or skips Steam. The HUD only appears when the game is actually using a Metal renderer. The current `Grim Dawn` recipe deliberately falls back to WineD3D because its 2D UI is known to disappear under D3DMetal; that fallback does not mean GPTK 4 is missing.
 
 ## Development and testing
 
@@ -87,6 +90,7 @@ swift test
 swift build -c release
 swift run indiectl --json doctor
 scripts/check.sh
+scripts/build-indie-wine11.sh
 ```
 
 Useful CLI commands:
@@ -99,6 +103,7 @@ indiectl recipes validate <recipes-directory>
 indiectl gptk import <apple-gptk.dmg|mounted-directory>
 indiectl wine latest
 indiectl wine gaming-install
+indiectl wine local-install <runtime-root>
 indiectl dxvk install <bottle-root>
 indiectl steam repair <bottle-root> [wrapper.exe]
 indiectl fonts repair <bottle-root> <runtime-root>

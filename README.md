@@ -13,7 +13,7 @@
 
 Indie 目前处于 `0.1.0` 研究预览阶段，面向 Apple Silicon 与 macOS 15 及以上版本。应用已经打通环境准备、Windows 版 Steam 安装、Steam 游戏扫描和 D3DMetal 启动闭环。
 
-实机验证环境：Apple M3 Max、macOS 26.6.2、GPTK 4.0 beta 2、Sikarugir Wine 10。`Ruins of Dawn` 已验证进入主菜单并启用 Steam 集成。
+实机验证环境：Apple M3 Max、macOS 26.6.2、GPTK 4.0 beta 2、Indie Wine 11。`Ruins of Dawn` 已验证进入主菜单、显示 Apple 官方 Metal HUD 并启用 Steam 集成。
 
 ## 已实现
 
@@ -21,13 +21,14 @@ Indie 目前处于 `0.1.0` 研究预览阶段，面向 Apple Silicon 与 macOS 1
 - 从 Valve 官方 CDN 下载并安装 Windows 版 Steam。
 - 打开 Apple 官方下载页，监测 GPTK 4 下载并自动完成 DMG、SHA-256 与 Apple 签名验证。
 - 导入完整 D3DMetal framework、Wine PE Bridge 与 Unix Bridge，不重新分发 Apple 二进制。
-- 安装固定版本和哈希的 Sikarugir Wine 游戏运行时与 DXVK macOS Overlay。
+- 从公开对应源码构建并安装 Indie Wine 11（新 WoW64、MSync、Steam CEF 补丁与原生 D3DMetal Bridge 路径）。
 - Steam CEF 兼容包装器、中文字体注册与 DirectWrite 字体链接。
 - 等待 Steam 登录后解析并启动真实的 `*-Win64-Shipping.exe`。
 - 按 GPTK 版本、安装包哈希、MetalFX、DXR、Metal 4、macOS 和游戏参数管理着色器缓存。
 - Steam AppID/EXE 双重匹配的可审计游戏配方系统。
 - PE 架构、DirectX 导入和反作弊静态检测；内核级反作弊会在启动前阻断。
-- SQLite 状态存储、Bottle 隔离、可恢复备份、CLI 诊断和 31 项自动化测试。
+- Apple Metal Performance HUD：由同一个 Indie Wine 11 游戏进程启用，直接显示在游戏画面内。
+- SQLite 状态存储、Bottle 隔离、可恢复备份、CLI 诊断和自动化测试。
 
 ## 工作原理
 
@@ -72,13 +73,15 @@ INDIE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 
 ### 第一次使用
 
-1. 点击“一键准备环境”，安装开源 Wine 运行环境。
+1. 点击“一键准备环境”，安装 Indie 自行构建的开源 Wine 11 运行环境。
 2. 点击“一键安装 GPTK 4”。Indie 会打开 Apple 官方页面；用户登录并点击下载后，其余验证和导入自动完成。
 3. 点击“安装 Steam”，在 Wine 安装窗口中完成 Windows 版 Steam 安装并登录。
 4. 从 Steam 安装游戏，返回 Indie 的“游戏库”并点击“扫描 Steam”。
-5. 点击游戏旁的“D3DMetal 启动”。首次图形缓存构建可能需要几分钟。
+5. 点击游戏旁的“智能启动”。Indie 会按游戏配方选择 D3DMetal、DXMT 或 WineD3D；首次图形缓存构建可能需要几分钟。
 
 MetalFX/DLSS 映射是实验功能且默认关闭。只有游戏本身提供 DLSS 时才可能生效；遇到黑屏或 GPU Timeout 时应保持关闭。
+
+“显示 Apple Metal HUD”会把 Apple HUD 环境变量传给 Indie Wine 11 启动的游戏进程；不再切换到 Apple Evaluation Wine，也不会因此跳过 Steam。HUD 只会在实际使用 D3DMetal/Metal 的游戏中出现。`Grim Dawn` 当前配方使用 WineD3D 回退，因为 D3DMetal 下已知会缺失 2D UI；这是按游戏规避，不代表 GPTK 4 未安装。
 
 ## 开发与测试
 
@@ -87,6 +90,7 @@ swift test
 swift build -c release
 swift run indiectl --json doctor
 scripts/check.sh
+scripts/build-indie-wine11.sh
 ```
 
 常用 CLI：
@@ -99,6 +103,7 @@ indiectl recipes validate <recipes-directory>
 indiectl gptk import <apple-gptk.dmg|mounted-directory>
 indiectl wine latest
 indiectl wine gaming-install
+indiectl wine local-install <runtime-root>
 indiectl dxvk install <bottle-root>
 indiectl steam repair <bottle-root> [wrapper.exe]
 indiectl fonts repair <bottle-root> <runtime-root>

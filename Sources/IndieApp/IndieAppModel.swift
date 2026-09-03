@@ -24,14 +24,12 @@ final class IndieAppModel: ObservableObject {
     private lazy var importer = GPTKImporter(paths: paths)
     private lazy var wineImporter = LocalWineImporter(paths: paths)
     private lazy var overlayImporter = RendererOverlayImporter(paths: paths)
-    private lazy var communityWine = CommunityWineBootstrapper(paths: paths)
-    private lazy var communityDXVK = CommunityDXVKBootstrapper(paths: paths)
-    private lazy var communityGamingWine = CommunitySikarugirBootstrapper(paths: paths)
+    private lazy var communityGamingWine = CommunityIndieWineBootstrapper(paths: paths)
     private var recipeRepository = RecipeRepository(recipes: [])
     private var gptkSetupTask: Task<Void, Never>?
 
     var environmentReady: Bool {
-        systemReport?.isSupported == true && !wineRuntimes.isEmpty
+        systemReport?.isSupported == true && gamingWineRuntime != nil
     }
 
     private var preferredGPTKRuntime: AppleGPTKRuntime? {
@@ -41,7 +39,7 @@ final class IndieAppModel: ObservableObject {
         d3dMetal.first { $0.rendererRoot != nil }
     }
     private var gamingWineRuntime: LocalWineRuntime? {
-        wineRuntimes.first { $0.manifest.id == CommunitySikarugirBootstrapper.runtimeID }
+        wineRuntimes.first { $0.manifest.id == CommunityIndieWineBootstrapper.runtimeID }
     }
     var gptkRuntimeVersion: String? { preferredD3DMetal?.version ?? preferredGPTKRuntime?.version }
     var d3dMetalRuntimeAvailable: Bool {
@@ -122,13 +120,12 @@ final class IndieAppModel: ObservableObject {
     }
 
     func prepareEnvironment() async {
-        await perform("正在查找最新的兼容运行环境…") {
+        await perform("正在安装 Indie Wine 11 开源运行环境…") {
             guard self.systemReport?.isSupported == true else {
                 throw IndieError.unsupported("这台 Mac 尚未通过环境检查，请打开高级设置查看原因")
             }
-            let release = try await self.communityWine.latest()
-            self.status = "正在下载 Wine \(release.version)（\(ByteCountFormatter.string(fromByteCount: release.downloadSize, countStyle: .file))）…"
-            let installed = try await self.communityWine.installLatest()
+            self.status = "正在下载并校验 Indie Wine 11…"
+            let installed = try await self.communityGamingWine.installLatest()
             self.wineRuntimes = await self.wineImporter.installed()
             self.status = "游戏运行环境 \(installed.manifest.version) 已准备好"
         }
@@ -153,8 +150,8 @@ final class IndieAppModel: ObservableObject {
 
     func installSteam() async {
         await perform("正在从 Valve 官方 CDN 下载 Steam…") {
-            guard let runtime = self.wineRuntimes.first else {
-                throw IndieError.notFound("请先在“运行时”页面导入兼容的 macOS Wine 11 运行时")
+            guard let runtime = self.gamingWineRuntime else {
+                throw IndieError.notFound("请先准备 Indie Wine 11 开源运行环境")
             }
             let steamInstaller = SteamInstaller(paths: self.paths)
             let installer = try await steamInstaller.download()
@@ -194,7 +191,7 @@ final class IndieAppModel: ObservableObject {
 
     func launchSteam(appID: UInt64? = nil) async {
         await perform(appID == nil ? "正在打开 Steam…" : "正在通过 Steam 启动游戏…") {
-            guard let runtime = self.wineRuntimes.first,
+            guard let runtime = self.gamingWineRuntime,
                   let bottle = self.steamBottle,
                   let executable = self.steamExecutable else {
                 throw IndieError.notFound("尚未完成 Steam 安装")
@@ -205,27 +202,22 @@ final class IndieAppModel: ObservableObject {
             }
             await provider.stopBottle(bottle)
             try await provider.prepareBottleForInstaller(bottle)
-            try await provider.configureVulkanGraphics(in: bottle)
-            self.status = "正在准备 DirectX 11 图形兼容层…"
-            let dxvk = try await self.communityDXVK.installLatest()
-            _ = try BottleDXVKInstaller.install(overlay: dxvk, in: bottle)
-            self.rendererOverlays = await self.overlayImporter.installed()
             _ = try SteamCompatibilityManager.prepare(bottle: bottle, wrapper: wrapper)
             let analysis = GameAnalysis(
                 identity: GameIdentity(steamAppID: appID, executableName: "steam.exe"),
                 architecture: .x86_64, directX: .none, antiCheat: .none, importedLibraries: []
             )
-            var environment = WineRuntimeProvider.vulkanEnvironment
-            environment["LANG"] = "zh_CN.UTF-8"
-            environment["LC_ALL"] = "zh_CN.UTF-8"
-            environment["DXVK_ASYNC"] = "0"
-            environment["DXVK_LOG_PATH"] = self.paths.logs.appendingPathComponent("DXVK", isDirectory: true).path
-            environment["DXVK_STATE_CACHE_PATH"] = self.paths.shaderCaches.appendingPathComponent("DXVK", isDirectory: true).path
-            try FileManager.default.createDirectory(at: URL(fileURLWithPath: environment["DXVK_LOG_PATH"]!), withIntermediateDirectories: true)
-            try FileManager.default.createDirectory(at: URL(fileURLWithPath: environment["DXVK_STATE_CACHE_PATH"]!), withIntermediateDirectories: true)
+            let environment = [
+                "LANG": "zh_CN.UTF-8",
+                "LC_ALL": "zh_CN.UTF-8",
+                "WINEDEBUG": "-all",
+                "WINEMSYNC": "1",
+                "WINEESYNC": "1",
+                "WINEDLLOVERRIDES": "mscoree,mshtml=;winedbg.exe=d",
+            ]
             let profile = LaunchProfile(
                 runtimeID: runtime.manifest.id,
-                preferredRenderer: .dxvk,
+                preferredRenderer: .wineD3D,
                 arguments: SteamCompatibilityManager.launchArguments(appID: appID),
                 environment: environment
             )
@@ -233,7 +225,7 @@ final class IndieAppModel: ObservableObject {
                 executable: executable,
                 windowsExecutablePath: try WinePath.windowsPath(for: executable, in: bottle),
                 bottle: bottle, profile: profile, analysis: analysis,
-                recipe: nil, installed: InstalledRenderers(available: [.wineD3D, .dxvk])
+                recipe: nil, installed: InstalledRenderers(available: [.wineD3D])
             )
             let log = self.paths.logs.appendingPathComponent("\(plan.id.uuidString)-steam.log")
             self.status = appID == nil ? "Steam 正在运行；请登录并安装游戏" : "游戏正在运行"
@@ -245,26 +237,14 @@ final class IndieAppModel: ObservableObject {
     }
 
     func launchSteamGame(_ game: SteamGame) async {
-        await perform("正在为 \(game.name) 准备 D3DMetal…") {
+        await perform("正在为 \(game.name) 选择最佳图形后端…") {
             guard let bottle = self.steamBottle else {
                 throw IndieError.notFound("尚未完成 Steam 安装")
             }
-            guard let component = self.preferredD3DMetal,
-                  let renderer = component.rendererRoot,
-                  Self.majorVersion(component.version) >= 4 else {
-                throw IndieError.notFound("请先使用“一键安装 GPTK 4”导入 Windows 游戏评估环境")
+            guard let gamingRuntime = self.gamingWineRuntime else {
+                throw IndieError.notFound("需要 Indie Wine 11 游戏引擎，请重新运行环境准备")
             }
-            guard let gamingRuntime = self.gamingWineRuntime,
-                  let frameworks = CommunitySikarugirBootstrapper.frameworksRoot(in: gamingRuntime.root) else {
-                throw IndieError.notFound("D3DMetal 需要 Sikarugir Wine 10 游戏引擎，请重新运行 GPTK 4 一键安装")
-            }
-            guard let primaryRuntime = self.wineRuntimes.first else {
-                throw IndieError.notFound("尚未安装 Wine 运行环境")
-            }
-
-            let primaryProvider = WineRuntimeProvider(manifest: primaryRuntime.manifest, root: primaryRuntime.root)
             let gamingProvider = WineRuntimeProvider(manifest: gamingRuntime.manifest, root: gamingRuntime.root)
-            await primaryProvider.stopBottle(bottle)
             await gamingProvider.stopBottle(bottle)
             self.status = "正在修复 Steam 中文字体…"
             try await gamingProvider.prepareBottleForInstaller(bottle)
@@ -272,74 +252,6 @@ final class IndieAppModel: ObservableObject {
                 throw IndieError.notFound("Indie 缺少 Steam 界面兼容组件，请重新安装应用")
             }
             _ = try SteamCompatibilityManager.prepare(bottle: bottle, wrapper: wrapper)
-            guard let steam = self.steamExecutable else { throw IndieError.notFound("尚未完成 Steam 安装") }
-            let steamAnalysis = GameAnalysis(
-                identity: GameIdentity(steamAppID: game.appID, executableName: "steam.exe"),
-                architecture: .x86_64, directX: .none, antiCheat: .none, importedLibraries: []
-            )
-            let shared = renderer.appendingPathComponent("external/libd3dshared.dylib")
-            var environment = [
-                "LANG": "zh_CN.UTF-8",
-                "LC_ALL": "zh_CN.UTF-8",
-                "WINEDEBUG": "-all",
-                "GRAPHICS_BACKEND": "d3dmetal",
-                "CX_GRAPHICS_BACKEND": "d3dmetal",
-                "D3DMETAL_RUNTIME_DIR": renderer.path,
-                "CX_APPLEGPTK_LIBD3DSHARED_PATH": shared.path,
-                "CX_APPLEGPT_LIBD3DSHARED_PATH": shared.path,
-                "WINEDLLPATH_PREPEND": renderer.appendingPathComponent("wine").path,
-                "WINEDLLPATH": renderer.appendingPathComponent("wine").path,
-                "DYLD_LIBRARY_PATH": frameworks.path,
-                "DYLD_FALLBACK_LIBRARY_PATH": "\(renderer.appendingPathComponent("external").path):\(frameworks.path)",
-            ]
-            environment["D3DM_UNBUFFERED_OUTPUT"] = "0"
-            environment["D3DM_SUPPORT_DXR"] = "0"
-            environment["ROSETTA_ADVERTISE_AVX"] = "1"
-            // Match the synchronization defaults used by the Sikarugir
-            // wrapper. Indie invokes Wine directly, so these are not read
-            // from the wrapper's Info.plist automatically.
-            environment["WINEMSYNC"] = "1"
-            environment["WINEESYNC"] = "1"
-            let metalFXEnabled = UserDefaults.standard.bool(forKey: "metalFX")
-            if metalFXEnabled {
-                try D3DMetalRendererPreparer.enableMetalFX(
-                    rendererRoot: renderer, version: component.version, bottle: bottle
-                )
-                environment["D3DM_ENABLE_METALFX"] = "1"
-                environment["D3DMETAL_UPSCALER_PROFILE"] = "nvidia"
-                environment["D3DM_VENDOR_ID"] = "4318"
-                environment["D3DM_DEVICE_ID"] = "10370"
-                environment["D3DM_DEVICE_DESCRIPTION"] = "NVIDIA GeForce RTX 4080"
-            }
-            let metal4Enabled = ProcessInfo.processInfo.operatingSystemVersion.majorVersion >= 27
-            if metal4Enabled {
-                environment["D3DM_MTL4"] = "1"
-            }
-            let steamProfile = LaunchProfile(
-                runtimeID: gamingRuntime.manifest.id,
-                preferredRenderer: .d3dMetal,
-                syncBackend: .msync,
-                arguments: SteamCompatibilityManager.launchArguments(appID: nil),
-                environment: environment,
-                metalHUD: false
-            )
-            let steamPlan = try LaunchPlanBuilder.build(
-                executable: steam,
-                windowsExecutablePath: try WinePath.windowsPath(for: steam, in: bottle),
-                bottle: bottle, profile: steamProfile, analysis: steamAnalysis,
-                recipe: nil, installed: InstalledRenderers(available: [.d3dMetal])
-            )
-            let steamLog = self.paths.logs.appendingPathComponent("\(steamPlan.id.uuidString)-steam-d3dmetal.log")
-            let steamStartedAt = Date()
-            _ = try await gamingProvider.launchDetached(steamPlan, logURL: steamLog)
-            self.status = "正在等待 Steam 登录…"
-            let loginDeadline = Date().addingTimeInterval(90)
-            while !SteamCompatibilityManager.isLoggedOn(in: bottle, since: steamStartedAt) {
-                try Task.checkCancellation()
-                if Date() >= loginDeadline { throw IndieError.timedOut("Steam 登录") }
-                try await Task.sleep(for: .seconds(1))
-            }
-
             let executable = try SteamExecutableResolver.shippingExecutable(for: game)
             let launcher = try SteamExecutableResolver.preferredExecutable(for: game)
             self.status = "正在快速检查游戏兼容性…"
@@ -347,25 +259,128 @@ final class IndieAppModel: ObservableObject {
                 try PEAnalyzer.analyze(at: executable, steamAppID: game.appID)
             }.value
             let recipe = self.recipeRepository.match(analysis)
-            let recipeProfile = recipe?.profiles.first { $0.renderer == .d3dMetal }
-            let recipeArguments = recipeProfile?.arguments ?? []
-            let shaderPreparation = try D3DMetalShaderCacheManager.prepare(
-                executableName: executable.lastPathComponent,
-                profile: D3DMetalShaderProfile(
-                    rendererVersion: component.version,
-                    rendererSHA256: component.sourceSHA256,
-                    metalFX: metalFXEnabled,
-                    dxr: false,
-                    metal4: metal4Enabled,
-                    launchArguments: recipeArguments
-                ),
-                backupRoot: self.paths.shaderCacheBackups
+            var availableRenderers: Set<RendererKind> = [.wineD3D]
+            var overlayPaths: [RendererKind: URL] = [:]
+            if let component = self.preferredD3DMetal,
+               let renderer = component.rendererRoot,
+               Self.majorVersion(component.version) >= 4 {
+                availableRenderers.insert(.d3dMetal)
+                overlayPaths[.d3dMetal] = renderer.appendingPathComponent("wine", isDirectory: true)
+            }
+            for overlay in self.rendererOverlays where overlay.kind == .dxmt {
+                availableRenderers.insert(.dxmt)
+                overlayPaths[.dxmt] = overlay.root
+            }
+            let installedRenderers = InstalledRenderers(available: availableRenderers, overlayPaths: overlayPaths)
+            let resolution = try RendererResolver.resolve(
+                analysis: analysis,
+                preferred: nil,
+                recipe: recipe,
+                installed: installedRenderers
             )
+            let recipeProfile = recipe?.profiles.first { $0.renderer == resolution.renderer }
+            let recipeArguments = recipeProfile?.arguments ?? []
+
+            let wantsMetalHUD = UserDefaults.standard.bool(forKey: "metalHUD")
+            let metalHUDEnabled = wantsMetalHUD && resolution.renderer == .d3dMetal
+            let metalFXEnabled = UserDefaults.standard.bool(forKey: "metalFX") && resolution.renderer == .d3dMetal
+            let metal4Enabled = ProcessInfo.processInfo.operatingSystemVersion.majorVersion >= 27
+            var environment = [
+                "LANG": "zh_CN.UTF-8",
+                "LC_ALL": "zh_CN.UTF-8",
+                "WINEDEBUG": "-all",
+                "WINEMSYNC": "1",
+                "WINEESYNC": "1",
+            ]
+            var needsWarmupProtection = false
+            if resolution.renderer == .d3dMetal {
+                guard let component = self.preferredD3DMetal,
+                      let renderer = component.rendererRoot else {
+                    throw IndieError.notFound("请先使用“一键安装 GPTK 4”导入 D3DMetal")
+                }
+                if metalFXEnabled {
+                    try D3DMetalRendererPreparer.enableMetalFX(
+                        rendererRoot: renderer, version: component.version, bottle: bottle
+                    )
+                }
+                environment = try D3DMetalLaunchEnvironment.make(
+                    rendererRoot: renderer,
+                    runtimeRoot: gamingRuntime.root,
+                    metalHUD: metalHUDEnabled,
+                    metalFX: metalFXEnabled,
+                    metal4: metal4Enabled
+                )
+                let shaderPreparation = try D3DMetalShaderCacheManager.prepare(
+                    executableName: executable.lastPathComponent,
+                    profile: D3DMetalShaderProfile(
+                        rendererVersion: component.version,
+                        rendererSHA256: component.sourceSHA256,
+                        metalFX: metalFXEnabled,
+                        dxr: false,
+                        metal4: metal4Enabled,
+                        launchArguments: recipeArguments
+                    ),
+                    backupRoot: self.paths.shaderCacheBackups
+                )
+                needsWarmupProtection = shaderPreparation.needsWarmupProtection
+            } else if resolution.renderer == .wineD3D {
+                environment["CX_ACTIVE_GRAPHICS_BACKEND"] = "wined3d"
+                environment["WINEDLLOVERRIDES"] = "dxgi,d3d10,d3d10core,d3d11,d3d12=b"
+            }
+
+            guard let steam = self.steamExecutable else { throw IndieError.notFound("尚未完成 Steam 安装") }
+            let steamEnvironment = [
+                "LANG": "zh_CN.UTF-8",
+                "LC_ALL": "zh_CN.UTF-8",
+                "WINEDEBUG": "-all",
+                "WINEMSYNC": "1",
+                "WINEESYNC": "1",
+                "WINE_WAIT_CHILD_PIPE_IGNORE": "steam.exe",
+                // A failed optional Steam service must not leave a modal
+                // debugger that blocks login and accumulates conhost windows.
+                "WINEDLLOVERRIDES": "mscoree,mshtml=;winedbg.exe=d",
+            ]
+            let steamAnalysis = GameAnalysis(
+                identity: GameIdentity(steamAppID: game.appID, executableName: "steam.exe"),
+                architecture: .x86_64, directX: .none, antiCheat: .none, importedLibraries: []
+            )
+            let steamProfile = LaunchProfile(
+                runtimeID: gamingRuntime.manifest.id,
+                preferredRenderer: .wineD3D,
+                syncBackend: .msync,
+                arguments: SteamCompatibilityManager.launchArguments(appID: nil),
+                environment: steamEnvironment,
+                metalHUD: false
+            )
+            let steamPlan = try LaunchPlanBuilder.build(
+                executable: steam,
+                windowsExecutablePath: try WinePath.windowsPath(for: steam, in: bottle),
+                bottle: bottle, profile: steamProfile, analysis: steamAnalysis,
+                recipe: nil, installed: InstalledRenderers(available: [.wineD3D])
+            )
+            let steamLog = self.paths.logs.appendingPathComponent("\(steamPlan.id.uuidString)-steam-\(resolution.renderer.rawValue).log")
+            let steamStartedAt = Date()
+            _ = try await gamingProvider.launchDetached(steamPlan, logURL: steamLog)
+            self.status = "正在等待 Steam 登录…"
+            let loginDeadline = Date().addingTimeInterval(30)
+            var steamLoggedOn = SteamCompatibilityManager.isLoggedOn(in: bottle, since: steamStartedAt)
+            while !steamLoggedOn && Date() < loginDeadline {
+                try Task.checkCancellation()
+                try await Task.sleep(for: .seconds(1))
+                steamLoggedOn = SteamCompatibilityManager.isLoggedOn(in: bottle, since: steamStartedAt)
+            }
+            if !steamLoggedOn {
+                // Steam's connection manager can remain offline during a CDN
+                // or account-service outage. Do not prevent a locally installed
+                // single-player title from trying its own offline-mode path.
+                self.status = "Steam 尚未联网，正在尝试离线启动 \(game.name)…"
+            }
+
             var gameEnvironment = environment
             gameEnvironment["SteamAppId"] = String(game.appID)
             gameEnvironment["SteamGameId"] = String(game.appID)
             var gameArguments = executable == launcher ? [] : [launcher.deletingPathExtension().lastPathComponent]
-            if shaderPreparation.needsWarmupProtection,
+            if needsWarmupProtection,
                executable.lastPathComponent.lowercased().contains("-win64-shipping") {
                 // D3DMetal may need more than UE's 120-second RenderThread
                 // watchdog allowance while rebuilding a large pipeline cache.
@@ -374,23 +389,24 @@ final class IndieAppModel: ObservableObject {
                 }
             }
             let gameProfile = LaunchProfile(
-                runtimeID: gamingRuntime.manifest.id,
-                preferredRenderer: .d3dMetal,
+                runtimeID: gamingProvider.manifest.id,
+                preferredRenderer: resolution.renderer,
                 syncBackend: .msync,
                 arguments: gameArguments,
                 environment: gameEnvironment,
-                metalHUD: recipeProfile?.metalHUD ?? UserDefaults.standard.bool(forKey: "metalHUD")
+                metalHUD: metalHUDEnabled
             )
             let gamePlan = try LaunchPlanBuilder.build(
                 executable: executable,
                 windowsExecutablePath: try WinePath.windowsPath(for: executable, in: bottle),
                 bottle: bottle, profile: gameProfile, analysis: analysis,
-                recipe: recipe, installed: InstalledRenderers(available: [.d3dMetal])
+                recipe: recipe,
+                installed: installedRenderers
             )
-            let log = self.paths.logs.appendingPathComponent("\(gamePlan.id.uuidString)-d3dmetal.log")
-            self.status = shaderPreparation.needsWarmupProtection
+            let log = self.paths.logs.appendingPathComponent("\(gamePlan.id.uuidString)-\(resolution.renderer.rawValue).log")
+            self.status = needsWarmupProtection
                 ? "\(game.name) 正在首次构建图形缓存，可能需要几分钟…"
-                : "\(game.name) 正在通过 Steam + D3DMetal 4 运行"
+                : "\(game.name) 正在通过 Indie Wine 11 + \(resolution.renderer.rawValue.uppercased()) 运行"
             await Task.yield()
             let session = await gamingProvider.launch(gamePlan, logURL: log) { processID in
                 Task { @MainActor in
@@ -449,8 +465,8 @@ final class IndieAppModel: ObservableObject {
 
     func play(_ game: GameRecord) async {
         await perform("正在准备 \(game.displayName)…") {
-            guard let runtime = self.wineRuntimes.first else {
-                throw IndieError.notFound("请先在“运行时”页面导入兼容的 macOS Wine 11 运行时")
+            guard let runtime = self.gamingWineRuntime else {
+                throw IndieError.notFound("请先准备 Indie Wine 11 开源运行环境")
             }
             let provider = WineRuntimeProvider(manifest: runtime.manifest, root: runtime.root)
             let bottle: BottleRecord
@@ -538,7 +554,7 @@ final class IndieAppModel: ObservableObject {
             guard component.rendererRoot != nil else {
                 throw IndieError.invalidData("GPTK 4 镜像缺少 D3DMetal Wine Bridge；请确认下载的是 Windows 游戏评估环境")
             }
-            self.status = "正在安装支持现代 Steam 的开源游戏引擎（约 250 MB）…"
+            self.status = "正在安装支持现代 Steam 的 Indie Wine 11（约 50 MB）…"
             _ = try await self.communityGamingWine.installLatest()
             self.wineRuntimes = await self.wineImporter.installed()
             self.status = "GPTK \(component.version) 已验证并安装，可以启动游戏"

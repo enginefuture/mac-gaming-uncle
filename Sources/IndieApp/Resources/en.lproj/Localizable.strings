@@ -27,7 +27,7 @@
 "runtime.gptk.detail" = "D3DMetal is Apple's DirectX 11/12 to Metal layer from GPTK. Indie only imports and verifies the copy you obtain from Apple.";
 "runtime.downloadGPTK" = "Open Apple Download Page";
 "runtime.importGPTK" = "Import GPTK";
-"runtime.wine.detail" = "Release runtimes are installed using signed manifests. Wine and commercial CrossOver binaries are not stored in this repository.";
+"runtime.wine.detail" = "Indie builds Wine 11 from public corresponding source and does not bundle or redistribute commercial CrossOver binaries.";
 "runtime.importWine" = "Import local Wine";
 "runtime.importDXMT" = "Import DXMT";
 "runtime.importDXVK" = "Import DXVK";

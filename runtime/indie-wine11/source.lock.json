@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "runtime": "Indie Wine 11",
+  "wineVersion": "11.0",
+  "upstreamDistribution": "CodeWeavers CrossOver FOSS source",
+  "upstreamVersion": "26.3.0",
+  "sourceURL": "https://media.codeweavers.com/pub/crossover/source/crossover-sources-26.3.0.tar.gz",
+  "sourceSHA256": "ac99c8ca4b3848f3e81784135f023df266b61c2345726ea55a50b3e030dd6872",
+  "sourceSize": 149054023,
+  "wineSourcePath": "sources/wine",
+  "freetypeSourcePath": "sources/freetype",
+  "bundledDependencySourcePaths": {
+    "gmp": "sources/gnutls/gmp",
+    "gnutls": "sources/gnutls/gnutls"
+  },
+  "additionalSources": [
+    {
+      "name": "Nettle",
+      "version": "3.10",
+      "url": "https://ftp.gnu.org/gnu/nettle/nettle-3.10.tar.gz",
+      "sha256": "b4c518adb174e484cb4acea54118f02380c7133771e7e9beb98a0787194ee47c",
+      "size": 2640485,
+      "reason": "The CrossOver source archive contains Nettle sources but omits its generated Makefile.in."
+    }
+  ],
+  "buildToolchain": {
+    "hostCompiler": "Apple Clang from Xcode 26.6",
+    "peCompiler": "LLVM Clang 23 with LLD",
+    "peArchitectures": ["i386", "x86_64"],
+    "wow64Mode": "new WoW64",
+    "sourceDateEpoch": 1768262400
+  },
+  "indiePatches": [
+    "0001-allow-d3dmetal-build-without-vulkan.patch",
+    "0002-remove-proprietary-compatdb-loader.patch",
+    "0003-native-winedllpath-prepend.patch"
+  ],
+  "runtimeFeatures": [
+    "CodeWeavers macOS driver patches present in the published LGPL source",
+    "MSync",
+    "new WoW64",
+    "native WINEDLLPATH_PREPEND support for user-imported D3DMetal"
+  ],
+  "licenses": [
+    "LGPL-2.1-or-later",
+    "LGPL-3.0-or-later OR GPL-2.0-or-later",
+    "FTL-or-GPL-2.0-only"
+  ],
+  "closedSourcePayloads": []
+}
