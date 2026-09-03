@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://indie.dev/schemas/runtime-manifest-v1.json",
+  "title": "Indie Runtime Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "displayName", "version", "channel", "hostArchitecture", "minimumMacOS", "capabilities", "artifacts", "licenses", "publishedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string", "minLength": 1},
+    "displayName": {"type": "string", "minLength": 1},
+    "version": {"$ref": "#/$defs/version"},
+    "channel": {"enum": ["stable", "candidate", "experimental"]},
+    "hostArchitecture": {"enum": ["x86_64", "arm64"]},
+    "minimumMacOS": {"$ref": "#/$defs/version"},
+    "capabilities": {
+      "type": "object",
+      "required": ["architectures", "renderers", "supportsWoW64", "supportsMSync"],
+      "properties": {
+        "architectures": {"type": "array", "items": {"enum": ["i386", "x86_64", "arm64", "arm64ec"]}, "uniqueItems": true},
+        "renderers": {"type": "array", "items": {"enum": ["d3dmetal", "dxmt", "dxvk", "wined3d", "vkd3d"]}, "uniqueItems": true},
+        "supportsWoW64": {"type": "boolean"},
+        "supportsMSync": {"type": "boolean"}
+      }
+    },
+    "artifacts": {"type": "array"},
+    "licenses": {"type": "array"},
+    "publishedAt": {"type": "string", "format": "date-time"},
+    "signature": {"type": ["string", "null"]}
+  },
+  "$defs": {
+    "version": {
+      "type": "object",
+      "required": ["major", "minor", "patch"],
+      "properties": {"major": {"type": "integer"}, "minor": {"type": "integer"}, "patch": {"type": "integer"}, "prerelease": {"type": ["string", "null"]}}
+    }
+  }
+}

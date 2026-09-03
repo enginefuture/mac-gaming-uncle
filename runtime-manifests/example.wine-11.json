@@ -1,0 +1,29 @@
+{
+  "artifacts" : [{
+    "archiveRoot" : "wine-runtime",
+    "sha256" : "0000000000000000000000000000000000000000000000000000000000000000",
+    "size" : 0,
+    "url" : "https://example.invalid/indie/wine-11.0-macos-x86_64.tar.xz"
+  }],
+  "capabilities" : {
+    "architectures" : ["i386", "x86_64"],
+    "renderers" : ["wined3d"],
+    "supportsMSync" : true,
+    "supportsWoW64" : true
+  },
+  "channel" : "stable",
+  "displayName" : "Indie Wine 11.0",
+  "hostArchitecture" : "x86_64",
+  "id" : "dev.indie.runtime.wine",
+  "licenses" : [{
+    "correspondingSourceURL" : "https://gitlab.winehq.org/wine/wine/-/releases/wine-11.0",
+    "identifier" : "LGPL-2.1-or-later",
+    "name" : "Wine GNU LGPL",
+    "sourceURL" : "https://gitlab.winehq.org/wine/wine"
+  }],
+  "minimumMacOS" : {"major":15,"minor":0,"patch":0},
+  "publishedAt" : "2026-09-03T00:00:00Z",
+  "schemaVersion" : 1,
+  "signature" : null,
+  "version" : {"major":11,"minor":0,"patch":0}
+}

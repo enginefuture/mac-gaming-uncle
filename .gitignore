@@ -1,0 +1,13 @@
+.DS_Store
+.build/
+.swiftpm/
+DerivedData/
+dist/
+*.xcarchive
+*.dmg
+*.zip
+.swiftpm/xcode/package.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+Local.xcconfig
+runtime-artifacts/
+*.log

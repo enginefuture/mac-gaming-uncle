@@ -1,0 +1,26 @@
+{
+  "antiCheat": "none",
+  "executableNames": ["ruinsofdawn-win64-shipping.exe"],
+  "id": "indie.steam.4364910.ruins-of-dawn",
+  "knownIssues": [
+    "UE 5.5 的并行 RHI 线程在 D3DMetal 4 下可能卡住；此配方将 RHI 提交合并到渲染线程。",
+    "首次构建 D3DMetal 图形缓存可能需要几分钟。"
+  ],
+  "name": "Ruins of Dawn",
+  "profiles": [
+    {
+      "arguments": ["-norhithread", "-nothreadtimeout"],
+      "dllOverrides": {},
+      "environment": {
+        "WINEESYNC": "1",
+        "WINEMSYNC": "1"
+      },
+      "highResolution": true,
+      "renderer": "d3dmetal",
+      "syncBackend": "msync"
+    }
+  ],
+  "provenance": [],
+  "schemaVersion": 1,
+  "steamAppIDs": [4364910]
+}

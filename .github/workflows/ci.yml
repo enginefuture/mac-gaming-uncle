@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show toolchain
+        run: swift --version
+      - name: Test
+        run: swift test
+      - name: Build release binaries
+        run: |
+          swift build -c release --product IndieApp
+          swift build -c release --product indiectl
+      - name: Build application bundle
+        run: scripts/build-app.sh

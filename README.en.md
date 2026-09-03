@@ -1,0 +1,130 @@
+<div align="center">
+  <img src="Assets/IndieIcon.png" width="144" alt="Indie icon">
+  <h1>Indie</h1>
+  <p><strong>Run Windows games you own on Apple Silicon Macs.</strong></p>
+  <p>Native SwiftUI · Wine · Apple D3DMetal · MetalFX · DXVK</p>
+  <p>English · <a href="README.md">简体中文</a></p>
+</div>
+
+> [!IMPORTANT]
+> Indie is an open-source compatibility research project. It is not a virtual machine and does not include Windows, Steam, games, or Apple D3DMetal. Apple components must be obtained by the user from the official Apple Developer site and imported locally.
+
+## Project status
+
+Indie is currently a `0.1.0` research preview for Apple Silicon and macOS 15 or later. The native app covers environment setup, Windows Steam installation, Steam library discovery, and D3DMetal game launching.
+
+Hardware validation: Apple M3 Max, macOS 26.6.2, GPTK 4.0 beta 2, and Sikarugir Wine 10. `Ruins of Dawn` has been validated through its main menu with Steam integration enabled.
+
+## Features
+
+- Native SwiftUI/AppKit interface with a guided Chinese onboarding flow.
+- Downloads the Windows Steam installer from Valve's official CDN.
+- Opens Apple's official download page, watches for GPTK 4, and automatically verifies the DMG, SHA-256, and Apple code signature.
+- Imports the complete D3DMetal framework, Wine PE bridge, and Unix bridge without redistributing Apple binaries.
+- Installs pinned, checksummed Sikarugir Wine gaming runtimes and the macOS DXVK overlay.
+- Repairs Steam CEF compatibility and installs CJK fonts with DirectWrite font linking.
+- Waits for Steam authentication, then resolves and launches the real `*-Win64-Shipping.exe` executable.
+- Invalidates shader caches when the GPTK version, source hash, MetalFX, DXR, Metal 4, macOS version, or compatibility arguments change.
+- Auditable game recipes matched by Steam AppID and executable name.
+- Static PE architecture, DirectX import, and anti-cheat inspection; kernel anti-cheat is blocked before launch.
+- SQLite state, isolated Wine bottles, recoverable backups, CLI diagnostics, and 30 automated tests.
+
+## How it works
+
+```text
+Windows game
+     │
+     ├─ Win32 / Win64 APIs ──────────────→ Wine
+     ├─ x86_64 instructions ─────────────→ Rosetta 2
+     └─ Direct3D 11 / 12 ─→ D3DMetal ───→ Metal
+                           └→ DXVK/MoltenVK (fallback)
+
+Steam AppManifest → discovery → game recipe → immutable LaunchPlan → isolated bottle
+```
+
+Indie composes, verifies, and launches these layers. It does not modify game content or bypass DRM, licensing, or anti-cheat systems.
+
+## Quick start
+
+### Requirements
+
+- Apple Silicon Mac
+- macOS 15 or later
+- Xcode 26, or a compatible full Swift 6 toolchain
+- An Apple Developer login for the initial D3DMetal download
+- A Steam account and games you legally own
+
+### Build from source
+
+```bash
+git clone https://github.com/enginefuture/indie.git
+cd indie
+scripts/build-app.sh
+open dist/Indie.app
+```
+
+Development builds are ad-hoc signed. Set a Developer ID for distribution:
+
+```bash
+INDIE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+  scripts/build-app.sh
+```
+
+### First run
+
+1. Select “Prepare environment” to install the open-source Wine runtime.
+2. Select “Install GPTK 4.” Indie opens the official Apple page. After the user signs in and starts the download, verification and import continue automatically.
+3. Select “Install Steam,” complete the Windows Steam installer inside Wine, and sign in.
+4. Install a game in Steam, return to Indie's Library, and scan Steam.
+5. Select “Launch with D3DMetal.” The first graphics-cache build may take several minutes.
+
+MetalFX/DLSS mapping is experimental and disabled by default. It can only help games that already implement DLSS. Keep it disabled if a game shows a black screen or GPU timeout.
+
+## Development and testing
+
+```bash
+swift test
+swift build -c release
+swift run indiectl --json doctor
+scripts/check.sh
+```
+
+Useful CLI commands:
+
+```text
+indiectl doctor
+indiectl pe <game.exe>
+indiectl steam-scan <steamapps-directory>
+indiectl recipes validate <recipes-directory>
+indiectl gptk import <apple-gptk.dmg|mounted-directory>
+indiectl wine latest
+indiectl wine gaming-install
+indiectl dxvk install <bottle-root>
+indiectl steam repair <bottle-root> [wrapper.exe]
+indiectl fonts repair <bottle-root> <runtime-root>
+```
+
+Further reading:
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Runtime supply chain](docs/RUNTIME_SUPPLY_CHAIN.md)
+- [Testing guide](docs/TESTING.md)
+- [Third-party notices](THIRD_PARTY_NOTICES.md)
+
+## Compatibility boundaries
+
+- Wine is a compatibility layer, not a security sandbox. Windows processes still run with the current macOS user's permissions.
+- Kernel anti-cheat, Windows drivers, UWP, some DRM systems, and software requiring AVX-512 generally do not work.
+- Compatibility for 32-bit titles, D3D9/10/11, launchers, and video playback varies by game.
+- D3DMetal, Steam, and games remain subject to their own terms. This repository does not provide those binaries.
+- Indie is not affiliated with Apple, Valve, CodeWeavers, or any game publisher.
+
+## Contributing
+
+Reproducible compatibility reports, game recipes, tests, and code improvements are welcome. Issues should include the Mac model, macOS version, GPTK/D3DMetal version, Steam AppID, launch arguments, and relevant logs with personal information removed.
+
+Do not submit game files, account credentials, Apple download media, D3DMetal binaries, or material intended to bypass DRM or anti-cheat systems.
+
+## License
+
+Indie source code is licensed under the [Apache License 2.0](LICENSE). Third-party components remain under their own licenses or terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

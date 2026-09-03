@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://indie.dev/schemas/game-recipe-v1.json",
+  "title": "Indie Game Recipe v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "name", "steamAppIDs", "executableNames", "antiCheat", "profiles", "knownIssues", "provenance"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string", "pattern": "^[a-z0-9._-]+$"},
+    "name": {"type": "string", "minLength": 1},
+    "steamAppIDs": {"type": "array", "items": {"type": "integer", "minimum": 1}, "uniqueItems": true},
+    "executableNames": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "minimumRuntimeVersion": {"type": ["object", "null"]},
+    "antiCheat": {"enum": ["none", "user-space", "kernel", "unknown"]},
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["renderer", "syncBackend", "environment", "dllOverrides", "arguments", "highResolution"],
+        "properties": {
+          "renderer": {"enum": ["d3dmetal", "dxmt", "dxvk", "wined3d", "vkd3d"]},
+          "syncBackend": {"enum": ["automatic", "msync", "wineserver"]},
+          "environment": {"type": "object", "additionalProperties": {"type": "string"}},
+          "dllOverrides": {"type": "object", "additionalProperties": {"type": "string"}},
+          "arguments": {"type": "array", "items": {"type": "string"}},
+          "highResolution": {"type": "boolean"}
+        }
+      }
+    },
+    "knownIssues": {"type": "array", "items": {"type": "string"}},
+    "provenance": {"type": "array", "items": {"type": "string", "format": "uri"}}
+  }
+}
