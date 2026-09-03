@@ -4,13 +4,26 @@ set -euo pipefail
 indie_root=${0:A:h:h}
 indie_output="$indie_root/.build/runtime-support"
 indie_compiler=${INDIE_MINGW_CC:-/opt/homebrew/bin/x86_64-w64-mingw32-gcc}
+indie_prebuilt="$indie_root/RuntimeSupport/SteamWebHelperWrapper/steamwebhelper-wrapper.exe"
+indie_prebuilt_sha256="83522d75ecc1df696c3474682a198d62d6af88d0b4bc31a932a22a8df1a409c0"
 
 if [[ ! -x "$indie_compiler" ]]; then
   indie_compiler=$(command -v x86_64-w64-mingw32-gcc || true)
 fi
 if [[ -z "$indie_compiler" || ! -x "$indie_compiler" ]]; then
-  print -u2 "x86_64-w64-mingw32-gcc is required to build the Steam CEF wrapper"
-  exit 1
+  if [[ ! -f "$indie_prebuilt" ]]; then
+    print -u2 "x86_64-w64-mingw32-gcc is unavailable and the verified prebuilt Steam CEF wrapper is missing"
+    exit 1
+  fi
+  indie_actual_sha256=$(shasum -a 256 "$indie_prebuilt" | awk '{print $1}')
+  if [[ "$indie_actual_sha256" != "$indie_prebuilt_sha256" ]]; then
+    print -u2 "prebuilt Steam CEF wrapper failed SHA-256 verification"
+    exit 1
+  fi
+  mkdir -p "$indie_output"
+  ditto "$indie_prebuilt" "$indie_output/steamwebhelper-wrapper.exe"
+  shasum -a 256 "$indie_output/steamwebhelper-wrapper.exe"
+  exit 0
 fi
 
 mkdir -p "$indie_output"
