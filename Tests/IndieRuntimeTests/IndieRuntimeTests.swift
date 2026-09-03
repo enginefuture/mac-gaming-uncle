@@ -47,6 +47,17 @@ final class IndieRuntimeTests: XCTestCase {
         XCTAssertEqual(plan.arguments, ["Game", "-norhithread"])
     }
 
+    func testSubprocessEnvironmentDoesNotLeakUnrelatedSecrets() {
+        let environment = Subprocess.sanitizedEnvironment(
+            inherited: ["HOME": "/Users/test", "PATH": "/usr/bin", "API_SECRET": "do-not-inherit"],
+            overrides: ["WINEPREFIX": "/tmp/bottle", "LANG": "zh_CN.UTF-8"]
+        )
+        XCTAssertEqual(environment["HOME"], "/Users/test")
+        XCTAssertEqual(environment["WINEPREFIX"], "/tmp/bottle")
+        XCTAssertEqual(environment["LANG"], "zh_CN.UTF-8")
+        XCTAssertNil(environment["API_SECRET"])
+    }
+
     func testKernelAntiCheatIsBlocked() {
         let analysis = GameAnalysis(
             identity: GameIdentity(executableName: "blocked.exe"), architecture: .x86_64,

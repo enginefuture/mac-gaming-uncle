@@ -27,7 +27,7 @@ Indie 目前处于 `0.1.0` 研究预览阶段，面向 Apple Silicon 与 macOS 1
 - 按 GPTK 版本、安装包哈希、MetalFX、DXR、Metal 4、macOS 和游戏参数管理着色器缓存。
 - Steam AppID/EXE 双重匹配的可审计游戏配方系统。
 - PE 架构、DirectX 导入和反作弊静态检测；内核级反作弊会在启动前阻断。
-- SQLite 状态存储、Bottle 隔离、可恢复备份、CLI 诊断和 30 项自动化测试。
+- SQLite 状态存储、Bottle 隔离、可恢复备份、CLI 诊断和 31 项自动化测试。
 
 ## 工作原理
 

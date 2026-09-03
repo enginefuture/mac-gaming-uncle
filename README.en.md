@@ -27,7 +27,7 @@ Hardware validation: Apple M3 Max, macOS 26.6.2, GPTK 4.0 beta 2, and Sikarugir 
 - Invalidates shader caches when the GPTK version, source hash, MetalFX, DXR, Metal 4, macOS version, or compatibility arguments change.
 - Auditable game recipes matched by Steam AppID and executable name.
 - Static PE architecture, DirectX import, and anti-cheat inspection; kernel anti-cheat is blocked before launch.
-- SQLite state, isolated Wine bottles, recoverable backups, CLI diagnostics, and 30 automated tests.
+- SQLite state, isolated Wine bottles, recoverable backups, CLI diagnostics, and 31 automated tests.
 
 ## How it works
 

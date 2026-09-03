@@ -131,9 +131,11 @@ public struct WineRuntimeProvider: RuntimeProvider, Sendable {
             timeout: .seconds(15),
             requireSuccess: false
         )
+        await WineProcessReaper.terminate(runtimeRoot: root)
     }
 
     public func prepareBottleForInstaller(_ bottle: BottleRecord) async throws {
+        await stopBottle(bottle)
         try await registerCJKFonts(in: bottle)
         await stopBottle(bottle)
     }

@@ -52,6 +52,7 @@ final class IndieCatalogTests: XCTestCase {
         let recipe = repository.match(analysis)
         XCTAssertEqual(recipe?.id, "indie.steam.4364910.ruins-of-dawn")
         XCTAssertTrue(recipe?.profiles.first?.arguments.contains("-norhithread") == true)
+        XCTAssertEqual(recipe?.profiles.first?.metalHUD, false)
     }
 
     func testSteamScannerMapsWindowsDriveInsideBottle() throws {

@@ -103,6 +103,24 @@ final class IndieAppModel: ObservableObject {
         } catch { present(error) }
     }
 
+    func handleDeepLink(_ url: URL) {
+        guard url.scheme?.lowercased() == "indie", url.host?.lowercased() == "launch",
+              let appIDText = url.pathComponents.dropFirst().first,
+              let appID = UInt64(appIDText) else {
+            present(IndieError.invalidArgument("无法识别 Indie 链接：\(url.absoluteString)"))
+            return
+        }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            while self.isWorking { try? await Task.sleep(for: .milliseconds(100)) }
+            guard let game = self.steamGames.first(where: { $0.appID == appID }) else {
+                self.present(IndieError.notFound("Steam 游戏库中没有 AppID \(appID)"))
+                return
+            }
+            await self.launchSteamGame(game)
+        }
+    }
+
     func prepareEnvironment() async {
         await perform("正在查找最新的兼容运行环境…") {
             guard self.systemReport?.isSupported == true else {
@@ -274,7 +292,7 @@ final class IndieAppModel: ObservableObject {
                 "DYLD_LIBRARY_PATH": frameworks.path,
                 "DYLD_FALLBACK_LIBRARY_PATH": "\(renderer.appendingPathComponent("external").path):\(frameworks.path)",
             ]
-            environment["D3DM_UNBUFFERED_OUTPUT"] = "1"
+            environment["D3DM_UNBUFFERED_OUTPUT"] = "0"
             environment["D3DM_SUPPORT_DXR"] = "0"
             environment["ROSETTA_ADVERTISE_AVX"] = "1"
             // Match the synchronization defaults used by the Sikarugir
@@ -329,7 +347,8 @@ final class IndieAppModel: ObservableObject {
                 try PEAnalyzer.analyze(at: executable, steamAppID: game.appID)
             }.value
             let recipe = self.recipeRepository.match(analysis)
-            let recipeArguments = recipe?.profiles.first { $0.renderer == .d3dMetal }?.arguments ?? []
+            let recipeProfile = recipe?.profiles.first { $0.renderer == .d3dMetal }
+            let recipeArguments = recipeProfile?.arguments ?? []
             let shaderPreparation = try D3DMetalShaderCacheManager.prepare(
                 executableName: executable.lastPathComponent,
                 profile: D3DMetalShaderProfile(
@@ -360,7 +379,7 @@ final class IndieAppModel: ObservableObject {
                 syncBackend: .msync,
                 arguments: gameArguments,
                 environment: gameEnvironment,
-                metalHUD: UserDefaults.standard.bool(forKey: "metalHUD")
+                metalHUD: recipeProfile?.metalHUD ?? UserDefaults.standard.bool(forKey: "metalHUD")
             )
             let gamePlan = try LaunchPlanBuilder.build(
                 executable: executable,

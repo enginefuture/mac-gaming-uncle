@@ -7,6 +7,14 @@
     <key>CFBundleExecutable</key><string>IndieApp</string>
     <key>CFBundleIconFile</key><string>Indie.icns</string>
     <key>CFBundleIdentifier</key><string>dev.indie.macgaming</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key><string>dev.indie.macgaming</string>
+            <key>CFBundleURLSchemes</key>
+            <array><string>indie</string></array>
+        </dict>
+    </array>
     <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
     <key>CFBundleName</key><string>Indie</string>
     <key>CFBundlePackageType</key><string>APPL</string>

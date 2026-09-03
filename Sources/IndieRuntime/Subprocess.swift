@@ -52,7 +52,7 @@ public actor Subprocess {
         process.currentDirectoryURL = workingDirectory
         process.standardOutput = stdoutHandle
         process.standardError = stderrHandle
-        process.environment = ProcessInfo.processInfo.environment.merging(environment) { _, new in new }
+        process.environment = Self.sanitizedEnvironment(overrides: environment)
         try process.run()
         onStart?(process.processIdentifier)
 
@@ -118,9 +118,25 @@ public actor Subprocess {
         process.currentDirectoryURL = workingDirectory
         process.standardOutput = log
         process.standardError = log
-        process.environment = ProcessInfo.processInfo.environment.merging(environment) { _, new in new }
+        process.environment = Self.sanitizedEnvironment(overrides: environment)
         try process.run()
         try log.close()
         return process.processIdentifier
+    }
+
+    static func sanitizedEnvironment(
+        inherited: [String: String] = ProcessInfo.processInfo.environment,
+        overrides: [String: String]
+    ) -> [String: String] {
+        let allowed = [
+            "PATH", "HOME", "TMPDIR", "USER", "LOGNAME", "SHELL",
+            "LANG", "LC_ALL", "LC_CTYPE", "DISPLAY", "COMMAND_MODE",
+            "SECURITYSESSIONID", "__CF_USER_TEXT_ENCODING", "MallocNanoZone",
+        ]
+        var result = Dictionary(uniqueKeysWithValues: allowed.compactMap { key in
+            inherited[key].map { (key, $0) }
+        })
+        result.merge(overrides) { _, explicit in explicit }
+        return result
     }
 }
