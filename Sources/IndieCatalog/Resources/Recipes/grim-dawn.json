@@ -15,14 +15,16 @@
         "d3d10core": "b",
         "d3d11": "n,b",
         "d3d12": "n,b",
-        "dxgi": "n,b"
+        "dxgi": "n,b",
+        "gameoverlayrenderer": "d",
+        "gameoverlayrenderer64": "d"
       },
       "environment": {},
       "highResolution": true,
       "metalFX": false,
       "renderer": "d3dmetal",
-      "steamLaunchOption": 1,
-      "syncBackend": "msync"
+      "steamLaunchOption": 0,
+      "syncBackend": "wineserver"
     },
     {
       "arguments": [],

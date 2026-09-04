@@ -213,7 +213,6 @@ final class IndieAppModel: ObservableObject {
                 "LC_ALL": "zh_CN.UTF-8",
                 "WINEDEBUG": "-all",
                 "WINEMSYNC": "1",
-                "WINEESYNC": "1",
                 // Renderer bridges are installed in this shared Steam bottle,
                 // but Steam/CEF must stay on Wine builtins. The selected game
                 // gets its own renderer overrides in gamePlan below.
@@ -307,8 +306,6 @@ final class IndieAppModel: ObservableObject {
                 "LANG": "zh_CN.UTF-8",
                 "LC_ALL": "zh_CN.UTF-8",
                 "WINEDEBUG": "-all",
-                "WINEMSYNC": "1",
-                "WINEESYNC": "1",
             ]
             var needsWarmupProtection = false
             if resolution.renderer == .d3dMetal {
@@ -368,7 +365,7 @@ final class IndieAppModel: ObservableObject {
             let gameProfile = LaunchProfile(
                 runtimeID: gamingProvider.manifest.id,
                 preferredRenderer: resolution.renderer,
-                syncBackend: .msync,
+                syncBackend: recipeProfile?.syncBackend ?? .automatic,
                 arguments: gameArguments,
                 environment: gameEnvironment,
                 metalHUD: metalHUDEnabled
@@ -393,7 +390,9 @@ final class IndieAppModel: ObservableObject {
             let steamProfile = LaunchProfile(
                 runtimeID: gamingRuntime.manifest.id,
                 preferredRenderer: .wineD3D,
-                syncBackend: .msync,
+                // gamePlan.environment already contains the selected backend;
+                // do not silently re-enable MSync for a no-sync recipe.
+                syncBackend: .wineserver,
                 arguments: SteamCompatibilityManager.launchArguments(
                     appID: game.appID,
                     gameArguments: gamePlan.arguments,

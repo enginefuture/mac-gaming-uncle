@@ -42,8 +42,6 @@ public enum D3DMetalLaunchEnvironment {
             "DYLD_FALLBACK_LIBRARY_PATH": fallbackRoots.joined(separator: ":"),
             "D3DM_SUPPORT_DXR": dxr ? "1" : "0",
             "ROSETTA_ADVERTISE_AVX": "1",
-            "WINEMSYNC": "1",
-            "WINEESYNC": "1",
         ]
         if metalHUD {
             environment["MTL_HUD_ENABLED"] = "1"
