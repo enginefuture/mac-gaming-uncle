@@ -303,14 +303,18 @@ public struct RendererProfile: Codable, Hashable, Sendable {
     public let dllOverrides: [String: String]
     public let arguments: [String]
     public let highResolution: Bool
+    /// `nil` follows the user's global preference, `false` disables MetalFX
+    /// for a known-incompatible title, and `true` explicitly permits it.
+    public let metalFX: Bool?
 
-    public init(renderer: RendererKind, syncBackend: SyncBackend = .automatic, environment: [String: String] = [:], dllOverrides: [String: String] = [:], arguments: [String] = [], highResolution: Bool = true) {
+    public init(renderer: RendererKind, syncBackend: SyncBackend = .automatic, environment: [String: String] = [:], dllOverrides: [String: String] = [:], arguments: [String] = [], highResolution: Bool = true, metalFX: Bool? = nil) {
         self.renderer = renderer
         self.syncBackend = syncBackend
         self.environment = environment
         self.dllOverrides = dllOverrides
         self.arguments = arguments
         self.highResolution = highResolution
+        self.metalFX = metalFX
     }
 }
 

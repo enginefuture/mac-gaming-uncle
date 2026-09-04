@@ -72,7 +72,6 @@ public enum LaunchPlanBuilder {
         environment["INDIE_RENDERER"] = resolution.renderer.rawValue
         if profile.metalHUD {
             environment["MTL_HUD_ENABLED"] = "1"
-            environment["MTL_HUD_LOG_ENABLED"] = "1"
         }
         if profile.syncBackend == .msync || recipeProfile?.syncBackend == .msync { environment["WINEMSYNC"] = "1" }
         if let overlay = installed.overlayPaths[resolution.renderer] {

@@ -80,7 +80,7 @@ INDIE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 4. 从 Steam 安装游戏，返回 Indie 的“游戏库”并点击“扫描 Steam”。
 5. 点击游戏旁的“智能启动”。Indie 会按游戏配方选择 D3DMetal、DXMT 或 WineD3D；首次图形缓存构建可能需要几分钟。
 
-MetalFX/DLSS 映射是实验功能且默认关闭。只有游戏本身提供 DLSS 时才可能生效；遇到黑屏或 GPU Timeout 时应保持关闭。
+MetalFX/DLSS 映射是实验功能且默认关闭。只有游戏本身提供 DLSS 时才可能生效；游戏配方可以强制禁用它。`Grim Dawn` 不使用 DLSS，Indie 会忽略全局 MetalFX 开关，避免 NVNGX 显卡伪装导致 UI 消失。
 
 “显示 Apple Metal HUD”会经 Steam 把 Apple HUD 环境变量传给目标游戏；不切换到 Apple Evaluation Wine，也不会跳过 Steam。HUD 只会在实际使用 D3DMetal 或 DXMT 的游戏中出现。`Grim Dawn 1.3` 配方优先 D3DMetal 4，并自动备份 `options.txt`、启用经典 HUD，以规避 1.3 新 HUD 在转译环境中的漏绘问题。
 

@@ -300,7 +300,8 @@ final class IndieAppModel: ObservableObject {
             // D3DMetal made the setting appear broken for DX11 titles whose
             // compatibility recipe deliberately selects DXMT.
             let metalHUDEnabled = wantsMetalHUD && [.d3dMetal, .dxmt].contains(resolution.renderer)
-            let metalFXEnabled = UserDefaults.standard.bool(forKey: "metalFX") && resolution.renderer == .d3dMetal
+            let metalFXEnabled = UserDefaults.standard.bool(forKey: "metalFX") &&
+                resolution.renderer == .d3dMetal && recipeProfile?.metalFX != false
             let metal4Enabled = ProcessInfo.processInfo.operatingSystemVersion.majorVersion >= 27
             var environment = [
                 "LANG": "zh_CN.UTF-8",

@@ -19,6 +19,7 @@
       },
       "environment": {},
       "highResolution": true,
+      "metalFX": false,
       "renderer": "d3dmetal",
       "syncBackend": "msync"
     },

@@ -46,7 +46,7 @@ final class IndieRuntimeTests: XCTestCase {
         )
         XCTAssertEqual(plan.arguments, ["Game", "-norhithread"])
         XCTAssertEqual(plan.environment["MTL_HUD_ENABLED"], "1")
-        XCTAssertEqual(plan.environment["MTL_HUD_LOG_ENABLED"], "1")
+        XCTAssertNil(plan.environment["MTL_HUD_LOG_ENABLED"])
     }
 
     func testSubprocessEnvironmentDoesNotLeakUnrelatedSecrets() {

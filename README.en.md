@@ -80,7 +80,7 @@ INDIE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 4. Install a game in Steam, return to Indie's Library, and scan Steam.
 5. Select “Smart launch.” Indie selects D3DMetal, DXMT, or WineD3D from the game recipe. The first graphics-cache build may take several minutes.
 
-MetalFX/DLSS mapping is experimental and disabled by default. It can only help games that already implement DLSS. Keep it disabled if a game shows a black screen or GPU timeout.
+MetalFX/DLSS mapping is experimental and disabled by default. It can only help games that already implement DLSS, and recipes can explicitly disable it. `Grim Dawn` does not use DLSS, so Indie ignores the global MetalFX toggle for that title to prevent the NVNGX GPU-spoof path from dropping its UI.
 
 “Show Apple Metal HUD” relays Apple's HUD environment through Steam to the target game. It does not switch to Apple Evaluation Wine or bypass Steam. The HUD appears only with D3DMetal or DXMT. The `Grim Dawn 1.3` recipe prefers D3DMetal 4 and backs up `options.txt` before enabling the classic HUD, avoiding the rewritten 1.3 HUD's missing-render-pass issue under translation.
 

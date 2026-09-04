@@ -47,7 +47,6 @@ public enum D3DMetalLaunchEnvironment {
         ]
         if metalHUD {
             environment["MTL_HUD_ENABLED"] = "1"
-            environment["MTL_HUD_LOG_ENABLED"] = "1"
             environment["D3DM_SHOW_HUD_STATS"] = "1"
         } else {
             environment["D3DM_UNBUFFERED_OUTPUT"] = "0"
