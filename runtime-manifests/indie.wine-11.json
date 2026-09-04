@@ -4,7 +4,7 @@
       "archiveRoot": "wine-runtime",
       "sha256": "8bc048c5cff513b34734ac00bbadd762a88516bfab0e8e5ebc6c99b1f832fe0d",
       "size": 43294468,
-      "url": "https://github.com/enginefuture/indie/releases/download/runtime-wine-11.0.0/indie-wine-11.0.0-macos-x86_64.tar.xz"
+      "url": "https://github.com/enginefuture/mac-gaming-uncle/releases/download/runtime-wine-11.0.0/indie-wine-11.0.0-macos-x86_64.tar.xz"
     }
   ],
   "capabilities": {

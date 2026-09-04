@@ -6,8 +6,24 @@
   <p><a href="README.en.md">English</a> · 简体中文</p>
 </div>
 
+<p align="center">
+  <img src="Assets/MacGamingUncleHero.png" width="100%" alt="叔叔没有选错，只是选得太早。">
+</p>
+
 > [!IMPORTANT]
 > Mac Gaming Uncle 是开源兼容性研究项目，不是虚拟机，也不包含 Windows、Steam、游戏或 Apple D3DMetal。Apple 组件只能由用户从 Apple 官方开发者页面获取并在本机导入。
+
+## 为什么做这个项目
+
+过去，“用 Mac 玩游戏”常被当成一句调侃。我们想把它变成一件普通而简单的事：安装应用、登录 Steam、下载游戏、点击开始。用户不应该先学会 Wine、Bottle、图形转译和启动参数，才有资格玩自己已经购买的游戏。
+
+Mac Gaming Uncle 的长期目标，是在 Mac 上提供接近 SteamOS 的体验——由系统吸收兼容层的复杂度，让游戏安装、配置、更新和启动尽可能自动完成。它不是 SteamOS 的移植，也不隶属于 Valve；我们学习的是它“把复杂技术藏在简单体验之后”的产品方向。
+
+### 永久非商业化承诺
+
+Mac Gaming Uncle 官方项目和官方发行将永久保持非商业化：不推出收费版、订阅、广告、付费兼容名单、游戏抽成或用户数据交易。兼容配方、问题记录和关键实现继续公开，项目的成功标准是让更多 Mac 用户更容易玩到自己合法拥有的游戏，而不是收入。
+
+> 本承诺约束官方项目的运营方向。源代码继续使用 Apache License 2.0；该开源许可证允许第三方在遵守许可证的前提下使用和再分发代码，官方项目不会借“非商业化”之名限制正常的开源协作。
 
 ## 项目状态
 
@@ -59,7 +75,7 @@ Mac Gaming Uncle 负责组合、验证和启动这些层。它不会修改游戏
 ### 从源码构建
 
 ```bash
-git clone https://github.com/enginefuture/indie.git mac-gaming-uncle
+git clone https://github.com/enginefuture/mac-gaming-uncle.git
 cd mac-gaming-uncle
 scripts/build-app.sh
 open "dist/Mac Gaming Uncle.app"

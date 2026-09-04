@@ -6,8 +6,24 @@
   <p>English · <a href="README.md">简体中文</a></p>
 </div>
 
+<p align="center">
+  <img src="Assets/MacGamingUncleHero.png" width="100%" alt="Uncle was not wrong—he was simply early.">
+</p>
+
 > [!IMPORTANT]
 > Mac Gaming Uncle is an open-source compatibility research project. It is not a virtual machine and does not include Windows, Steam, games, or Apple D3DMetal. Apple components must be obtained by the user from the official Apple Developer site and imported locally.
+
+## Why this project exists
+
+For years, “gaming on a Mac” was treated as a punchline. We want it to become ordinary and simple: install the app, sign in to Steam, download a game, and press Play. People should not need to learn Wine, bottles, graphics translation, and launch flags before they can enjoy games they already own.
+
+Mac Gaming Uncle's long-term goal is to provide a SteamOS-like experience on the Mac: the system absorbs compatibility complexity while game installation, configuration, updates, and launching become as automatic as possible. It is not a SteamOS port and is not affiliated with Valve; the inspiration is SteamOS's product principle of hiding difficult technology behind a simple experience.
+
+### Permanent noncommercial commitment
+
+The official Mac Gaming Uncle project and its official releases will remain permanently noncommercial: no paid edition, subscriptions, advertising, paid compatibility lists, game commissions, or sale of user data. Compatibility recipes, issue records, and core implementation remain public. Success means helping more Mac users play games they legally own—not generating revenue.
+
+> This commitment governs the official project's operation. The source remains under Apache License 2.0, which permits third-party use and redistribution under its terms; the official project will not use “noncommercial” branding to restrict ordinary open-source collaboration.
 
 ## Project status
 
@@ -59,7 +75,7 @@ Mac Gaming Uncle composes, verifies, and launches these layers. It does not modi
 ### Build from source
 
 ```bash
-git clone https://github.com/enginefuture/indie.git mac-gaming-uncle
+git clone https://github.com/enginefuture/mac-gaming-uncle.git
 cd mac-gaming-uncle
 scripts/build-app.sh
 open "dist/Mac Gaming Uncle.app"
