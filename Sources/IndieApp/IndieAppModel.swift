@@ -380,6 +380,11 @@ final class IndieAppModel: ObservableObject {
                 recipe: recipe,
                 installed: installedRenderers
             )
+            if let option = recipeProfile?.steamLaunchOption {
+                _ = try SteamCompatibilityManager.setDefaultLaunchOption(
+                    appID: game.appID, option: option, in: bottle
+                )
+            }
             guard let steam = self.steamExecutable else { throw IndieError.notFound("尚未完成 Steam 安装") }
             let steamAnalysis = GameAnalysis(
                 identity: GameIdentity(steamAppID: game.appID, executableName: "steam.exe"),
@@ -391,7 +396,8 @@ final class IndieAppModel: ObservableObject {
                 syncBackend: .msync,
                 arguments: SteamCompatibilityManager.launchArguments(
                     appID: game.appID,
-                    gameArguments: gamePlan.arguments
+                    gameArguments: gamePlan.arguments,
+                    launchOption: recipeProfile?.steamLaunchOption
                 ),
                 environment: SteamCompatibilityManager.relayEnvironment(for: gamePlan.environment),
                 metalHUD: false

@@ -53,6 +53,7 @@ final class IndieCatalogTests: XCTestCase {
         let recipe = try XCTUnwrap(repository.match(analysis))
         XCTAssertEqual(recipe.profiles.map(\.renderer), [.d3dMetal, .dxmt, .wineD3D])
         XCTAssertEqual(recipe.profiles.first?.metalFX, false)
+        XCTAssertEqual(recipe.profiles.first?.steamLaunchOption, 1)
     }
 
     func testBuiltInRecipesLoad() throws {

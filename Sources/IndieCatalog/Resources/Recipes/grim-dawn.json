@@ -21,6 +21,7 @@
       "highResolution": true,
       "metalFX": false,
       "renderer": "d3dmetal",
+      "steamLaunchOption": 1,
       "syncBackend": "msync"
     },
     {

@@ -17,13 +17,66 @@ public enum SteamCompatibilityManager {
         return candidates.first { FileManager.default.isReadableFile(atPath: $0.path) }
     }
 
-    public static func launchArguments(appID: UInt64? = nil, gameArguments: [String] = []) -> [String] {
+    public static func launchArguments(
+        appID: UInt64? = nil,
+        gameArguments: [String] = [],
+        launchOption: Int? = nil
+    ) -> [String] {
         var arguments = ["-noverifyfiles", "-no-cef-sandbox"]
         if let appID {
-            arguments.append(contentsOf: ["-applaunch", String(appID)])
-            arguments.append(contentsOf: gameArguments)
+            if launchOption != nil {
+                // Steam's -applaunch always selects the first entry for games
+                // with multiple play options. The launch-dialog contract reads
+                // DefaultLaunchOption and automatically uses the saved choice.
+                arguments.append("steam://launch/\(appID)/dialog")
+            } else {
+                arguments.append(contentsOf: ["-applaunch", String(appID)])
+                arguments.append(contentsOf: gameArguments)
+            }
         }
         return arguments
+    }
+
+    /// Updates an existing per-machine Steam play-option selection. Steam
+    /// creates the opaque machine key after the launch dialog is shown once;
+    /// Indie preserves that key and changes only its numeric value.
+    @discardableResult
+    public static func setDefaultLaunchOption(
+        appID: UInt64,
+        option: Int,
+        in bottle: BottleRecord,
+        fileManager: FileManager = .default
+    ) throws -> Bool {
+        guard option >= 0 else { throw IndieError.invalidArgument("Steam 启动项不能为负数") }
+        let userdata = steamRoot(in: bottle).appendingPathComponent("userdata", isDirectory: true)
+        let users = (try? fileManager.contentsOfDirectory(
+            at: userdata, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]
+        )) ?? []
+        let escapedAppID = NSRegularExpression.escapedPattern(for: String(appID))
+        let pattern = "\\\"\(escapedAppID)\\\"\\s*\\{\\s*\\\"DefaultLaunchOption\\\"\\s*\\{\\s*\\\"[^\\\"]+\\\"\\s*\\\"(\\d+)\\\""
+        let regex = try NSRegularExpression(pattern: pattern)
+        var changed = false
+        for user in users {
+            let config = user.appendingPathComponent("config/localconfig.vdf")
+            guard fileManager.fileExists(atPath: config.path),
+                  let original = try? String(contentsOf: config, encoding: .utf8) else { continue }
+            let range = NSRange(original.startIndex..., in: original)
+            guard let match = regex.firstMatch(in: original, range: range),
+                  let valueRange = Range(match.range(at: 1), in: original) else { continue }
+            var updated = original
+            updated.replaceSubrange(valueRange, with: String(option))
+            guard updated != original else { continue }
+            let backup = bottle.root
+                .appendingPathComponent(".indie-backups/steam-launch-options", isDirectory: true)
+                .appendingPathComponent("\(user.lastPathComponent)-localconfig.vdf")
+            try fileManager.createDirectory(at: backup.deletingLastPathComponent(), withIntermediateDirectories: true)
+            if !fileManager.fileExists(atPath: backup.path) {
+                try fileManager.copyItem(at: config, to: backup)
+            }
+            try updated.write(to: config, atomically: true, encoding: .utf8)
+            changed = true
+        }
+        return changed
     }
 
     /// Steam must create recent game processes itself so SteamAPI and launch

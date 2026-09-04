@@ -306,8 +306,11 @@ public struct RendererProfile: Codable, Hashable, Sendable {
     /// `nil` follows the user's global preference, `false` disables MetalFX
     /// for a known-incompatible title, and `true` explicitly permits it.
     public let metalFX: Bool?
+    /// Zero-based Steam play-option index. When present, Indie persists the
+    /// selection and uses Steam's launch-dialog contract instead of applaunch.
+    public let steamLaunchOption: Int?
 
-    public init(renderer: RendererKind, syncBackend: SyncBackend = .automatic, environment: [String: String] = [:], dllOverrides: [String: String] = [:], arguments: [String] = [], highResolution: Bool = true, metalFX: Bool? = nil) {
+    public init(renderer: RendererKind, syncBackend: SyncBackend = .automatic, environment: [String: String] = [:], dllOverrides: [String: String] = [:], arguments: [String] = [], highResolution: Bool = true, metalFX: Bool? = nil, steamLaunchOption: Int? = nil) {
         self.renderer = renderer
         self.syncBackend = syncBackend
         self.environment = environment
@@ -315,6 +318,7 @@ public struct RendererProfile: Codable, Hashable, Sendable {
         self.arguments = arguments
         self.highResolution = highResolution
         self.metalFX = metalFX
+        self.steamLaunchOption = steamLaunchOption
     }
 }
 

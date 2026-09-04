@@ -26,7 +26,8 @@
           "dllOverrides": {"type": "object", "additionalProperties": {"type": "string"}},
           "arguments": {"type": "array", "items": {"type": "string"}},
           "highResolution": {"type": "boolean"},
-          "metalFX": {"type": ["boolean", "null"]}
+          "metalFX": {"type": ["boolean", "null"]},
+          "steamLaunchOption": {"type": ["integer", "null"], "minimum": 0}
         }
       }
     },

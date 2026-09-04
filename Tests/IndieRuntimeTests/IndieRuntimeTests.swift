@@ -433,6 +433,10 @@ final class IndieRuntimeTests: XCTestCase {
             SteamCompatibilityManager.launchArguments(appID: 42, gameArguments: ["-nothreadtimeout"]),
             ["-noverifyfiles", "-no-cef-sandbox", "-applaunch", "42", "-nothreadtimeout"]
         )
+        XCTAssertEqual(
+            SteamCompatibilityManager.launchArguments(appID: 42, launchOption: 1),
+            ["-noverifyfiles", "-no-cef-sandbox", "steam://launch/42/dialog"]
+        )
         let relayed = SteamCompatibilityManager.relayEnvironment(for: [
             "MTL_HUD_ENABLED": "1",
             "WINEDLLOVERRIDES": "d3d11,dxgi=n,b",
@@ -440,6 +444,33 @@ final class IndieRuntimeTests: XCTestCase {
         XCTAssertEqual(relayed["MTL_HUD_ENABLED"], "1")
         XCTAssertEqual(relayed["WINE_WAIT_CHILD_PIPE_IGNORE"], "steam.exe")
         XCTAssertEqual(relayed["WINEDLLOVERRIDES"], "d3d11,dxgi=n,b;mscoree,mshtml=;winedbg.exe=d")
+    }
+
+    func testSteamDefaultLaunchOptionIsUpdatedWithBackup() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("indie-steam-option-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let bottle = BottleRecord(name: "Steam", root: root, runtimeID: "wine")
+        let config = SteamCompatibilityManager.steamRoot(in: bottle)
+            .appendingPathComponent("userdata/123/config/localconfig.vdf")
+        try FileManager.default.createDirectory(at: config.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let original = #"""
+        "apps"
+        {
+            "219990"
+            {
+                "DefaultLaunchOption"
+                {
+                    "opaque-machine-key" "0"
+                }
+            }
+        }
+        """#
+        try original.write(to: config, atomically: true, encoding: .utf8)
+
+        XCTAssertTrue(try SteamCompatibilityManager.setDefaultLaunchOption(appID: 219990, option: 1, in: bottle))
+        XCTAssertTrue(try String(contentsOf: config, encoding: .utf8).contains(#""opaque-machine-key" "1""#))
+        let backup = root.appendingPathComponent(".indie-backups/steam-launch-options/123-localconfig.vdf")
+        XCTAssertEqual(try String(contentsOf: backup, encoding: .utf8), original)
     }
 
     func testSteamLoggedOnDetectionUsesLatestConnectionState() throws {
