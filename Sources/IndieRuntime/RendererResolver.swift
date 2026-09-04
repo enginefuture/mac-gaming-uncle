@@ -24,7 +24,7 @@ public enum RendererResolver {
         installed: InstalledRenderers
     ) throws -> RendererResolution {
         if analysis.antiCheat == .kernel {
-            throw IndieError.unsupported("检测到内核级反作弊；Indie 不尝试绕过")
+            throw IndieError.unsupported("检测到内核级反作弊；Mac Gaming Uncle 不尝试绕过")
         }
 
         let candidates: [RendererKind]

@@ -14,7 +14,7 @@
     "supportsWoW64": true
   },
   "channel": "experimental",
-  "displayName": "Indie Wine 11 开源游戏引擎",
+  "displayName": "Mac Gaming Uncle Wine 11 开源游戏引擎",
   "hostArchitecture": "x86_64",
   "id": "org.indie.wine11",
   "licenses": [

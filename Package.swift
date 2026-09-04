@@ -2,15 +2,15 @@
 import PackageDescription
 
 let package = Package(
-    name: "Indie",
+    name: "MacGamingUncle",
     defaultLocalization: "zh-Hans",
     platforms: [.macOS(.v15)],
     products: [
         .library(name: "IndieCore", targets: ["IndieCore"]),
         .library(name: "IndieRuntime", targets: ["IndieRuntime"]),
         .library(name: "IndieCatalog", targets: ["IndieCatalog"]),
-        .executable(name: "indiectl", targets: ["IndieCLI"]),
-        .executable(name: "IndieApp", targets: ["IndieApp"]),
+        .executable(name: "macgamingunclectl", targets: ["MacGamingUncleCLI"]),
+        .executable(name: "MacGamingUncleApp", targets: ["MacGamingUncleApp"]),
     ],
     targets: [
         .systemLibrary(
@@ -21,11 +21,11 @@ let package = Package(
         .target(name: "IndieRuntime", dependencies: ["IndieCore"]),
         .target(name: "IndieCatalog", dependencies: ["IndieCore"], resources: [.process("Resources")]),
         .executableTarget(
-            name: "IndieCLI",
+            name: "MacGamingUncleCLI",
             dependencies: ["IndieCore", "IndieRuntime", "IndieCatalog"]
         ),
         .executableTarget(
-            name: "IndieApp",
+            name: "MacGamingUncleApp",
             dependencies: ["IndieCore", "IndieRuntime", "IndieCatalog"],
             resources: [.process("Resources")]
         ),

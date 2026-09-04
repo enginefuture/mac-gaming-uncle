@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "runtime": "Indie Wine 11",
+  "runtime": "Mac Gaming Uncle Wine 11",
   "wineVersion": "11.0",
   "upstreamDistribution": "CodeWeavers CrossOver FOSS source",
   "upstreamVersion": "26.3.0",

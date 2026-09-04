@@ -3,7 +3,7 @@
 "sidebar.runtimes" = "Runtimes";
 "sidebar.diagnostics" = "Diagnostics";
 "overview.title" = "Windows games, at home on Mac";
-"overview.subtitle" = "Indie orchestrates Wine, D3DMetal, and open Metal renderers without installing a Windows VM.";
+"overview.subtitle" = "Mac Gaming Uncle orchestrates Wine, D3DMetal, and open Metal renderers without installing a Windows VM.";
 "overview.quickStart" = "Quick Start";
 "overview.step.runtime" = "Install a signed and verified Wine runtime";
 "overview.step.gptk" = "Import D3DMetal from Apple's Game Porting Toolkit";
@@ -13,7 +13,7 @@
 "status.notImported" = "Not imported";
 "action.refresh" = "Refresh";
 "action.ok" = "OK";
-"error.title" = "Indie couldn't complete the operation";
+"error.title" = "Mac Gaming Uncle couldn't complete the operation";
 "library.title" = "Library";
 "library.scanSteam" = "Scan Steam";
 "library.installSteam" = "Install Steam";
@@ -24,10 +24,10 @@
 "library.local" = "Local games";
 "library.chooseSteamApps" = "Choose steamapps";
 "runtime.title" = "Runtimes";
-"runtime.gptk.detail" = "D3DMetal is Apple's DirectX 11/12 to Metal layer from GPTK. Indie only imports and verifies the copy you obtain from Apple.";
+"runtime.gptk.detail" = "D3DMetal is Apple's DirectX 11/12 to Metal layer from GPTK. Mac Gaming Uncle only imports and verifies the copy you obtain from Apple.";
 "runtime.downloadGPTK" = "Open Apple Download Page";
 "runtime.importGPTK" = "Import GPTK";
-"runtime.wine.detail" = "Indie builds Wine 11 from public corresponding source and does not bundle or redistribute commercial CrossOver binaries.";
+"runtime.wine.detail" = "Mac Gaming Uncle builds Wine 11 from public corresponding source and does not bundle or redistribute commercial CrossOver binaries.";
 "runtime.importWine" = "Import local Wine";
 "runtime.importDXMT" = "Import DXMT";
 "runtime.importDXVK" = "Import DXVK";
@@ -35,4 +35,4 @@
 "diagnostics.title" = "System Diagnostics";
 "settings.channel" = "Update channel";
 "settings.metalHUD" = "Enable Metal HUD by default";
-"settings.privacy" = "Indie collects no telemetry. Compatibility recipes update from an auditable Git repository.";
+"settings.privacy" = "Mac Gaming Uncle collects no telemetry. Compatibility recipes update from an auditable Git repository.";

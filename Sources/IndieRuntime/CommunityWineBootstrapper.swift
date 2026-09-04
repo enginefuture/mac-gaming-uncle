@@ -96,7 +96,7 @@ public actor CommunityWineBootstrapper {
         var request = URLRequest(url: Self.latestReleaseURL)
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
-        request.setValue("Indie/0.1", forHTTPHeaderField: "User-Agent")
+        request.setValue("Mac Gaming Uncle/0.1", forHTTPHeaderField: "User-Agent")
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200,
               http.url?.host?.lowercased() == "api.github.com" else {

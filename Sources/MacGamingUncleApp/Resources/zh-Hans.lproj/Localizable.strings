@@ -3,7 +3,7 @@
 "sidebar.runtimes" = "运行时";
 "sidebar.diagnostics" = "诊断";
 "overview.title" = "Windows 游戏，原生融入 Mac";
-"overview.subtitle" = "Indie 编排 Wine、D3DMetal 与开源 Metal 图形后端，不安装 Windows 虚拟机。";
+"overview.subtitle" = "Mac Gaming Uncle 编排 Wine、D3DMetal 与开源 Metal 图形后端，不安装 Windows 虚拟机。";
 "overview.quickStart" = "开始使用";
 "overview.step.runtime" = "安装经过签名验证的 Wine 运行时";
 "overview.step.gptk" = "从 Apple 官方 Game Porting Toolkit 导入 D3DMetal";
@@ -13,7 +13,7 @@
 "status.notImported" = "未导入";
 "action.refresh" = "刷新";
 "action.ok" = "好";
-"error.title" = "Indie 无法完成操作";
+"error.title" = "Mac Gaming Uncle 无法完成操作";
 "library.title" = "游戏库";
 "library.scanSteam" = "扫描 Steam";
 "library.installSteam" = "安装 Steam";
@@ -24,10 +24,10 @@
 "library.local" = "本地游戏";
 "library.chooseSteamApps" = "选择 steamapps";
 "runtime.title" = "运行时";
-"runtime.gptk.detail" = "D3DMetal 是 Apple 官方 GPTK 中的 DirectX 11/12 → Metal 转译层。Indie 只导入并验证你从 Apple 获取的副本。";
+"runtime.gptk.detail" = "D3DMetal 是 Apple 官方 GPTK 中的 DirectX 11/12 → Metal 转译层。Mac Gaming Uncle 只导入并验证你从 Apple 获取的副本。";
 "runtime.downloadGPTK" = "打开 Apple 下载页";
 "runtime.importGPTK" = "导入 GPTK";
-"runtime.wine.detail" = "Indie 从公开对应源码构建 Wine 11；不封装或分发商业 CrossOver 二进制。";
+"runtime.wine.detail" = "Mac Gaming Uncle 从公开对应源码构建 Wine 11；不封装或分发商业 CrossOver 二进制。";
 "runtime.importWine" = "导入本地 Wine";
 "runtime.importDXMT" = "导入 DXMT";
 "runtime.importDXVK" = "导入 DXVK";
@@ -35,4 +35,4 @@
 "diagnostics.title" = "环境诊断";
 "settings.channel" = "更新通道";
 "settings.metalHUD" = "默认启用 Metal HUD";
-"settings.privacy" = "Indie 不收集遥测数据。兼容配方通过可审计的 Git 仓库更新。";
+"settings.privacy" = "Mac Gaming Uncle 不收集遥测数据。兼容配方通过可审计的 Git 仓库更新。";

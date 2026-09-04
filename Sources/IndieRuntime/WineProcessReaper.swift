@@ -2,7 +2,7 @@ import Darwin
 import Foundation
 
 public enum WineProcessReaper {
-    /// Terminates processes whose real host executable belongs to Indie's
+    /// Terminates processes whose real host executable belongs to Mac Gaming Uncle's
     /// private Wine runtime. This is a fallback for orphaned Wine clients that
     /// no longer respond to `wineserver -k` after the parent app has exited.
     @discardableResult

@@ -343,7 +343,7 @@ final class IndieRuntimeTests: XCTestCase {
 
         let staged = try await SteamInstaller(paths: paths).stageForLaunch(source, in: bottle)
         XCTAssertTrue(FileManager.default.fileExists(atPath: staged.fileURL.path))
-        XCTAssertTrue(staged.windowsPath.hasPrefix("C:\\users\\Public\\Downloads\\Indie\\SteamSetup-"))
+        XCTAssertTrue(staged.windowsPath.hasPrefix("C:\\users\\Public\\Downloads\\Mac Gaming Uncle\\SteamSetup-"))
         XCTAssertEqual(try Data(contentsOf: staged.fileURL), Data("valid-fixture".utf8))
     }
 

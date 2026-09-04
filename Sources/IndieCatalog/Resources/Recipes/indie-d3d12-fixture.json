@@ -1,6 +1,6 @@
 {
   "antiCheat":"none","executableNames":["indie-d3d12-fixture.exe"],"id":"indie.compatibility-lab.d3d12",
-  "knownIssues":["D3DMetal 必须由用户从 Apple 官方 Game Porting Toolkit 导入。"],"name":"Indie Compatibility Lab — Direct3D 12",
+  "knownIssues":["D3DMetal 必须由用户从 Apple 官方 Game Porting Toolkit 导入。"],"name":"Mac Gaming Uncle Compatibility Lab — Direct3D 12",
   "profiles":[
     {"arguments":[],"dllOverrides":{"d3d11":"b","d3d12":"b","dxgi":"b"},"environment":{},"highResolution":true,"renderer":"d3dmetal","syncBackend":"msync"},
     {"arguments":[],"dllOverrides":{},"environment":{},"highResolution":true,"renderer":"vkd3d","syncBackend":"automatic"}

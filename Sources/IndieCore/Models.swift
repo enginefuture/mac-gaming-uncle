@@ -309,7 +309,7 @@ public struct RendererProfile: Codable, Hashable, Sendable {
     /// `nil` follows the user's global preference, while an explicit value
     /// lets a compatibility recipe opt into or out of D3DMetal's Metal 4 path.
     public let metal4: Bool?
-    /// Zero-based Steam play-option index. When present, Indie persists the
+    /// Zero-based Steam play-option index. When present, Mac Gaming Uncle persists the
     /// selection and uses Steam's launch-dialog contract instead of applaunch.
     public let steamLaunchOption: Int?
 

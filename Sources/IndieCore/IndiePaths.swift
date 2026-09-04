@@ -7,6 +7,8 @@ public struct IndiePaths: Sendable {
 
     public static var userDefault: IndiePaths {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        // Keep the original storage location so the rename does not orphan
+        // existing Wine runtimes, Steam bottles, installed games, or caches.
         return IndiePaths(root: base.appendingPathComponent("Indie", isDirectory: true))
     }
 

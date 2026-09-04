@@ -1,6 +1,6 @@
 {
   "antiCheat":"none","executableNames":["indie-d3d11-fixture.exe"],"id":"indie.compatibility-lab.d3d11",
-  "knownIssues":[],"name":"Indie Compatibility Lab — Direct3D 11",
+  "knownIssues":[],"name":"Mac Gaming Uncle Compatibility Lab — Direct3D 11",
   "profiles":[
     {"arguments":[],"dllOverrides":{"d3d10core":"n,b","d3d11":"n,b","dxgi":"n,b"},"environment":{},"highResolution":true,"renderer":"dxmt","syncBackend":"msync"},
     {"arguments":[],"dllOverrides":{},"environment":{},"highResolution":true,"renderer":"d3dmetal","syncBackend":"msync"},

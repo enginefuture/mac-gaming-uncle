@@ -1,11 +1,11 @@
 import SwiftUI
 
 @main
-struct IndieApplication: App {
-    @StateObject private var model = IndieAppModel()
+struct MacGamingUncleApplication: App {
+    @StateObject private var model = MacGamingUncleAppModel()
 
     var body: some Scene {
-        Window("Indie", id: "main") {
+        Window("Mac Gaming Uncle", id: "main") {
             ContentView()
                 .environmentObject(model)
                 .frame(minWidth: 1100, minHeight: 720)

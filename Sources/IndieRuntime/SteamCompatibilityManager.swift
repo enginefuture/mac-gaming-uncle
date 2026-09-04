@@ -39,7 +39,7 @@ public enum SteamCompatibilityManager {
 
     /// Updates an existing per-machine Steam play-option selection. Steam
     /// creates the opaque machine key after the launch dialog is shown once;
-    /// Indie preserves that key and changes only its numeric value.
+    /// Mac Gaming Uncle preserves that key and changes only its numeric value.
     @discardableResult
     public static func setDefaultLaunchOption(
         appID: UInt64,
@@ -114,7 +114,7 @@ public enum SteamCompatibilityManager {
         fileManager: FileManager = .default
     ) throws -> SteamCompatibilityResult {
         guard fileManager.isReadableFile(atPath: wrapper.path) else {
-            throw IndieError.notFound("Indie 缺少 Steam 界面兼容组件，请重新构建应用")
+            throw IndieError.notFound("Mac Gaming Uncle 缺少 Steam 界面兼容组件，请重新构建应用")
         }
         let steam = steamRoot(in: bottle)
         let cef = steam.appendingPathComponent("bin/cef/cef.win64", isDirectory: true)

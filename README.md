@@ -1,19 +1,19 @@
 <div align="center">
-  <img src="Assets/IndieIcon.png" width="144" alt="Indie 图标">
-  <h1>Indie</h1>
+  <img src="Assets/MacGamingUncleIcon.png" width="144" alt="Mac Gaming Uncle 图标">
+  <h1>Mac Gaming Uncle</h1>
   <p><strong>在 Apple Silicon Mac 上运行你拥有的 Windows 游戏。</strong></p>
   <p>原生 SwiftUI · Wine · Apple D3DMetal · MetalFX · DXVK</p>
   <p><a href="README.en.md">English</a> · 简体中文</p>
 </div>
 
 > [!IMPORTANT]
-> Indie 是开源兼容性研究项目，不是虚拟机，也不包含 Windows、Steam、游戏或 Apple D3DMetal。Apple 组件只能由用户从 Apple 官方开发者页面获取并在本机导入。
+> Mac Gaming Uncle 是开源兼容性研究项目，不是虚拟机，也不包含 Windows、Steam、游戏或 Apple D3DMetal。Apple 组件只能由用户从 Apple 官方开发者页面获取并在本机导入。
 
 ## 项目状态
 
-Indie 目前处于 `0.1.0` 研究预览阶段，面向 Apple Silicon 与 macOS 15 及以上版本。应用已经打通环境准备、Windows 版 Steam 安装、Steam 游戏扫描和 D3DMetal 启动闭环。
+Mac Gaming Uncle 目前处于 `0.1.0` 研究预览阶段，面向 Apple Silicon 与 macOS 15 及以上版本。应用已经打通环境准备、Windows 版 Steam 安装、Steam 游戏扫描和 D3DMetal 启动闭环。
 
-实机验证环境：Apple M3 Max、macOS 26.6.2、GPTK 4.0 beta 2、Indie Wine 11.0.1。`Grim Dawn 1.3.0.8 (x64)` 已验证完整中文 UI、Steam 集成与 Apple 官方 Metal HUD（D3D11，实测约 114 FPS）；`Ruins of Dawn` 已验证进入主菜单。
+实机验证环境：Apple M3 Max、macOS 26.6.2、GPTK 4.0 beta 2、Mac Gaming Uncle Wine 11.0.1。`Grim Dawn 1.3.0.8 (x64)` 已验证完整中文 UI、Steam 集成与 Apple 官方 Metal HUD（D3D11，实测约 114 FPS）；`Ruins of Dawn` 已验证进入主菜单。
 
 ## 已实现
 
@@ -21,14 +21,14 @@ Indie 目前处于 `0.1.0` 研究预览阶段，面向 Apple Silicon 与 macOS 1
 - 从 Valve 官方 CDN 下载并安装 Windows 版 Steam。
 - 打开 Apple 官方下载页，监测 GPTK 4 下载并自动完成 DMG、SHA-256 与 Apple 签名验证。
 - 导入完整 D3DMetal framework、Wine PE Bridge 与 Unix Bridge，不重新分发 Apple 二进制。
-- 从公开对应源码构建并安装 Indie Wine 11（GCC 15 MinGW、新 WoW64、MSync、Steam CEF 补丁与原生 D3DMetal Bridge 路径）。
+- 从公开对应源码构建并安装 Mac Gaming Uncle Wine 11（GCC 15 MinGW、新 WoW64、MSync、Steam CEF 补丁与原生 D3DMetal Bridge 路径）。
 - Steam CEF 兼容包装器、中文字体注册与 DirectWrite 字体链接。
 - 解析目标 x64/`*-Win64-Shipping.exe`，再通过 Steam `-applaunch` 创建游戏进程，保证 SteamAPI、渲染器和 HUD 环境完整继承。
 - D3DMetal 原生 PE Bridge 按版本安装到 Bottle，覆盖前自动备份；Steam 更新覆盖 CEF 包装器后会在下次启动自动修复。
 - 按 GPTK 版本、安装包哈希、MetalFX、DXR、Metal 4、macOS 和游戏参数管理着色器缓存。
 - Steam AppID/EXE 双重匹配的可审计游戏配方系统。
 - PE 架构、DirectX 导入和反作弊静态检测；内核级反作弊会在启动前阻断。
-- Apple Metal Performance HUD：由同一个 Indie Wine 11 游戏进程启用，直接显示在游戏画面内。
+- Apple Metal Performance HUD：由同一个 Mac Gaming Uncle Wine 11 游戏进程启用，直接显示在游戏画面内。
 - SQLite 状态存储、Bottle 隔离、可恢复备份、CLI 诊断和自动化测试。
 
 ## 工作原理
@@ -44,7 +44,7 @@ Windows 游戏
 Steam AppManifest → 游戏扫描 → 兼容配方 → 不可变 LaunchPlan → 独立 Bottle
 ```
 
-Indie 负责组合、验证和启动这些层。它不会修改游戏内容，也不会绕过 DRM、授权或反作弊。
+Mac Gaming Uncle 负责组合、验证和启动这些层。它不会修改游戏内容，也不会绕过 DRM、授权或反作弊。
 
 ## 快速开始
 
@@ -59,28 +59,40 @@ Indie 负责组合、验证和启动这些层。它不会修改游戏内容，�
 ### 从源码构建
 
 ```bash
-git clone https://github.com/enginefuture/indie.git
-cd indie
+git clone https://github.com/enginefuture/indie.git mac-gaming-uncle
+cd mac-gaming-uncle
 scripts/build-app.sh
-open dist/Indie.app
+open "dist/Mac Gaming Uncle.app"
+```
+
+生成经过挂载验证的 DMG：
+
+```bash
+scripts/build-dmg.sh
+```
+
+当前开源研究预览使用 ad-hoc 签名，尚未公证。若 Gatekeeper 阻止打开，从 GitHub Release 下载并确认来源后可执行：
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/Mac Gaming Uncle.app"
 ```
 
 开发构建使用 ad-hoc 签名。正式分发时设置 Developer ID：
 
 ```bash
-INDIE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+MAC_GAMING_UNCLE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
   scripts/build-app.sh
 ```
 
 ### 第一次使用
 
-1. 点击“一键准备环境”，安装 Indie 自行构建的开源 Wine 11 运行环境。
-2. 点击“一键安装 GPTK 4”。Indie 会打开 Apple 官方页面；用户登录并点击下载后，其余验证和导入自动完成。
+1. 点击“一键准备环境”，安装 Mac Gaming Uncle 自行构建的开源 Wine 11 运行环境。
+2. 点击“一键安装 GPTK 4”。Mac Gaming Uncle 会打开 Apple 官方页面；用户登录并点击下载后，其余验证和导入自动完成。
 3. 点击“安装 Steam”，在 Wine 安装窗口中完成 Windows 版 Steam 安装并登录。
-4. 从 Steam 安装游戏，返回 Indie 的“游戏库”并点击“扫描 Steam”。
-5. 点击游戏旁的“智能启动”。Indie 会按游戏配方选择 D3DMetal、DXMT 或 WineD3D；首次图形缓存构建可能需要几分钟。
+4. 从 Steam 安装游戏，返回 Mac Gaming Uncle 的“游戏库”并点击“扫描 Steam”。
+5. 点击游戏旁的“智能启动”。Mac Gaming Uncle 会按游戏配方选择 D3DMetal、DXMT 或 WineD3D；首次图形缓存构建可能需要几分钟。
 
-MetalFX/DLSS 映射是实验功能且默认关闭。只有游戏本身提供 DLSS 时才可能生效；游戏配方可以强制禁用它。`Grim Dawn` 不使用 DLSS，Indie 会忽略全局 MetalFX 开关，避免 NVNGX 显卡伪装导致 UI 消失。
+MetalFX/DLSS 映射是实验功能且默认关闭。只有游戏本身提供 DLSS 时才可能生效；游戏配方可以强制禁用它。`Grim Dawn` 不使用 DLSS，Mac Gaming Uncle 会忽略全局 MetalFX 开关，避免 NVNGX 显卡伪装导致 UI 消失。
 
 “优先使用 Metal 4”默认开启，但会先通过当前 `MTLDevice` 查询硬件和系统支持；不支持时自动回退，个别游戏异常时也可在高级设置中手动关闭。D3DMetal 版本、游戏 Direct3D 版本和 Metal 提交路径是三个不同维度，例如 HUD 显示 `Game Porting Toolkit 4.0b2 · D3D11` 完全正常。
 
@@ -91,7 +103,7 @@ MetalFX/DLSS 映射是实验功能且默认关闭。只有游戏本身提供 DLS
 ```bash
 swift test
 swift build -c release
-swift run indiectl --json doctor
+swift run macgamingunclectl --json doctor
 scripts/check.sh
 scripts/build-indie-wine11.sh
 ```
@@ -99,18 +111,18 @@ scripts/build-indie-wine11.sh
 常用 CLI：
 
 ```text
-indiectl doctor
-indiectl pe <game.exe>
-indiectl steam-scan <steamapps-directory>
-indiectl recipes validate <recipes-directory>
-indiectl gptk import <apple-gptk.dmg|mounted-directory>
-indiectl wine latest
-indiectl wine gaming-install
-indiectl wine local-install <runtime-root>
-indiectl dxvk install <bottle-root>
-indiectl dxmt install
-indiectl steam repair <bottle-root> [wrapper.exe]
-indiectl fonts repair <bottle-root> <runtime-root>
+macgamingunclectl doctor
+macgamingunclectl pe <game.exe>
+macgamingunclectl steam-scan <steamapps-directory>
+macgamingunclectl recipes validate <recipes-directory>
+macgamingunclectl gptk import <apple-gptk.dmg|mounted-directory>
+macgamingunclectl wine latest
+macgamingunclectl wine gaming-install
+macgamingunclectl wine local-install <runtime-root>
+macgamingunclectl dxvk install <bottle-root>
+macgamingunclectl dxmt install
+macgamingunclectl steam repair <bottle-root> [wrapper.exe]
+macgamingunclectl fonts repair <bottle-root> <runtime-root>
 ```
 
 更多资料：
@@ -126,7 +138,7 @@ indiectl fonts repair <bottle-root> <runtime-root>
 - 内核级反作弊、Windows 驱动、UWP、部分 DRM 和依赖 AVX-512 的程序通常无法运行。
 - 32 位游戏、D3D9/10/11、启动器和视频播放的兼容性仍因游戏而异。
 - D3DMetal、Steam 和游戏受各自条款约束，本仓库不提供这些二进制文件。
-- Indie 不隶属于 Apple、Valve、CodeWeavers 或任何游戏发行商。
+- Mac Gaming Uncle 不隶属于 Apple、Valve、CodeWeavers 或任何游戏发行商。
 
 ## 参与贡献
 
@@ -136,4 +148,4 @@ indiectl fonts repair <bottle-root> <runtime-root>
 
 ## 许可证
 
-Indie 源代码使用 [Apache License 2.0](LICENSE)。第三方组件继续受各自许可证或使用条款约束，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+Mac Gaming Uncle 源代码使用 [Apache License 2.0](LICENSE)。第三方组件继续受各自许可证或使用条款约束，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

@@ -3,7 +3,7 @@ import IndieCore
 
 /// A complete Apple evaluation runtime is required for D3DMetal. The framework
 /// alone is insufficient because its PE and Unix bridge DLLs must match Wine's
-/// internal ABI. Indie therefore discovers the user-installed GPTK app and runs
+/// internal ABI. Mac Gaming Uncle therefore discovers the user-installed GPTK app and runs
 /// D3DMetal games with that complete runtime without redistributing it.
 public struct AppleGPTKRuntime: Sendable, Equatable {
     public let rootURL: URL

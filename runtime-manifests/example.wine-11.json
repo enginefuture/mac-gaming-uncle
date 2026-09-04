@@ -12,7 +12,7 @@
     "supportsWoW64" : true
   },
   "channel" : "stable",
-  "displayName" : "Indie Wine 11.0",
+  "displayName" : "Mac Gaming Uncle Wine 11.0",
   "hostArchitecture" : "x86_64",
   "id" : "dev.indie.runtime.wine",
   "licenses" : [{

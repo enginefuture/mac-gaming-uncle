@@ -1,7 +1,7 @@
 import Foundation
 import IndieCore
 
-/// Installs the reproducible Wine 11 runtime maintained by Indie.
+/// Installs the reproducible Wine 11 runtime maintained by Mac Gaming Uncle.
 ///
 /// The archive contains only LGPL/open-source Wine and its open-source host
 /// dependencies. Apple D3DMetal remains a separate, user-imported component.
@@ -33,7 +33,7 @@ public actor CommunityIndieWineBootstrapper {
         try paths.createDirectories()
         let sourceRoot = Self.runtimePayloadRoot(in: source)
         guard Self.isCompleteRuntime(sourceRoot) else {
-            throw IndieError.invalidData("本地 Indie Wine 11 构建不完整")
+            throw IndieError.invalidData("本地 Mac Gaming Uncle Wine 11 构建不完整")
         }
         let destination = runtimeDestination
         if FileManager.default.fileExists(atPath: destination.path) {
@@ -74,7 +74,7 @@ public actor CommunityIndieWineBootstrapper {
 
     private func finishInstallation(at root: URL, metadataRoot: URL? = nil) throws -> LocalWineRuntime {
         guard Self.isCompleteRuntime(root) else {
-            throw IndieError.invalidData("Indie Wine 11 运行环境不完整")
+            throw IndieError.invalidData("Mac Gaming Uncle Wine 11 运行环境不完整")
         }
         let installed = LocalWineRuntime(manifest: Self.manifest, root: root, importedAt: Date())
         try IndieJSON.encoder(pretty: true).encode(installed)
@@ -97,7 +97,7 @@ public actor CommunityIndieWineBootstrapper {
 
     public static let manifest = RuntimeManifest(
         id: runtimeID,
-        displayName: "Indie Wine 11 开源游戏引擎",
+        displayName: "Mac Gaming Uncle Wine 11 开源游戏引擎",
         version: version,
         channel: .experimental,
         hostArchitecture: .x86_64,

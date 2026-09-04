@@ -6,7 +6,7 @@ import IndieRuntime
 import Metal
 
 @MainActor
-final class IndieAppModel: ObservableObject {
+final class MacGamingUncleAppModel: ObservableObject {
     @Published var systemReport: SystemReport?
     @Published var games: [GameRecord] = []
     @Published var steamGames: [SteamGame] = []
@@ -104,10 +104,12 @@ final class IndieAppModel: ObservableObject {
     }
 
     func handleDeepLink(_ url: URL) {
-        guard url.scheme?.lowercased() == "indie", url.host?.lowercased() == "launch",
+        guard let scheme = url.scheme?.lowercased(),
+              ["macgaminguncle", "indie"].contains(scheme),
+              url.host?.lowercased() == "launch",
               let appIDText = url.pathComponents.dropFirst().first,
               let appID = UInt64(appIDText) else {
-            present(IndieError.invalidArgument("无法识别 Indie 链接：\(url.absoluteString)"))
+            present(IndieError.invalidArgument("无法识别 Mac Gaming Uncle 链接：\(url.absoluteString)"))
             return
         }
         Task { @MainActor [weak self] in
@@ -122,11 +124,11 @@ final class IndieAppModel: ObservableObject {
     }
 
     func prepareEnvironment() async {
-        await perform("正在安装 Indie Wine 11 开源运行环境…") {
+        await perform("正在安装 Mac Gaming Uncle Wine 11 开源运行环境…") {
             guard self.systemReport?.isSupported == true else {
                 throw IndieError.unsupported("这台 Mac 尚未通过环境检查，请打开高级设置查看原因")
             }
-            self.status = "正在下载并校验 Indie Wine 11…"
+            self.status = "正在下载并校验 Mac Gaming Uncle Wine 11…"
             let installed = try await self.communityGamingWine.installLatest()
             self.wineRuntimes = await self.wineImporter.installed()
             self.status = "游戏运行环境 \(installed.manifest.version) 已准备好"
@@ -153,7 +155,7 @@ final class IndieAppModel: ObservableObject {
     func installSteam() async {
         await perform("正在从 Valve 官方 CDN 下载 Steam…") {
             guard let runtime = self.gamingWineRuntime else {
-                throw IndieError.notFound("请先准备 Indie Wine 11 开源运行环境")
+                throw IndieError.notFound("请先准备 Mac Gaming Uncle Wine 11 开源运行环境")
             }
             let steamInstaller = SteamInstaller(paths: self.paths)
             let installer = try await steamInstaller.download()
@@ -200,7 +202,7 @@ final class IndieAppModel: ObservableObject {
             }
             let provider = WineRuntimeProvider(manifest: runtime.manifest, root: runtime.root)
             guard let wrapper = SteamCompatibilityManager.bundledWrapperURL() else {
-                throw IndieError.notFound("Indie 缺少 Steam 界面兼容组件，请重新安装应用")
+                throw IndieError.notFound("Mac Gaming Uncle 缺少 Steam 界面兼容组件，请重新安装应用")
             }
             await provider.stopBottle(bottle)
             try await provider.prepareBottleForInstaller(bottle)
@@ -246,14 +248,14 @@ final class IndieAppModel: ObservableObject {
                 throw IndieError.notFound("尚未完成 Steam 安装")
             }
             guard let gamingRuntime = self.gamingWineRuntime else {
-                throw IndieError.notFound("需要 Indie Wine 11 游戏引擎，请重新运行环境准备")
+                throw IndieError.notFound("需要 Mac Gaming Uncle Wine 11 游戏引擎，请重新运行环境准备")
             }
             let gamingProvider = WineRuntimeProvider(manifest: gamingRuntime.manifest, root: gamingRuntime.root)
             await gamingProvider.stopBottle(bottle)
             self.status = "正在修复 Steam 中文字体…"
             try await gamingProvider.prepareBottleForInstaller(bottle)
             guard let wrapper = SteamCompatibilityManager.bundledWrapperURL() else {
-                throw IndieError.notFound("Indie 缺少 Steam 界面兼容组件，请重新安装应用")
+                throw IndieError.notFound("Mac Gaming Uncle 缺少 Steam 界面兼容组件，请重新安装应用")
             }
             _ = try SteamCompatibilityManager.prepare(bottle: bottle, wrapper: wrapper)
             let executable = try SteamExecutableResolver.shippingExecutable(for: game)
@@ -480,7 +482,7 @@ final class IndieAppModel: ObservableObject {
     func play(_ game: GameRecord) async {
         await perform("正在准备 \(game.displayName)…") {
             guard let runtime = self.gamingWineRuntime else {
-                throw IndieError.notFound("请先准备 Indie Wine 11 开源运行环境")
+                throw IndieError.notFound("请先准备 Mac Gaming Uncle Wine 11 开源运行环境")
             }
             let provider = WineRuntimeProvider(manifest: runtime.manifest, root: runtime.root)
             let bottle: BottleRecord
@@ -542,7 +544,7 @@ final class IndieAppModel: ObservableObject {
                 guard NSWorkspace.shared.open(downloadPage) else {
                     throw IndieError.processFailed(executable: "浏览器", status: 1, stderr: "无法打开 Apple Developer 下载页")
                 }
-                self.status = "请在 Apple 官方页面点击 GPTK 4 下载；Indie 会自动接管后续安装"
+                self.status = "请在 Apple 官方页面点击 GPTK 4 下载；Mac Gaming Uncle 会自动接管后续安装"
                 let deadline = Date().addingTimeInterval(45 * 60)
                 while snapshot.completedImage == nil {
                     try Task.checkCancellation()
@@ -568,7 +570,7 @@ final class IndieAppModel: ObservableObject {
             guard component.rendererRoot != nil else {
                 throw IndieError.invalidData("GPTK 4 镜像缺少 D3DMetal Wine Bridge；请确认下载的是 Windows 游戏评估环境")
             }
-            self.status = "正在安装支持现代 Steam 的 Indie Wine 11（约 50 MB）…"
+            self.status = "正在安装支持现代 Steam 的 Mac Gaming Uncle Wine 11（约 50 MB）…"
             _ = try await self.communityGamingWine.installLatest()
             self.wineRuntimes = await self.wineImporter.installed()
             self.status = "GPTK \(component.version) 已验证并安装，可以启动游戏"

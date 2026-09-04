@@ -19,7 +19,7 @@ jobs:
         run: swift test
       - name: Build release binaries
         run: |
-          swift build -c release --product IndieApp
-          swift build -c release --product indiectl
+          swift build -c release --product MacGamingUncleApp
+          swift build -c release --product macgamingunclectl
       - name: Build application bundle
         run: scripts/build-app.sh

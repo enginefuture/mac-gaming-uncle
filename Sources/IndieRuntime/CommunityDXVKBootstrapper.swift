@@ -10,7 +10,7 @@ public struct DXVKBootstrapRelease: Sendable, Equatable {
 
 /// Installs the last macOS-specific DXVK release. Upstream DXVK builds require
 /// Vulkan features that MoltenVK does not expose, so they are not interchangeable
-/// with this fork. The release asset predates GitHub's digest field; Indie pins
+/// with this fork. The release asset predates GitHub's digest field; Mac Gaming Uncle pins
 /// the reviewed asset by exact size and SHA-256 instead.
 public actor CommunityDXVKBootstrapper {
     public static let release = DXVKBootstrapRelease(

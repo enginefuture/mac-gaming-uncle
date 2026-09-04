@@ -37,7 +37,7 @@ public actor SteamInstaller {
 
     public func stageForLaunch(_ installer: URL, in bottle: BottleRecord) throws -> StagedWindowsInstaller {
         let hash = try ManifestSecurity.sha256(of: installer)
-        let directory = bottle.root.appendingPathComponent("drive_c/users/Public/Downloads/Indie", isDirectory: true)
+        let directory = bottle.root.appendingPathComponent("drive_c/users/Public/Downloads/Mac Gaming Uncle", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let destination = directory.appendingPathComponent("SteamSetup-\(hash.prefix(12)).exe")
         if !FileManager.default.fileExists(atPath: destination.path) {

@@ -22,7 +22,7 @@ private enum IndiePalette {
 }
 
 struct ContentView: View {
-    @EnvironmentObject private var model: IndieAppModel
+    @EnvironmentObject private var model: MacGamingUncleAppModel
     @State private var destination: MainDestination = .start
     @State private var showAdvanced = false
 
@@ -73,7 +73,7 @@ private struct IndieSidebar: View {
                 }
                 .frame(width: 32, height: 32)
                 .shadow(color: IndiePalette.primary.opacity(0.42), radius: 12)
-                Text("Indie").font(.system(size: 21, weight: .semibold, design: .rounded))
+                Text("Mac Gaming Uncle").font(.system(size: 21, weight: .semibold, design: .rounded))
             }
             .padding(.horizontal, 20)
             .padding(.top, 24)
@@ -140,7 +140,7 @@ private struct IndieBackground: View {
 }
 
 private struct SetupHomeView: View {
-    @EnvironmentObject private var model: IndieAppModel
+    @EnvironmentObject private var model: MacGamingUncleAppModel
     let openLibrary: () -> Void
     let showAdvanced: () -> Void
 
@@ -238,10 +238,10 @@ private struct SetupHomeView: View {
     }
     private var stageDescription: String {
         switch stage {
-        case .environment: "Indie 会自动下载并验证运行游戏所需的开源兼容组件。\n不会安装 Windows，也不会修改系统安全设置。"
-        case .steam: "环境已经准备完成。接下来 Indie 会从 Valve 官方地址下载并打开 Steam 安装程序，你只需完成安装。"
-        case .game: "打开 Steam，登录你的账户，在“游戏库”中选择一款 Windows 游戏并点击“安装”。安装完成后回到 Indie 扫描游戏。"
-        case .ready: "已发现 \(model.steamGames.count) 个 Steam 游戏。你可以从游戏库直接启动，Indie 会自动选择合适的图形兼容方案。"
+        case .environment: "Mac Gaming Uncle 会自动下载并验证运行游戏所需的开源兼容组件。\n不会安装 Windows，也不会修改系统安全设置。"
+        case .steam: "环境已经准备完成。接下来 Mac Gaming Uncle 会从 Valve 官方地址下载并打开 Steam 安装程序，你只需完成安装。"
+        case .game: "打开 Steam，登录你的账户，在“游戏库”中选择一款 Windows 游戏并点击“安装”。安装完成后回到 Mac Gaming Uncle 扫描游戏。"
+        case .ready: "已发现 \(model.steamGames.count) 个 Steam 游戏。你可以从游戏库直接启动，Mac Gaming Uncle 会自动选择合适的图形兼容方案。"
         }
     }
     private var primaryTitle: String {
@@ -344,9 +344,9 @@ private struct NextStepStrip: View {
     }
     private var detail: String {
         switch stage {
-        case .environment: "环境准备完成后，Indie 将为你打开官方 Steam 安装程序。"
-        case .steam: "Indie 不会读取或保存你的 Steam 账户和密码。"
-        case .game: "安装完成后返回 Indie，游戏会自动出现在游戏库。"
+        case .environment: "环境准备完成后，Mac Gaming Uncle 将为你打开官方 Steam 安装程序。"
+        case .steam: "Mac Gaming Uncle 不会读取或保存你的 Steam 账户和密码。"
+        case .game: "安装完成后返回 Mac Gaming Uncle，游戏会自动出现在游戏库。"
         case .ready: "需要更换图形兼容方案时，可在高级设置中调整。"
         }
     }
@@ -381,7 +381,7 @@ private struct IndiePrimaryButtonStyle: ButtonStyle {
 }
 
 struct LibraryView: View {
-    @EnvironmentObject private var model: IndieAppModel
+    @EnvironmentObject private var model: MacGamingUncleAppModel
     let returnToStart: () -> Void
 
     var body: some View {
@@ -513,7 +513,7 @@ struct LibraryView: View {
 }
 
 struct AdvancedSettingsView: View {
-    @EnvironmentObject private var model: IndieAppModel
+    @EnvironmentObject private var model: MacGamingUncleAppModel
     @Environment(\.dismiss) private var dismiss
     @State private var section = 0
 
@@ -545,11 +545,11 @@ struct AdvancedSettingsView: View {
 }
 
 private struct RuntimeSettingsContent: View {
-    @EnvironmentObject private var model: IndieAppModel
+    @EnvironmentObject private var model: MacGamingUncleAppModel
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                advancedSection(title: "Wine 运行环境", detail: "Indie 自行从 LGPL 源码构建 Wine 11 新 WoW64 运行时；不封装或分发 CrossOver 应用。") {
+                advancedSection(title: "Wine 运行环境", detail: "Mac Gaming Uncle 自行从 LGPL 源码构建 Wine 11 新 WoW64 运行时；不封装或分发 CrossOver 应用。") {
                     ForEach(model.wineRuntimes) { runtime in componentRow(name: runtime.manifest.displayName, status: "已安装") }
                     HStack {
                         Button("自动安装最新版本") { Task { await model.prepareEnvironment() } }.buttonStyle(.borderedProminent)
@@ -609,7 +609,7 @@ private struct RuntimeSettingsContent: View {
 }
 
 private struct DiagnosticsContent: View {
-    @EnvironmentObject private var model: IndieAppModel
+    @EnvironmentObject private var model: MacGamingUncleAppModel
     var body: some View {
         VStack(spacing: 0) {
             HStack { Text("这台 Mac").font(.system(size: 18, weight: .semibold)); Spacer(); Button("重新检查", systemImage: "arrow.clockwise") { Task { await model.refresh() } } }.padding(24)
@@ -635,7 +635,7 @@ private struct PreferencesContent: View {
                 Text("稳定版").tag(ReleaseChannel.stable.rawValue); Text("候选版").tag(ReleaseChannel.candidate.rawValue); Text("实验版").tag(ReleaseChannel.experimental.rawValue)
             }
             Toggle("启动游戏时显示 Apple Metal HUD", isOn: $metalHUD)
-            Text("D3DMetal 游戏会在同一个 Indie Wine 11 + Steam 会话中显示 Apple 官方 FPS、GPU 时间、内存和帧间隔；非 D3DMetal 兼容回退不会显示该 HUD。")
+            Text("D3DMetal 游戏会在同一个 Mac Gaming Uncle Wine 11 + Steam 会话中显示 Apple 官方 FPS、GPU 时间、内存和帧间隔；非 D3DMetal 兼容回退不会显示该 HUD。")
                 .font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText)
             Toggle("优先使用 Metal 4", isOn: $metal4)
             Text("GPTK 4 会在支持的 Apple GPU 与 macOS 上使用新的 Metal 4 提交路径；遇到个别游戏异常时可关闭并回退。")
@@ -643,7 +643,7 @@ private struct PreferencesContent: View {
             Toggle("使用 MetalFX 兼容游戏的 DLSS", isOn: $metalFX)
             Text("需要 GPTK 4/D3DMetal，且仍需在游戏画面设置中开启 DLSS。Apple GPU 实际执行的是 MetalFX。")
                 .font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText)
-            Text("Indie 不收集遥测数据。兼容配方来自可审计的 Git 仓库。").font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText)
+            Text("Mac Gaming Uncle 不收集遥测数据。兼容配方来自可审计的 Git 仓库。").font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText)
         }
         .formStyle(.grouped).padding(12)
     }
