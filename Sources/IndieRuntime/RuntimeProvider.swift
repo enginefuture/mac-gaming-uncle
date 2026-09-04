@@ -67,7 +67,7 @@ public struct WineRuntimeProvider: RuntimeProvider, Sendable {
             timeout: .seconds(300)
         )
         try await registerCJKFonts(in: bottle)
-        try await configureVulkanGraphics(in: bottle)
+        try await configureWineD3DGraphics(in: bottle)
         await stopBottle(bottle)
         let rootDrive = bottle.root.appendingPathComponent("dosdevices/z:")
         if FileManager.default.fileExists(atPath: rootDrive.path) {
@@ -163,6 +163,24 @@ public struct WineRuntimeProvider: RuntimeProvider, Sendable {
         )
     }
 
+    /// Restores WineD3D's native macOS OpenGL renderer. This must be explicit
+    /// because older Indie builds persisted `renderer=vulkan` in Steam bottles;
+    /// that stale value breaks WineD3D when the runtime has no Vulkan backend.
+    public func configureWineD3DGraphics(in bottle: BottleRecord) async throws {
+        try await subprocess.run(
+            wineBinary,
+            arguments: Self.wineD3DRegistryArguments,
+            environment: hostEnvironment.merging([
+                "WINEPREFIX": bottle.root.path,
+                "WINEDEBUG": "-all",
+                "LANG": "zh_CN.UTF-8",
+                "LC_ALL": "zh_CN.UTF-8",
+            ]) { _, new in new },
+            workingDirectory: bottle.root,
+            timeout: .seconds(30)
+        )
+    }
+
     /// GPTK's Wine build uses a fixed `crossover` profile name. Repointing its
     /// volatile environment keeps saves shared with the primary Wine runtime.
     public func configureWindowsUserProfile(in bottle: BottleRecord, username: String) async throws {
@@ -191,6 +209,11 @@ public struct WineRuntimeProvider: RuntimeProvider, Sendable {
     public static let vulkanRegistryArguments = [
         "reg", "add", #"HKCU\Software\Wine\Direct3D"#,
         "/v", "renderer", "/t", "REG_SZ", "/d", "vulkan", "/f",
+    ]
+
+    public static let wineD3DRegistryArguments = [
+        "reg", "add", #"HKCU\Software\Wine\Direct3D"#,
+        "/v", "renderer", "/t", "REG_SZ", "/d", "gl", "/f",
     ]
 
     public static let vulkanEnvironment = [

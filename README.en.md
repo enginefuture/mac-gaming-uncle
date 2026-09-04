@@ -13,7 +13,7 @@
 
 Indie is currently a `0.1.0` research preview for Apple Silicon and macOS 15 or later. The native app covers environment setup, Windows Steam installation, Steam library discovery, and D3DMetal game launching.
 
-Hardware validation: Apple M3 Max, macOS 26.6.2, GPTK 4.0 beta 2, and Indie Wine 11. `Ruins of Dawn` has been validated through its main menu with Steam integration and Apple's in-game Metal HUD.
+Hardware validation: Apple M3 Max, macOS 26.6.2, GPTK 4.0 beta 2, and Indie Wine 11.0.1. `Grim Dawn 1.3.0.8 (x64)` has been validated with its complete Chinese UI, Steam integration, and Apple's in-game Metal HUD (D3D11, approximately 114 FPS); `Ruins of Dawn` reaches its main menu.
 
 ## Features
 
@@ -21,9 +21,10 @@ Hardware validation: Apple M3 Max, macOS 26.6.2, GPTK 4.0 beta 2, and Indie Wine
 - Downloads the Windows Steam installer from Valve's official CDN.
 - Opens Apple's official download page, watches for GPTK 4, and automatically verifies the DMG, SHA-256, and Apple code signature.
 - Imports the complete D3DMetal framework, Wine PE bridge, and Unix bridge without redistributing Apple binaries.
-- Builds and installs Indie Wine 11 from corresponding public source, with new WoW64, MSync, Steam CEF fixes, and a native D3DMetal bridge path.
+- Builds and installs Indie Wine 11 from corresponding public source, with GCC 15 MinGW, new WoW64, MSync, Steam CEF fixes, and a native D3DMetal bridge path.
 - Repairs Steam CEF compatibility and installs CJK fonts with DirectWrite font linking.
-- Waits for Steam authentication, then resolves and launches the real `*-Win64-Shipping.exe` executable.
+- Resolves the x64/`*-Win64-Shipping.exe` target, then lets Steam create it through `-applaunch` so SteamAPI, renderer, and HUD state are inherited intact.
+- Installs native D3DMetal PE bridges into the bottle with versioned backups, and automatically repairs the CEF wrapper after a Steam update replaces it.
 - Invalidates shader caches when the GPTK version, source hash, MetalFX, DXR, Metal 4, macOS version, or compatibility arguments change.
 - Auditable game recipes matched by Steam AppID and executable name.
 - Static PE architecture, DirectX import, and anti-cheat inspection; kernel anti-cheat is blocked before launch.
@@ -81,7 +82,7 @@ INDIE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 
 MetalFX/DLSS mapping is experimental and disabled by default. It can only help games that already implement DLSS. Keep it disabled if a game shows a black screen or GPU timeout.
 
-“Show Apple Metal HUD” passes Apple's HUD environment to the game process launched by Indie Wine 11. It no longer switches to Apple Evaluation Wine or skips Steam. The HUD only appears when the game is actually using a Metal renderer. The current `Grim Dawn` recipe deliberately falls back to WineD3D because its 2D UI is known to disappear under D3DMetal; that fallback does not mean GPTK 4 is missing.
+“Show Apple Metal HUD” relays Apple's HUD environment through Steam to the target game. It does not switch to Apple Evaluation Wine or bypass Steam. The HUD appears only with D3DMetal or DXMT. The `Grim Dawn 1.3` recipe prefers D3DMetal 4 and backs up `options.txt` before enabling the classic HUD, avoiding the rewritten 1.3 HUD's missing-render-pass issue under translation.
 
 ## Development and testing
 
@@ -105,6 +106,7 @@ indiectl wine latest
 indiectl wine gaming-install
 indiectl wine local-install <runtime-root>
 indiectl dxvk install <bottle-root>
+indiectl dxmt install
 indiectl steam repair <bottle-root> [wrapper.exe]
 indiectl fonts repair <bottle-root> <runtime-root>
 ```

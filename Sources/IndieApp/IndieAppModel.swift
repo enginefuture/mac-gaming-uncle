@@ -25,6 +25,7 @@ final class IndieAppModel: ObservableObject {
     private lazy var wineImporter = LocalWineImporter(paths: paths)
     private lazy var overlayImporter = RendererOverlayImporter(paths: paths)
     private lazy var communityGamingWine = CommunityIndieWineBootstrapper(paths: paths)
+    private lazy var communityDXMT = CommunityDXMTBootstrapper(paths: paths)
     private var recipeRepository = RecipeRepository(recipes: [])
     private var gptkSetupTask: Task<Void, Never>?
 
@@ -213,7 +214,10 @@ final class IndieAppModel: ObservableObject {
                 "WINEDEBUG": "-all",
                 "WINEMSYNC": "1",
                 "WINEESYNC": "1",
-                "WINEDLLOVERRIDES": "mscoree,mshtml=;winedbg.exe=d",
+                // Renderer bridges are installed in this shared Steam bottle,
+                // but Steam/CEF must stay on Wine builtins. The selected game
+                // gets its own renderer overrides in gamePlan below.
+                "WINEDLLOVERRIDES": "mscoree,mshtml=;winedbg.exe=d;dxgi,d3d10,d3d10core,d3d11,d3d12=b",
             ]
             let profile = LaunchProfile(
                 runtimeID: runtime.manifest.id,
@@ -253,12 +257,21 @@ final class IndieAppModel: ObservableObject {
             }
             _ = try SteamCompatibilityManager.prepare(bottle: bottle, wrapper: wrapper)
             let executable = try SteamExecutableResolver.shippingExecutable(for: game)
-            let launcher = try SteamExecutableResolver.preferredExecutable(for: game)
             self.status = "正在快速检查游戏兼容性…"
             let analysis = try await Task.detached(priority: .userInitiated) {
                 try PEAnalyzer.analyze(at: executable, steamAppID: game.appID)
             }.value
             let recipe = self.recipeRepository.match(analysis)
+            if game.appID == 219990 {
+                self.status = "正在应用 Grim Dawn 1.3 HUD 兼容配置…"
+                _ = try GrimDawnCompatibility.enableClassicHUD(bottleRoot: bottle.root)
+            }
+            if recipe?.profiles.first?.renderer == .dxmt,
+               !self.rendererOverlays.contains(where: { $0.kind == .dxmt }) {
+                self.status = "正在安装 \(game.name) 所需的 DXMT 0.80…"
+                _ = try await self.communityDXMT.installLatest()
+                self.rendererOverlays = await self.overlayImporter.installed()
+            }
             var availableRenderers: Set<RendererKind> = [.wineD3D]
             var overlayPaths: [RendererKind: URL] = [:]
             if let component = self.preferredD3DMetal,
@@ -282,7 +295,11 @@ final class IndieAppModel: ObservableObject {
             let recipeArguments = recipeProfile?.arguments ?? []
 
             let wantsMetalHUD = UserDefaults.standard.bool(forKey: "metalHUD")
-            let metalHUDEnabled = wantsMetalHUD && resolution.renderer == .d3dMetal
+            // Both D3DMetal and DXMT submit work directly to Metal. Keep the
+            // Apple HUD available for either backend; restricting it to
+            // D3DMetal made the setting appear broken for DX11 titles whose
+            // compatibility recipe deliberately selects DXMT.
+            let metalHUDEnabled = wantsMetalHUD && [.d3dMetal, .dxmt].contains(resolution.renderer)
             let metalFXEnabled = UserDefaults.standard.bool(forKey: "metalFX") && resolution.renderer == .d3dMetal
             let metal4Enabled = ProcessInfo.processInfo.operatingSystemVersion.majorVersion >= 27
             var environment = [
@@ -298,6 +315,9 @@ final class IndieAppModel: ObservableObject {
                       let renderer = component.rendererRoot else {
                     throw IndieError.notFound("请先使用“一键安装 GPTK 4”导入 D3DMetal")
                 }
+                try D3DMetalRendererPreparer.installBridge(
+                    rendererRoot: renderer, version: component.version, bottle: bottle
+                )
                 if metalFXEnabled {
                     try D3DMetalRendererPreparer.enableMetalFX(
                         rendererRoot: renderer, version: component.version, bottle: bottle
@@ -324,62 +344,18 @@ final class IndieAppModel: ObservableObject {
                 )
                 needsWarmupProtection = shaderPreparation.needsWarmupProtection
             } else if resolution.renderer == .wineD3D {
+                try await gamingProvider.configureWineD3DGraphics(in: bottle)
                 environment["CX_ACTIVE_GRAPHICS_BACKEND"] = "wined3d"
                 environment["WINEDLLOVERRIDES"] = "dxgi,d3d10,d3d10core,d3d11,d3d12=b"
-            }
-
-            guard let steam = self.steamExecutable else { throw IndieError.notFound("尚未完成 Steam 安装") }
-            let steamEnvironment = [
-                "LANG": "zh_CN.UTF-8",
-                "LC_ALL": "zh_CN.UTF-8",
-                "WINEDEBUG": "-all",
-                "WINEMSYNC": "1",
-                "WINEESYNC": "1",
-                "WINE_WAIT_CHILD_PIPE_IGNORE": "steam.exe",
-                // A failed optional Steam service must not leave a modal
-                // debugger that blocks login and accumulates conhost windows.
-                "WINEDLLOVERRIDES": "mscoree,mshtml=;winedbg.exe=d",
-            ]
-            let steamAnalysis = GameAnalysis(
-                identity: GameIdentity(steamAppID: game.appID, executableName: "steam.exe"),
-                architecture: .x86_64, directX: .none, antiCheat: .none, importedLibraries: []
-            )
-            let steamProfile = LaunchProfile(
-                runtimeID: gamingRuntime.manifest.id,
-                preferredRenderer: .wineD3D,
-                syncBackend: .msync,
-                arguments: SteamCompatibilityManager.launchArguments(appID: nil),
-                environment: steamEnvironment,
-                metalHUD: false
-            )
-            let steamPlan = try LaunchPlanBuilder.build(
-                executable: steam,
-                windowsExecutablePath: try WinePath.windowsPath(for: steam, in: bottle),
-                bottle: bottle, profile: steamProfile, analysis: steamAnalysis,
-                recipe: nil, installed: InstalledRenderers(available: [.wineD3D])
-            )
-            let steamLog = self.paths.logs.appendingPathComponent("\(steamPlan.id.uuidString)-steam-\(resolution.renderer.rawValue).log")
-            let steamStartedAt = Date()
-            _ = try await gamingProvider.launchDetached(steamPlan, logURL: steamLog)
-            self.status = "正在等待 Steam 登录…"
-            let loginDeadline = Date().addingTimeInterval(30)
-            var steamLoggedOn = SteamCompatibilityManager.isLoggedOn(in: bottle, since: steamStartedAt)
-            while !steamLoggedOn && Date() < loginDeadline {
-                try Task.checkCancellation()
-                try await Task.sleep(for: .seconds(1))
-                steamLoggedOn = SteamCompatibilityManager.isLoggedOn(in: bottle, since: steamStartedAt)
-            }
-            if !steamLoggedOn {
-                // Steam's connection manager can remain offline during a CDN
-                // or account-service outage. Do not prevent a locally installed
-                // single-player title from trying its own offline-mode path.
-                self.status = "Steam 尚未联网，正在尝试离线启动 \(game.name)…"
             }
 
             var gameEnvironment = environment
             gameEnvironment["SteamAppId"] = String(game.appID)
             gameEnvironment["SteamGameId"] = String(game.appID)
-            var gameArguments = executable == launcher ? [] : [launcher.deletingPathExtension().lastPathComponent]
+            // Steam owns executable selection for `-applaunch`; only pass
+            // compatibility switches here. Positional launcher shims are for
+            // direct EXE execution and would corrupt Steam launch options.
+            var gameArguments: [String] = []
             if needsWarmupProtection,
                executable.lastPathComponent.lowercased().contains("-win64-shipping") {
                 // D3DMetal may need more than UE's 120-second RenderThread
@@ -403,19 +379,33 @@ final class IndieAppModel: ObservableObject {
                 recipe: recipe,
                 installed: installedRenderers
             )
-            let log = self.paths.logs.appendingPathComponent("\(gamePlan.id.uuidString)-\(resolution.renderer.rawValue).log")
+            guard let steam = self.steamExecutable else { throw IndieError.notFound("尚未完成 Steam 安装") }
+            let steamAnalysis = GameAnalysis(
+                identity: GameIdentity(steamAppID: game.appID, executableName: "steam.exe"),
+                architecture: .x86_64, directX: .none, antiCheat: .none, importedLibraries: []
+            )
+            let steamProfile = LaunchProfile(
+                runtimeID: gamingRuntime.manifest.id,
+                preferredRenderer: .wineD3D,
+                syncBackend: .msync,
+                arguments: SteamCompatibilityManager.launchArguments(
+                    appID: game.appID,
+                    gameArguments: gamePlan.arguments
+                ),
+                environment: SteamCompatibilityManager.relayEnvironment(for: gamePlan.environment),
+                metalHUD: false
+            )
+            let steamPlan = try LaunchPlanBuilder.build(
+                executable: steam,
+                windowsExecutablePath: try WinePath.windowsPath(for: steam, in: bottle),
+                bottle: bottle, profile: steamProfile, analysis: steamAnalysis,
+                recipe: nil, installed: InstalledRenderers(available: [.wineD3D])
+            )
+            let log = self.paths.logs.appendingPathComponent("\(steamPlan.id.uuidString)-steam-\(resolution.renderer.rawValue).log")
             self.status = needsWarmupProtection
                 ? "\(game.name) 正在首次构建图形缓存，可能需要几分钟…"
-                : "\(game.name) 正在通过 Indie Wine 11 + \(resolution.renderer.rawValue.uppercased()) 运行"
-            await Task.yield()
-            let session = await gamingProvider.launch(gamePlan, logURL: log) { processID in
-                Task { @MainActor in
-                    try? await Task.sleep(for: .seconds(2))
-                    NSRunningApplication(processIdentifier: processID)?.activate(options: [.activateAllWindows])
-                }
-            }
-            try await self.store.saveSession(session)
-            self.status = "游戏已退出：\(String(describing: session.result))"
+                : "正在由 Steam 启动 \(game.name) · Indie Wine 11 + \(resolution.renderer.rawValue.uppercased())"
+            _ = try await gamingProvider.launchDetached(steamPlan, logURL: log)
         }
     }
 

@@ -53,6 +53,11 @@ struct IndieCLI {
                 )
                 let overlay = try await CommunityDXVKBootstrapper(paths: .userDefault).installLatest()
                 output = AnyEncodable(try BottleDXVKInstaller.install(overlay: overlay, in: bottle))
+            case "dxmt":
+                guard arguments.first == "install" else {
+                    throw IndieError.invalidArgument("dxmt install")
+                }
+                output = AnyEncodable(try await CommunityDXMTBootstrapper(paths: .userDefault).installLatest())
             case "steam":
                 guard arguments.first == "repair", arguments.count >= 2 else { throw IndieError.invalidArgument("steam repair <bottle-root> [wrapper.exe]") }
                 let bottle = BottleRecord(name: "Steam", root: URL(fileURLWithPath: arguments[1], isDirectory: true), runtimeID: "diagnostic")
@@ -104,6 +109,7 @@ struct IndieCLI {
       wine gaming-install
       wine local-install <runtime-root>
       dxvk install <bottle-root>
+      dxmt install
       steam repair <bottle-root> [wrapper.exe]
       fonts repair <bottle-root> <runtime-root>
       bottle create <name> <manifest.json> <runtime-root>

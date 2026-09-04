@@ -13,7 +13,7 @@
 
 Indie 目前处于 `0.1.0` 研究预览阶段，面向 Apple Silicon 与 macOS 15 及以上版本。应用已经打通环境准备、Windows 版 Steam 安装、Steam 游戏扫描和 D3DMetal 启动闭环。
 
-实机验证环境：Apple M3 Max、macOS 26.6.2、GPTK 4.0 beta 2、Indie Wine 11。`Ruins of Dawn` 已验证进入主菜单、显示 Apple 官方 Metal HUD 并启用 Steam 集成。
+实机验证环境：Apple M3 Max、macOS 26.6.2、GPTK 4.0 beta 2、Indie Wine 11.0.1。`Grim Dawn 1.3.0.8 (x64)` 已验证完整中文 UI、Steam 集成与 Apple 官方 Metal HUD（D3D11，实测约 114 FPS）；`Ruins of Dawn` 已验证进入主菜单。
 
 ## 已实现
 
@@ -21,9 +21,10 @@ Indie 目前处于 `0.1.0` 研究预览阶段，面向 Apple Silicon 与 macOS 1
 - 从 Valve 官方 CDN 下载并安装 Windows 版 Steam。
 - 打开 Apple 官方下载页，监测 GPTK 4 下载并自动完成 DMG、SHA-256 与 Apple 签名验证。
 - 导入完整 D3DMetal framework、Wine PE Bridge 与 Unix Bridge，不重新分发 Apple 二进制。
-- 从公开对应源码构建并安装 Indie Wine 11（新 WoW64、MSync、Steam CEF 补丁与原生 D3DMetal Bridge 路径）。
+- 从公开对应源码构建并安装 Indie Wine 11（GCC 15 MinGW、新 WoW64、MSync、Steam CEF 补丁与原生 D3DMetal Bridge 路径）。
 - Steam CEF 兼容包装器、中文字体注册与 DirectWrite 字体链接。
-- 等待 Steam 登录后解析并启动真实的 `*-Win64-Shipping.exe`。
+- 解析目标 x64/`*-Win64-Shipping.exe`，再通过 Steam `-applaunch` 创建游戏进程，保证 SteamAPI、渲染器和 HUD 环境完整继承。
+- D3DMetal 原生 PE Bridge 按版本安装到 Bottle，覆盖前自动备份；Steam 更新覆盖 CEF 包装器后会在下次启动自动修复。
 - 按 GPTK 版本、安装包哈希、MetalFX、DXR、Metal 4、macOS 和游戏参数管理着色器缓存。
 - Steam AppID/EXE 双重匹配的可审计游戏配方系统。
 - PE 架构、DirectX 导入和反作弊静态检测；内核级反作弊会在启动前阻断。
@@ -81,7 +82,7 @@ INDIE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 
 MetalFX/DLSS 映射是实验功能且默认关闭。只有游戏本身提供 DLSS 时才可能生效；遇到黑屏或 GPU Timeout 时应保持关闭。
 
-“显示 Apple Metal HUD”会把 Apple HUD 环境变量传给 Indie Wine 11 启动的游戏进程；不再切换到 Apple Evaluation Wine，也不会因此跳过 Steam。HUD 只会在实际使用 D3DMetal/Metal 的游戏中出现。`Grim Dawn` 当前配方使用 WineD3D 回退，因为 D3DMetal 下已知会缺失 2D UI；这是按游戏规避，不代表 GPTK 4 未安装。
+“显示 Apple Metal HUD”会经 Steam 把 Apple HUD 环境变量传给目标游戏；不切换到 Apple Evaluation Wine，也不会跳过 Steam。HUD 只会在实际使用 D3DMetal 或 DXMT 的游戏中出现。`Grim Dawn 1.3` 配方优先 D3DMetal 4，并自动备份 `options.txt`、启用经典 HUD，以规避 1.3 新 HUD 在转译环境中的漏绘问题。
 
 ## 开发与测试
 
@@ -105,6 +106,7 @@ indiectl wine latest
 indiectl wine gaming-install
 indiectl wine local-install <runtime-root>
 indiectl dxvk install <bottle-root>
+indiectl dxmt install
 indiectl steam repair <bottle-root> [wrapper.exe]
 indiectl fonts repair <bottle-root> <runtime-root>
 ```

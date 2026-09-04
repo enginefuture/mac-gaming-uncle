@@ -46,6 +46,7 @@ final class IndieRuntimeTests: XCTestCase {
         )
         XCTAssertEqual(plan.arguments, ["Game", "-norhithread"])
         XCTAssertEqual(plan.environment["MTL_HUD_ENABLED"], "1")
+        XCTAssertEqual(plan.environment["MTL_HUD_LOG_ENABLED"], "1")
     }
 
     func testSubprocessEnvironmentDoesNotLeakUnrelatedSecrets() {
@@ -79,6 +80,10 @@ final class IndieRuntimeTests: XCTestCase {
             ["reg", "add", #"HKCU\Software\Wine\Direct3D"#, "/v", "renderer", "/t", "REG_SZ", "/d", "vulkan", "/f"]
         )
         XCTAssertEqual(WineRuntimeProvider.vulkanEnvironment["MVK_CONFIG_RESUME_LOST_DEVICE"], "1")
+        XCTAssertEqual(
+            WineRuntimeProvider.wineD3DRegistryArguments,
+            ["reg", "add", #"HKCU\Software\Wine\Direct3D"#, "/v", "renderer", "/t", "REG_SZ", "/d", "gl", "/f"]
+        )
     }
 
     func testPinnedDXVKReleaseMetadata() {
@@ -87,10 +92,34 @@ final class IndieRuntimeTests: XCTestCase {
         XCTAssertEqual(CommunityDXVKBootstrapper.release.sha256.count, 64)
     }
 
+    func testPinnedDXMTReleaseMetadata() {
+        XCTAssertEqual(CommunityDXMTBootstrapper.release.version, "0.80")
+        XCTAssertEqual(CommunityDXMTBootstrapper.release.downloadSize, 18_681_669)
+        XCTAssertEqual(CommunityDXMTBootstrapper.release.sha256.count, 64)
+    }
+
+    func testDXMTLaunchPlanPrependsBuiltinBridge() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("indie-dxmt-plan-\(UUID().uuidString)")
+        let bottle = BottleRecord(name: "DXMT", root: root.appendingPathComponent("bottle"), runtimeID: "wine")
+        let overlay = root.appendingPathComponent("dxmt")
+        let analysis = GameAnalysis(
+            identity: GameIdentity(executableName: "game.exe"), architecture: .x86_64,
+            directX: .d3d11, antiCheat: .none, importedLibraries: ["d3d11.dll"]
+        )
+        let plan = try LaunchPlanBuilder.build(
+            executable: root.appendingPathComponent("game.exe"), bottle: bottle,
+            profile: LaunchProfile(runtimeID: "wine", preferredRenderer: .dxmt),
+            analysis: analysis, recipe: nil,
+            installed: InstalledRenderers(available: [.dxmt], overlayPaths: [.dxmt: overlay])
+        )
+        XCTAssertEqual(plan.environment["WINEDLLPATH_PREPEND"], overlay.path)
+        XCTAssertEqual(plan.environment["WINEDLLOVERRIDES"], "dxgi,d3d11,d3d10core=b")
+    }
+
     func testIndieWine11RuntimeManifestIsPinned() {
         let manifest = CommunityIndieWineBootstrapper.manifest
         XCTAssertEqual(manifest.id, "org.indie.wine11")
-        XCTAssertEqual(manifest.version, SemanticVersion(major: 11, minor: 0))
+        XCTAssertEqual(manifest.version, SemanticVersion(major: 11, minor: 0, patch: 1))
         XCTAssertEqual(manifest.artifacts.count, 1)
         XCTAssertTrue(manifest.artifacts.allSatisfy { $0.sha256.count == 64 && $0.size > 0 })
         XCTAssertTrue(manifest.capabilities.renderers.contains(.d3dMetal))
@@ -400,6 +429,17 @@ final class IndieRuntimeTests: XCTestCase {
         let second = try SteamCompatibilityManager.prepare(bottle: bottle, wrapper: wrapper)
         XCTAssertFalse(second.wrapperInstalled)
         XCTAssertEqual(SteamCompatibilityManager.launchArguments(appID: 42), ["-noverifyfiles", "-no-cef-sandbox", "-applaunch", "42"])
+        XCTAssertEqual(
+            SteamCompatibilityManager.launchArguments(appID: 42, gameArguments: ["-nothreadtimeout"]),
+            ["-noverifyfiles", "-no-cef-sandbox", "-applaunch", "42", "-nothreadtimeout"]
+        )
+        let relayed = SteamCompatibilityManager.relayEnvironment(for: [
+            "MTL_HUD_ENABLED": "1",
+            "WINEDLLOVERRIDES": "d3d11,dxgi=n,b",
+        ])
+        XCTAssertEqual(relayed["MTL_HUD_ENABLED"], "1")
+        XCTAssertEqual(relayed["WINE_WAIT_CHILD_PIPE_IGNORE"], "steam.exe")
+        XCTAssertEqual(relayed["WINEDLLOVERRIDES"], "d3d11,dxgi=n,b;mscoree,mshtml=;winedbg.exe=d")
     }
 
     func testSteamLoggedOnDetectionUsesLatestConnectionState() throws {
@@ -432,6 +472,34 @@ final class IndieRuntimeTests: XCTestCase {
         XCTAssertEqual(
             try Data(contentsOf: bottle.root.appendingPathComponent("drive_c/windows/system32/nvngx.dll")),
             Data("windows-nvngx".utf8)
+        )
+    }
+
+    func testD3DMetalPreparerInstallsNativeBridgeAndKeepsOriginalBackup() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("indie-d3dmetal-bridge-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let renderer = root.appendingPathComponent("renderer")
+        let windows = renderer.appendingPathComponent("wine/x86_64-windows")
+        try FileManager.default.createDirectory(at: windows, withIntermediateDirectories: true)
+        for name in ["dxgi.dll", "d3d10.dll", "d3d11.dll", "d3d12.dll"] {
+            try Data("gptk-\(name)".utf8).write(to: windows.appendingPathComponent(name))
+        }
+        let bottle = BottleRecord(name: "D3DMetal", root: root.appendingPathComponent("bottle"), runtimeID: "wine")
+        let system32 = bottle.root.appendingPathComponent("drive_c/windows/system32")
+        try FileManager.default.createDirectory(at: system32, withIntermediateDirectories: true)
+        try Data("original".utf8).write(to: system32.appendingPathComponent("d3d11.dll"))
+
+        try D3DMetalRendererPreparer.installBridge(rendererRoot: renderer, version: "4.0b2", bottle: bottle)
+        XCTAssertEqual(try Data(contentsOf: system32.appendingPathComponent("d3d11.dll")), Data("gptk-d3d11.dll".utf8))
+        XCTAssertEqual(
+            try Data(contentsOf: bottle.root.appendingPathComponent(".indie-backups/d3dmetal/4.0b2/system32/d3d11.dll")),
+            Data("original".utf8)
+        )
+
+        try D3DMetalRendererPreparer.installBridge(rendererRoot: renderer, version: "4.0b2", bottle: bottle)
+        XCTAssertEqual(
+            try Data(contentsOf: bottle.root.appendingPathComponent(".indie-backups/d3dmetal/4.0b2/system32/d3d11.dll")),
+            Data("original".utf8)
         )
     }
 

@@ -22,7 +22,7 @@ Indie Wine 11 Manifest ──→ WineRuntimeProvider / Subprocess
 
 `IndieCore` 只包含模型、路径和 SQLite 状态；`IndieCatalog` 负责无副作用的识别与配方；`IndieRuntime` 是所有外部进程、运行时、Bottle 和图形组件的边界；GUI 与 CLI 都调用同一套模块。
 
-默认宿主是 Indie 从公开对应源码构建的 Wine 11，而不是 CrossOver.app 的封装。D3DMetal 是用户从 Apple 下载后本地导入的独立渲染器：Wine 11 的 `WINEDLLPATH_PREPEND` 补丁把其 PE Bridge 放在内置 WineD3D 之前，`libd3dshared.dylib` 则通过单独的原生动态库路径加载。Steam 客户端本身使用软件 CEF/WineD3D，登录完成后游戏才按配方切换图形后端。
+默认宿主是 Indie 从公开对应源码构建的 Wine 11，而不是 CrossOver.app 的封装。D3DMetal 是用户从 Apple 下载后本地导入的独立渲染器：其原生 PE Bridge 会按版本备份并安装到 Bottle，再以 `n,b` 加载；`libd3dshared.dylib` 通过独立的原生动态库路径加载。Steam CEF 由单进程软件包装器启动；Steam 本身带着目标 LaunchPlan 和 `-applaunch` 运行，使其创建的游戏进程完整继承 D3DMetal/DXMT 与 Metal HUD 环境。
 
 ## 核心约束
 

@@ -70,7 +70,10 @@ public enum LaunchPlanBuilder {
         environment.merge(profile.environment) { _, user in user }
         environment["WINEPREFIX"] = bottle.root.path
         environment["INDIE_RENDERER"] = resolution.renderer.rawValue
-        if profile.metalHUD { environment["MTL_HUD_ENABLED"] = "1" }
+        if profile.metalHUD {
+            environment["MTL_HUD_ENABLED"] = "1"
+            environment["MTL_HUD_LOG_ENABLED"] = "1"
+        }
         if profile.syncBackend == .msync || recipeProfile?.syncBackend == .msync { environment["WINEMSYNC"] = "1" }
         if let overlay = installed.overlayPaths[resolution.renderer] {
             // D3DMetalLaunchEnvironment supplies two deliberately different
@@ -80,18 +83,21 @@ public enum LaunchPlanBuilder {
             if environment["WINEDLLPATH"] == nil {
                 environment["WINEDLLPATH"] = overlay.path
             }
+            if resolution.renderer == .dxmt {
+                environment["WINEDLLPATH_PREPEND"] = overlay.path
+            }
             if resolution.renderer == .d3dMetal,
                environment["DYLD_FALLBACK_LIBRARY_PATH"] == nil {
                 environment["DYLD_FALLBACK_LIBRARY_PATH"] = overlay.path
             }
         }
         if resolution.renderer == .d3dMetal {
-            environment["WINEDLLOVERRIDES"] = "dxgi,d3d10,d3d10core,d3d11,d3d12=b"
+            environment["WINEDLLOVERRIDES"] = "dxgi,d3d10,d3d10core,d3d11,d3d12=n,b"
             if environment["D3DM_ENABLE_METALFX"] == "1" {
-                environment["WINEDLLOVERRIDES"]! += ";nvapi,nvapi64,nvngx=b"
+                environment["WINEDLLOVERRIDES"]! += ";nvapi,nvapi64,nvngx=n,b"
             }
         } else if resolution.renderer == .dxmt {
-            environment["WINEDLLOVERRIDES"] = "dxgi,d3d11,d3d10core=n,b"
+            environment["WINEDLLOVERRIDES"] = "dxgi,d3d11,d3d10core=b"
         } else if resolution.renderer == .dxvk {
             environment["WINEDLLOVERRIDES"] = BottleDXVKInstaller.dllOverrides
         }

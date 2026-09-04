@@ -41,7 +41,7 @@ final class IndieCatalogTests: XCTestCase {
         XCTAssertEqual(RecipeRepository(recipes: [byName, bySteam]).match(analysis)?.id, "steam")
     }
 
-    func testGrimDawnAvoidsKnownD3DMetalUIRegression() throws {
+    func testGrimDawnPrefersD3DMetalWithDXMTFallback() throws {
         let repository = try RecipeRepository.builtIn()
         let analysis = GameAnalysis(
             identity: GameIdentity(steamAppID: 219990, executableName: "Grim Dawn.exe"),
@@ -51,8 +51,7 @@ final class IndieCatalogTests: XCTestCase {
             importedLibraries: ["d3d11.dll"]
         )
         let recipe = try XCTUnwrap(repository.match(analysis))
-        XCTAssertEqual(recipe.profiles.map(\.renderer), [.dxmt, .wineD3D])
-        XCTAssertFalse(recipe.profiles.contains { $0.renderer == .d3dMetal })
+        XCTAssertEqual(recipe.profiles.map(\.renderer), [.d3dMetal, .dxmt, .wineD3D])
     }
 
     func testBuiltInRecipesLoad() throws {
@@ -111,5 +110,48 @@ final class IndieCatalogTests: XCTestCase {
             try SteamExecutableResolver.shippingExecutable(for: game).standardizedFileURL,
             shipping.standardizedFileURL
         )
+    }
+
+    func testSteamExecutableResolverPrefersMatchingX64GameOverLegacyRootBinary() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("indie-steam-x64-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let legacy = root.appendingPathComponent("Grim Dawn.exe")
+        let x64 = root.appendingPathComponent("x64/Grim Dawn.exe")
+        for file in [legacy, x64] {
+            try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try Data("MZ".utf8).write(to: file)
+        }
+        let game = SteamGame(
+            appID: 219990, name: "Grim Dawn", installDirectory: root,
+            buildID: "1", manifestURL: root.appendingPathComponent("appmanifest.acf")
+        )
+        XCTAssertEqual(
+            try SteamExecutableResolver.preferredExecutable(for: game).standardizedFileURL,
+            x64.standardizedFileURL
+        )
+        XCTAssertEqual(
+            try SteamExecutableResolver.shippingExecutable(for: game).standardizedFileURL,
+            x64.standardizedFileURL
+        )
+    }
+
+    func testGrimDawnCompatibilityBacksUpAndEnablesClassicHUD() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("indie-grim-settings-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let settings = root.appendingPathComponent("drive_c/users/player/Documents/My Games/Grim Dawn/Settings")
+        try FileManager.default.createDirectory(at: settings, withIntermediateDirectories: true)
+        let options = settings.appendingPathComponent("options.txt")
+        let original = "uiScale                   = 0.5\nstandardHUD               = false\n"
+        try original.write(to: options, atomically: true, encoding: .utf8)
+
+        let first = try GrimDawnCompatibility.enableClassicHUD(bottleRoot: root)
+        XCTAssertTrue(first.changed)
+        XCTAssertTrue(try String(contentsOf: options, encoding: .utf8).contains("standardHUD               = true"))
+        let backup = settings.appendingPathComponent("options.txt.indie-before-classic-hud")
+        XCTAssertEqual(try String(contentsOf: backup, encoding: .utf8), original)
+
+        let second = try GrimDawnCompatibility.enableClassicHUD(bottleRoot: root)
+        XCTAssertFalse(second.changed)
+        XCTAssertEqual(try String(contentsOf: backup, encoding: .utf8), original)
     }
 }

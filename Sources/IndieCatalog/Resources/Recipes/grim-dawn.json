@@ -3,16 +3,31 @@
   "executableNames": ["grim dawn.exe"],
   "id": "indie.steam.219990.grim-dawn",
   "knownIssues": [
-    "D3DMetal 4 在部分 Grim Dawn 场景会漏绘 2D UI；Indie 优先使用 DXMT，未安装 DXMT 时回退到 WineD3D。"
+    "Grim Dawn 1.3 的新版 HUD 在部分转译后端会漏绘；Indie 会备份设置并自动启用兼容性更好的经典 HUD。",
+    "DXMT 0.80 在 Grim Dawn 的显示设备枚举阶段可能崩溃，因此优先使用 D3DMetal 4。"
   ],
   "name": "Grim Dawn",
   "profiles": [
     {
       "arguments": [],
       "dllOverrides": {
-        "d3d10core": "n,b",
+        "d3d10": "n,b",
+        "d3d10core": "b",
         "d3d11": "n,b",
+        "d3d12": "n,b",
         "dxgi": "n,b"
+      },
+      "environment": {},
+      "highResolution": true,
+      "renderer": "d3dmetal",
+      "syncBackend": "msync"
+    },
+    {
+      "arguments": [],
+      "dllOverrides": {
+        "d3d10core": "b",
+        "d3d11": "b",
+        "dxgi": "b"
       },
       "environment": {},
       "highResolution": true,

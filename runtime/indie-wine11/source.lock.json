@@ -21,14 +21,23 @@
       "sha256": "b4c518adb174e484cb4acea54118f02380c7133771e7e9beb98a0787194ee47c",
       "size": 2640485,
       "reason": "The CrossOver source archive contains Nettle sources but omits its generated Makefile.in."
+    },
+    {
+      "name": "libinotify-kqueue",
+      "version": "20240724",
+      "url": "https://github.com/libinotify-kqueue/libinotify-kqueue/archive/refs/tags/20240724.tar.gz",
+      "sha256": "120398ff95336d04f3ce7ac820e0490059625976264100dcc9af9d11e992b0ca",
+      "size": 77857,
+      "reason": "Provides kqueue-backed filesystem notifications used by the macOS wineserver."
     }
   ],
   "buildToolchain": {
     "hostCompiler": "Apple Clang from Xcode 26.6",
-    "peCompiler": "LLVM Clang 23 with LLD",
+    "peCompiler": "GCC 15.1.0 with MinGW-w64 12.0",
     "peArchitectures": ["i386", "x86_64"],
     "wow64Mode": "new WoW64",
-    "sourceDateEpoch": 1768262400
+    "sourceDateEpoch": 1768262400,
+    "minimumMacOS": "15.0"
   },
   "indiePatches": [
     "0001-allow-d3dmetal-build-without-vulkan.patch",
@@ -39,12 +48,14 @@
     "CodeWeavers macOS driver patches present in the published LGPL source",
     "MSync",
     "new WoW64",
+    "kqueue-backed inotify filesystem notifications",
     "native WINEDLLPATH_PREPEND support for user-imported D3DMetal"
   ],
   "licenses": [
     "LGPL-2.1-or-later",
     "LGPL-3.0-or-later OR GPL-2.0-or-later",
-    "FTL-or-GPL-2.0-only"
+    "FTL-or-GPL-2.0-only",
+    "MIT"
   ],
   "closedSourcePayloads": []
 }

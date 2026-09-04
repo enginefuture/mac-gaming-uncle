@@ -7,7 +7,7 @@ import IndieCore
 /// dependencies. Apple D3DMetal remains a separate, user-imported component.
 public actor CommunityIndieWineBootstrapper {
     public static let runtimeID = "org.indie.wine11"
-    public static let version = SemanticVersion(major: 11, minor: 0, patch: 0)
+    public static let version = SemanticVersion(major: 11, minor: 0, patch: 1)
 
     private let paths: IndiePaths
     private let session: URLSession
@@ -109,9 +109,9 @@ public actor CommunityIndieWineBootstrapper {
             supportsMSync: true
         ),
         artifacts: [ArtifactDescriptor(
-            url: URL(string: "https://github.com/enginefuture/indie/releases/download/runtime-wine-11.0.0/indie-wine-11.0.0-macos-x86_64.tar.xz")!,
-            sha256: "8bc048c5cff513b34734ac00bbadd762a88516bfab0e8e5ebc6c99b1f832fe0d",
-            size: 43_294_468,
+            url: URL(string: "https://github.com/enginefuture/indie/releases/download/runtime-wine-11.0.1/indie-wine-11.0.1-macos-x86_64.tar.xz")!,
+            sha256: "78c57653b5fb62f2df2a31d6074a99506e68b3d375b86573dc4adcfc280e3680",
+            size: 46_058_220,
             archiveRoot: "wine-runtime"
         )],
         licenses: [
@@ -124,6 +124,11 @@ public actor CommunityIndieWineBootstrapper {
                 identifier: "LGPL-3.0-or-later", name: "GnuTLS, GMP and Nettle licenses",
                 sourceURL: URL(string: "https://www.gnutls.org/")!,
                 correspondingSourceURL: URL(string: "https://ftp.gnu.org/gnu/nettle/nettle-3.10.tar.gz")!
+            ),
+            LicenseDescriptor(
+                identifier: "MIT", name: "libinotify-kqueue MIT License",
+                sourceURL: URL(string: "https://github.com/libinotify-kqueue/libinotify-kqueue")!,
+                correspondingSourceURL: URL(string: "https://github.com/libinotify-kqueue/libinotify-kqueue/archive/refs/tags/20240724.tar.gz")!
             ),
         ],
         publishedAt: Date(timeIntervalSince1970: 1_788_451_200)

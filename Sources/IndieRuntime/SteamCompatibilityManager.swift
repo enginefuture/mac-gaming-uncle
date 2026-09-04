@@ -17,10 +17,28 @@ public enum SteamCompatibilityManager {
         return candidates.first { FileManager.default.isReadableFile(atPath: $0.path) }
     }
 
-    public static func launchArguments(appID: UInt64? = nil) -> [String] {
+    public static func launchArguments(appID: UInt64? = nil, gameArguments: [String] = []) -> [String] {
         var arguments = ["-noverifyfiles", "-no-cef-sandbox"]
-        if let appID { arguments.append(contentsOf: ["-applaunch", String(appID)]) }
+        if let appID {
+            arguments.append(contentsOf: ["-applaunch", String(appID)])
+            arguments.append(contentsOf: gameArguments)
+        }
         return arguments
+    }
+
+    /// Steam must create recent game processes itself so SteamAPI and launch
+    /// contracts are initialized correctly. Relay the selected renderer and
+    /// Metal HUD to Steam; its child game then inherits the exact launch plan.
+    public static func relayEnvironment(for gameEnvironment: [String: String]) -> [String: String] {
+        var environment = gameEnvironment
+        environment["WINE_WAIT_CHILD_PIPE_IGNORE"] = "steam.exe"
+        let compatibility = "mscoree,mshtml=;winedbg.exe=d"
+        if let overrides = environment["WINEDLLOVERRIDES"], !overrides.isEmpty {
+            environment["WINEDLLOVERRIDES"] = overrides + ";" + compatibility
+        } else {
+            environment["WINEDLLOVERRIDES"] = compatibility
+        }
+        return environment
     }
 
     public static func isLoggedOn(in bottle: BottleRecord, since: Date? = nil) -> Bool {

@@ -15,6 +15,7 @@ Indie does not redistribute these components in this repository. When users or r
 | Indie Wine 11 runtime | Wine 11 macOS host, new WoW64, MSync and Indie patches | Wine LGPL-2.1-or-later; corresponding CodeWeavers FOSS source and patch set are published with the runtime |
 | FreeType | Wine font rendering | FreeType License or GPL-2.0-only |
 | GnuTLS, GMP, Nettle | Wine TLS and cryptography support | LGPL-2.1-or-later / LGPL-3.0-or-later and component-specific notices |
+| libinotify-kqueue | kqueue-backed filesystem notifications for wineserver | MIT |
 
 The interface includes the Steam logo asset retrieved from Valve's official
 Steam static asset host (`store.fastly.steamstatic.com`) solely to identify the

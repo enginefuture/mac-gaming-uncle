@@ -2,6 +2,25 @@ import Foundation
 import IndieCore
 
 public enum D3DMetalRendererPreparer {
+    /// Installs Apple's PE bridge into the bottle. GPTK's D3DMetal DLLs are
+    /// native PE modules, not Wine builtins, so an external WINEDLLPATH alone
+    /// is insufficient with a stock/FOSS Wine loader.
+    public static func installBridge(
+        rendererRoot: URL,
+        version: String,
+        bottle: BottleRecord,
+        fileManager: FileManager = .default
+    ) throws {
+        let windows = rendererRoot.appendingPathComponent("wine/x86_64-windows", isDirectory: true)
+        try installWindowsDLLs(
+            ["dxgi.dll", "d3d10.dll", "d3d11.dll", "d3d12.dll"],
+            from: windows,
+            version: version,
+            bottle: bottle,
+            fileManager: fileManager
+        )
+    }
+
     public static func enableMetalFX(
         rendererRoot: URL,
         version: String,
@@ -23,12 +42,28 @@ public enum D3DMetalRendererPreparer {
             }
         }
 
+        try installWindowsDLLs(
+            ["nvngx.dll", "nvapi64.dll"],
+            from: windows,
+            version: version,
+            bottle: bottle,
+            fileManager: fileManager
+        )
+    }
+
+    private static func installWindowsDLLs(
+        _ names: [String],
+        from sourceDirectory: URL,
+        version: String,
+        bottle: BottleRecord,
+        fileManager: FileManager
+    ) throws {
         let system32 = bottle.root.appendingPathComponent("drive_c/windows/system32", isDirectory: true)
         let backup = bottle.root.appendingPathComponent(".indie-backups/d3dmetal/\(version)/system32", isDirectory: true)
         try fileManager.createDirectory(at: system32, withIntermediateDirectories: true)
         try fileManager.createDirectory(at: backup, withIntermediateDirectories: true)
-        for name in ["nvngx.dll", "nvapi64.dll"] {
-            let source = windows.appendingPathComponent(name)
+        for name in names {
+            let source = sourceDirectory.appendingPathComponent(name)
             guard fileManager.fileExists(atPath: source.path) else {
                 throw IndieError.invalidData("GPTK \(version) 缺少 \(name)")
             }
