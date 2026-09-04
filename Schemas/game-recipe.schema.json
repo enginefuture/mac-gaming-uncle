@@ -27,6 +27,7 @@
           "arguments": {"type": "array", "items": {"type": "string"}},
           "highResolution": {"type": "boolean"},
           "metalFX": {"type": ["boolean", "null"]},
+          "metal4": {"type": ["boolean", "null"]},
           "steamLaunchOption": {"type": ["integer", "null"], "minimum": 0}
         }
       }

@@ -3,6 +3,7 @@ import Foundation
 import IndieCatalog
 import IndieCore
 import IndieRuntime
+import Metal
 
 @MainActor
 final class IndieAppModel: ObservableObject {
@@ -263,7 +264,15 @@ final class IndieAppModel: ObservableObject {
             let recipe = self.recipeRepository.match(analysis)
             if game.appID == 219990 {
                 self.status = "正在应用 Grim Dawn 1.3 HUD 兼容配置…"
-                _ = try GrimDawnCompatibility.enableClassicHUD(bottleRoot: bottle.root)
+                let screen = NSScreen.main?.frame.size
+                let safeResolution = GrimDawnCompatibility.logicalDisplayResolution(
+                    width: screen.map { Double($0.width) },
+                    height: screen.map { Double($0.height) }
+                )
+                _ = try GrimDawnCompatibility.prepare(
+                    bottleRoot: bottle.root,
+                    safeResolution: safeResolution
+                )
             }
             if recipe?.profiles.first?.renderer == .dxmt,
                !self.rendererOverlays.contains(where: { $0.kind == .dxmt }) {
@@ -301,7 +310,8 @@ final class IndieAppModel: ObservableObject {
             let metalHUDEnabled = wantsMetalHUD && [.d3dMetal, .dxmt].contains(resolution.renderer)
             let metalFXEnabled = UserDefaults.standard.bool(forKey: "metalFX") &&
                 resolution.renderer == .d3dMetal && recipeProfile?.metalFX != false
-            let metal4Enabled = ProcessInfo.processInfo.operatingSystemVersion.majorVersion >= 27
+            let wantsMetal4 = UserDefaults.standard.object(forKey: "metal4") as? Bool ?? true
+            let metal4Enabled = wantsMetal4 && recipeProfile?.metal4 != false && Self.supportsMetal4
             var environment = [
                 "LANG": "zh_CN.UTF-8",
                 "LC_ALL": "zh_CN.UTF-8",
@@ -408,11 +418,19 @@ final class IndieAppModel: ObservableObject {
                 recipe: nil, installed: InstalledRenderers(available: [.wineD3D])
             )
             let log = self.paths.logs.appendingPathComponent("\(steamPlan.id.uuidString)-steam-\(resolution.renderer.rawValue).log")
+            let architecture = analysis.architecture == .x86_64 ? "x64" : analysis.architecture.rawValue
             self.status = needsWarmupProtection
                 ? "\(game.name) 正在首次构建图形缓存，可能需要几分钟…"
-                : "正在由 Steam 启动 \(game.name) · Indie Wine 11 + \(resolution.renderer.rawValue.uppercased())"
+                : "正在由 Steam 启动 \(game.name) · \(architecture) + \(resolution.renderer.rawValue.uppercased())\(metal4Enabled ? " + Metal 4" : "")"
             _ = try await gamingProvider.launchDetached(steamPlan, logURL: log)
         }
+    }
+
+    private static var supportsMetal4: Bool {
+        if #available(macOS 26.0, *) {
+            return MTLCreateSystemDefaultDevice()?.supportsFamily(.metal4) == true
+        }
+        return false
     }
 
     func rescanSteam() {

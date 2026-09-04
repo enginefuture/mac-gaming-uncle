@@ -82,7 +82,9 @@ INDIE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 
 MetalFX/DLSS mapping is experimental and disabled by default. It can only help games that already implement DLSS, and recipes can explicitly disable it. `Grim Dawn` does not use DLSS, so Indie ignores the global MetalFX toggle for that title to prevent the NVNGX GPU-spoof path from dropping its UI.
 
-“Show Apple Metal HUD” relays Apple's HUD environment through Steam to the target game. It does not switch to Apple Evaluation Wine or bypass Steam. The HUD appears only with D3DMetal or DXMT. The `Grim Dawn 1.3` recipe prefers D3DMetal 4 and backs up `options.txt` before enabling the classic HUD, avoiding the rewritten 1.3 HUD's missing-render-pass issue under translation.
+“Prefer Metal 4” is enabled by default, but Indie first queries the active `MTLDevice` for hardware and OS support. Unsupported systems fall back automatically, and the option can be disabled for a title that regresses. The D3DMetal release, the game's Direct3D API, and the Metal submission path are separate dimensions; a HUD reading `Game Porting Toolkit 4.0b2 · D3D11` is expected.
+
+“Show Apple Metal HUD” relays Apple's HUD environment through Steam to the target game. It does not switch to Apple Evaluation Wine or bypass Steam. The HUD appears only with D3DMetal or DXMT. The `Grim Dawn 1.3` recipe selects the x64 executable and D3DMetal 4, matches the game resolution to the Mac display's logical-point dimensions, and backs up `options.txt` before enabling the classic HUD. It also disables MSync and Steam Overlay for this title to avoid missing UI and displaced pointer hit regions.
 
 ## Development and testing
 

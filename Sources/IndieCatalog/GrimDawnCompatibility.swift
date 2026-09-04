@@ -6,14 +6,27 @@ public enum GrimDawnCompatibility {
         public var changed: Bool { !changedFiles.isEmpty }
     }
 
-    /// Grim Dawn 1.3 replaced its in-game HUD. The new HUD currently loses its
-    /// 2D pass on some D3D translation paths while menus and the 3D scene keep
-    /// rendering. Selecting the built-in classic HUD avoids that failure.
+    /// Wine reports and receives pointer coordinates in macOS logical points,
+    /// not Retina backing pixels. Keeping Grim Dawn's render size identical to
+    /// that logical surface prevents the image from being stretched while the
+    /// hit-test grid remains at the old resolution.
+    public static func logicalDisplayResolution(width: Double?, height: Double?) -> String {
+        guard let width, let height,
+              width.isFinite, height.isFinite,
+              width >= 640, height >= 480 else { return "1280 720" }
+        return "\(evenPixels(width)) \(evenPixels(height))"
+    }
+
+    /// Selects the classic HUD and a conservative windowed swap chain. Grim
+    /// Dawn otherwise rebuilds a 2560x1440 exclusive/borderless surface on a
+    /// much smaller logical Mac display when a character starts, which can
+    /// detach both the game UI and Metal HUD layers under Wine.
     ///
     /// The user's original file is retained once beside the settings file, so
     /// this compatibility change is transparent and reversible.
-    public static func enableClassicHUD(
+    public static func prepare(
         bottleRoot: URL,
+        safeResolution: String = "1280 720",
         fileManager: FileManager = .default
     ) throws -> Result {
         let users = bottleRoot.appendingPathComponent("drive_c/users", isDirectory: true)
@@ -32,24 +45,46 @@ public enum GrimDawnCompatibility {
             guard visited.insert(options.path).inserted,
                   fileManager.fileExists(atPath: options.path),
                   var contents = try? String(contentsOf: options, encoding: .utf8) else { continue }
-            let pattern = #"(?m)^standardHUD\s*=\s*false\s*$"#
-            guard let regex = try? NSRegularExpression(pattern: pattern),
-                  regex.firstMatch(in: contents, range: NSRange(contents.startIndex..., in: contents)) != nil else {
-                continue
+            let desired = [
+                (key: "standardHUD", value: "true"),
+                (key: "screenMode", value: "0"),
+                (key: "resolution", value: safeResolution),
+                (key: "syncToRefresh", value: "false"),
+            ]
+            let valuesByKey = Dictionary(uniqueKeysWithValues: desired.map { ($0.key, $0.value) })
+            var lines = contents.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+            var found = Set<String>()
+            var modified = false
+            for index in lines.indices {
+                guard let equals = lines[index].firstIndex(of: "=") else { continue }
+                let key = lines[index][..<equals].trimmingCharacters(in: .whitespaces)
+                guard let value = valuesByKey[key] else { continue }
+                found.insert(key)
+                let replacement = key.padding(toLength: 27, withPad: " ", startingAt: 0) + "= \(value)"
+                if lines[index] != replacement {
+                    lines[index] = replacement
+                    modified = true
+                }
             }
+            for setting in desired where !found.contains(setting.key) {
+                lines.append(setting.key.padding(toLength: 27, withPad: " ", startingAt: 0) + "= \(setting.value)")
+                modified = true
+            }
+            guard modified else { continue }
             let backup = options.deletingLastPathComponent()
                 .appendingPathComponent("options.txt.indie-before-classic-hud")
             if !fileManager.fileExists(atPath: backup.path) {
                 try fileManager.copyItem(at: options, to: backup)
             }
-            contents = regex.stringByReplacingMatches(
-                in: contents,
-                range: NSRange(contents.startIndex..., in: contents),
-                withTemplate: "standardHUD               = true"
-            )
+            contents = lines.joined(separator: "\n")
             try contents.write(to: options, atomically: true, encoding: .utf8)
             changed.append(options)
         }
         return Result(changedFiles: changed)
+    }
+
+    private static func evenPixels(_ value: Double) -> Int {
+        let pixels = Int(value.rounded())
+        return pixels.isMultiple(of: 2) ? pixels : pixels - 1
     }
 }

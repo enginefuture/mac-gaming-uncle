@@ -628,6 +628,7 @@ private struct PreferencesContent: View {
     @AppStorage("releaseChannel") private var releaseChannel = ReleaseChannel.stable.rawValue
     @AppStorage("metalHUD") private var metalHUD = false
     @AppStorage("metalFX") private var metalFX = false
+    @AppStorage("metal4") private var metal4 = true
     var body: some View {
         Form {
             Picker("更新通道", selection: $releaseChannel) {
@@ -635,6 +636,9 @@ private struct PreferencesContent: View {
             }
             Toggle("启动游戏时显示 Apple Metal HUD", isOn: $metalHUD)
             Text("D3DMetal 游戏会在同一个 Indie Wine 11 + Steam 会话中显示 Apple 官方 FPS、GPU 时间、内存和帧间隔；非 D3DMetal 兼容回退不会显示该 HUD。")
+                .font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText)
+            Toggle("优先使用 Metal 4", isOn: $metal4)
+            Text("GPTK 4 会在支持的 Apple GPU 与 macOS 上使用新的 Metal 4 提交路径；遇到个别游戏异常时可关闭并回退。")
                 .font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText)
             Toggle("使用 MetalFX 兼容游戏的 DLSS", isOn: $metalFX)
             Text("需要 GPTK 4/D3DMetal，且仍需在游戏画面设置中开启 DLSS。Apple GPU 实际执行的是 MetalFX。")
@@ -646,7 +650,7 @@ private struct PreferencesContent: View {
 }
 
 struct SettingsView: View {
-    var body: some View { PreferencesContent().frame(width: 560, height: 320) }
+    var body: some View { PreferencesContent().frame(width: 560, height: 380) }
 }
 
 private extension UTType {

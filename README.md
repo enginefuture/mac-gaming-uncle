@@ -82,7 +82,9 @@ INDIE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 
 MetalFX/DLSS 映射是实验功能且默认关闭。只有游戏本身提供 DLSS 时才可能生效；游戏配方可以强制禁用它。`Grim Dawn` 不使用 DLSS，Indie 会忽略全局 MetalFX 开关，避免 NVNGX 显卡伪装导致 UI 消失。
 
-“显示 Apple Metal HUD”会经 Steam 把 Apple HUD 环境变量传给目标游戏；不切换到 Apple Evaluation Wine，也不会跳过 Steam。HUD 只会在实际使用 D3DMetal 或 DXMT 的游戏中出现。`Grim Dawn 1.3` 配方优先 D3DMetal 4，并自动备份 `options.txt`、启用经典 HUD，以规避 1.3 新 HUD 在转译环境中的漏绘问题。
+“优先使用 Metal 4”默认开启，但会先通过当前 `MTLDevice` 查询硬件和系统支持；不支持时自动回退，个别游戏异常时也可在高级设置中手动关闭。D3DMetal 版本、游戏 Direct3D 版本和 Metal 提交路径是三个不同维度，例如 HUD 显示 `Game Porting Toolkit 4.0b2 · D3D11` 完全正常。
+
+“显示 Apple Metal HUD”会经 Steam 把 Apple HUD 环境变量传给目标游戏；不切换到 Apple Evaluation Wine，也不会跳过 Steam。HUD 只会在实际使用 D3DMetal 或 DXMT 的游戏中出现。`Grim Dawn 1.3` 配方优先选择 x64 主程序与 D3DMetal 4，按 Mac 屏幕的逻辑点尺寸同步游戏分辨率，并自动备份 `options.txt`、启用经典 HUD；该游戏还会关闭 MSync 与 Steam Overlay，避免 UI 漏绘和鼠标命中区域错位。
 
 ## 开发与测试
 

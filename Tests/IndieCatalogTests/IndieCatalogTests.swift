@@ -139,21 +139,37 @@ final class IndieCatalogTests: XCTestCase {
     }
 
     func testGrimDawnCompatibilityBacksUpAndEnablesClassicHUD() throws {
+        XCTAssertEqual(
+            GrimDawnCompatibility.logicalDisplayResolution(width: 1512, height: 982),
+            "1512 982"
+        )
+        XCTAssertEqual(
+            GrimDawnCompatibility.logicalDisplayResolution(width: 1511, height: 981),
+            "1510 980"
+        )
+        XCTAssertEqual(
+            GrimDawnCompatibility.logicalDisplayResolution(width: nil, height: nil),
+            "1280 720"
+        )
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("indie-grim-settings-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: root) }
         let settings = root.appendingPathComponent("drive_c/users/player/Documents/My Games/Grim Dawn/Settings")
         try FileManager.default.createDirectory(at: settings, withIntermediateDirectories: true)
         let options = settings.appendingPathComponent("options.txt")
-        let original = "uiScale                   = 0.5\nstandardHUD               = false\n"
+        let original = "uiScale                   = 0.5\nstandardHUD               = false\nscreenMode                = 2\nresolution                = 2560 1440\nsyncToRefresh             = true\n"
         try original.write(to: options, atomically: true, encoding: .utf8)
 
-        let first = try GrimDawnCompatibility.enableClassicHUD(bottleRoot: root)
+        let first = try GrimDawnCompatibility.prepare(bottleRoot: root, safeResolution: "1512 982")
         XCTAssertTrue(first.changed)
-        XCTAssertTrue(try String(contentsOf: options, encoding: .utf8).contains("standardHUD               = true"))
+        let updated = try String(contentsOf: options, encoding: .utf8)
+        XCTAssertTrue(updated.contains("standardHUD                = true"))
+        XCTAssertTrue(updated.contains("screenMode                 = 0"))
+        XCTAssertTrue(updated.contains("resolution                 = 1512 982"))
+        XCTAssertTrue(updated.contains("syncToRefresh              = false"))
         let backup = settings.appendingPathComponent("options.txt.indie-before-classic-hud")
         XCTAssertEqual(try String(contentsOf: backup, encoding: .utf8), original)
 
-        let second = try GrimDawnCompatibility.enableClassicHUD(bottleRoot: root)
+        let second = try GrimDawnCompatibility.prepare(bottleRoot: root, safeResolution: "1512 982")
         XCTAssertFalse(second.changed)
         XCTAssertEqual(try String(contentsOf: backup, encoding: .utf8), original)
     }

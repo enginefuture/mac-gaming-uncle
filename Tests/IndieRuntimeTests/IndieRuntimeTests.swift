@@ -173,7 +173,8 @@ final class IndieRuntimeTests: XCTestCase {
             rendererRoot: renderer,
             runtimeRoot: runtime,
             metalHUD: true,
-            metalFX: true
+            metalFX: true,
+            metal4: true
         )
 
         XCTAssertEqual(environment["CX_ACTIVE_GRAPHICS_BACKEND"], "d3dmetal")
@@ -183,6 +184,7 @@ final class IndieRuntimeTests: XCTestCase {
         XCTAssertEqual(environment["MTL_HUD_ENABLED"], "1")
         XCTAssertEqual(environment["D3DM_SHOW_HUD_STATS"], "1")
         XCTAssertEqual(environment["D3DM_ENABLE_METALFX"], "1")
+        XCTAssertEqual(environment["D3DM_MTL4"], "1")
         XCTAssertTrue(environment["DYLD_FALLBACK_LIBRARY_PATH"]?.contains(runtime.appendingPathComponent("lib").path) == true)
     }
 
