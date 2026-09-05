@@ -14,6 +14,55 @@
 > [!IMPORTANT]
 > Mac Gaming Uncle 是开源兼容性研究项目，不是虚拟机。应用包不包含 Windows、Steam、游戏或 Apple D3DMetal。首次引导通过独立 R2 下载通道自动获取原始 GPTK 镜像并验证、导入；Apple 组件保留原始许可，按非商业条款分发。详见 [GPTK 下载说明](docs/GPTK_DISTRIBUTION.md)。
 
+## 新手下载安装指南
+
+普通用户只需下载安装包，不需要编程、Xcode 或自行编译。
+
+### 1. 确认你的 Mac 可以使用
+
+点击屏幕左上角 ** → 关于本机**：需要 Apple Silicon（M 系列芯片）和 **macOS 15 或更高版本**，暂不支持 Intel Mac。准备好网络连接和自己的 Steam 账户，并为运行组件和要安装的游戏预留磁盘空间。
+
+### 2. 下载应用安装包
+
+点击 **[下载 Mac Gaming Uncle 0.2.1（DMG）](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.1/Mac-Gaming-Uncle-0.2.1-macOS-arm64.dmg)**。
+
+也可以打开 [Release 页面](https://github.com/enginefuture/mac-gaming-uncle/releases/tag/v0.2.1)，在 **Assets（资源）** 中选择 `Mac-Gaming-Uncle-0.2.1-macOS-arm64.dmg`。不要选择 `Source code`、`.sha256` 或 Wine 的 `.tar.xz`：它们分别是源码、校验文件和由应用自动安装的运行时。
+
+### 3. 安装到“应用程序”并打开
+
+1. 在 Finder 的“下载”目录中双击刚下载的 `.dmg`。
+2. 将 **Mac Gaming Uncle** 图标拖到窗口中的 **Applications（应用程序）** 文件夹图标上，等待复制完成。
+3. 从 Finder 的“应用程序”中打开 **Mac Gaming Uncle**，不要一直从 DMG 窗口运行。
+4. 安装完成后，可以在 Finder 侧栏推出安装磁盘。
+
+当前是尚未公证的研究预览版。如果 macOS 提示无法验证开发者，先确认安装包来自上面的官方仓库；决定信任该来源后，在尝试打开应用后前往 **系统设置 → 隐私与安全性 → 安全性 → 仍要打开**，按提示确认。具体界面以 [Apple 官方说明](https://support.apple.com/zh-cn/102445) 为准。若提示包含恶意软件或文件已损坏，请先停止安装、重新下载并反馈，不要关闭系统安全保护。
+
+### 4. 等待环境安装，登录 Steam
+
+第一次打开时会自动出现两步引导：
+
+1. **安装游戏环境**：自动检查并安装 Rosetta、Wine、手柄及图形组件。保持应用打开并等待；出错时查看卡片提示，点击“重试并继续”，已完成的组件会保留。
+2. **登录 Steam**：环境就绪后，应用自动安装并更新 Windows 版 Steam，随后打开 Steam 官方登录窗口。使用手机 Steam 扫码，或输入 Steam 账号、密码及所需验证码。此窗口单独出现是正常现象。
+
+首次 Steam 客户端更新可能需要几分钟。登录成功后，回到 Mac Gaming Uncle，应用会自动同步游戏库。Mac 上已有的原生 Steam 登录不等于这里的 Windows Steam 已登录。
+
+### 5. 安装并开始游戏
+
+打开顶部 **游戏库**，选择自己拥有的游戏，点击 **安装**，按 Steam 提示完成下载。安装完成后点击 **开始游戏**。在“商店”浏览或看到某款游戏并不代表已经拥有它，需要先在 Steam 获得相应授权。
+
+第一次游玩先保留默认配置；需要调整分辨率、HUD 或手柄时，再打开 **游戏设置**。手柄请先与 macOS 连接，再到顶部手柄入口检查。首次游戏启动可能需要构建图形缓存，请耐心等待。能显示在游戏库中不代表该游戏已验证兼容。
+
+### 遇到问题怎么办
+
+| 现象 | 可以这样处理 |
+| --- | --- |
+| 已登录，但主页或游戏库还是空的 | 等待 Steam 写入账户缓存，再点主页“同步游戏库”或游戏库“刷新”；确认登录的是本应用打开的 Windows Steam。当前列表依赖 Steam 本地缓存，可能不是账户全部已购游戏。 |
+| 安装组件失败 | 检查网络、磁盘空间和卡片错误信息，再点“重试并继续”。 |
+| 游戏启动失败或画面异常 | 记录游戏名称、错误提示和所用图形后端，到 [Issues](https://github.com/enginefuture/mac-gaming-uncle/issues) 反馈。不要附上密码、验证码或登录文件。 |
+| 想升级应用 | 先退出游戏和 Mac Gaming Uncle，再下载新 DMG，将应用拖入“应用程序”并选择替换；不要删除应用数据目录，已有组件和游戏可继续保留。 |
+
+退出 Mac Gaming Uncle 会联动退出其管理的 Steam。请先保存并退出游戏，再关闭应用。
+
 ## 为什么做这个项目
 
 过去，“用 Mac 玩游戏”常被当成一句调侃。我们想把它变成一件普通而简单的事：安装应用、登录 Steam、下载游戏、点击开始。用户不应该先学会 Wine、Bottle、图形转译和启动参数，才有资格玩自己已经购买的游戏。
@@ -96,11 +145,12 @@ Mac Gaming Uncle 负责组合、验证和启动这些层。它不会修改游戏
 
 - Apple Silicon Mac
 - macOS 15 或更高版本
-- Xcode 26，或兼容 Swift 6 的完整开发工具链
 - 可访问组件下载服务器的网络连接
 - 合法拥有的 Steam 账户和游戏
 
 ### 从源码构建
+
+以下仅供开发者使用，需要 Xcode 26 或兼容 Swift 6 的完整开发工具链。普通用户请按上方“新手下载安装指南”安装 DMG。
 
 不需要开发环境时，可直接下载经过挂载和签名结构验证的 [Mac Gaming Uncle 0.2.1 DMG](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.1/Mac-Gaming-Uncle-0.2.1-macOS-arm64.dmg)，并用同目录的 [SHA-256 文件](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.1/Mac-Gaming-Uncle-0.2.1-macOS-arm64.dmg.sha256) 校验。
 
@@ -130,13 +180,7 @@ MAC_GAMING_UNCLE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)
   scripts/build-app.sh
 ```
 
-### 第一次使用
-
-1. 点击“一键准备环境”，安装 Mac Gaming Uncle 自行构建的开源 Wine 11 运行环境。
-2. 环境卡片自动下载、校验并安装 GPTK 4；已完成的下载可复用，失败后可重试。
-3. 点击“安装 Steam”，在 Wine 安装窗口中完成 Windows 版 Steam 安装并登录。
-4. 直接在 Mac Gaming Uncle 的“商店”浏览 Steam，在“游戏库”查看账户游戏并安装或启动。
-5. 点击游戏旁的设置按钮可单独调整分辨率、HUD、图形后端与手柄；点击“智能启动”应用该游戏的配置。首次图形缓存构建可能需要几分钟。
+### 游戏设置说明
 
 MetalFX/DLSS 映射是实验功能且默认关闭。只有游戏本身提供 DLSS 时才可能生效；游戏配方可以强制禁用它。`Grim Dawn` 不使用 DLSS，Mac Gaming Uncle 会忽略全局 MetalFX 开关，避免 NVNGX 显卡伪装导致 UI 消失。
 
