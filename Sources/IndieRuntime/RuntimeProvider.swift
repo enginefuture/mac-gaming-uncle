@@ -87,9 +87,10 @@ public struct WineRuntimeProvider: RuntimeProvider, Sendable {
         let startedAt = Date()
         let result: RunExit
         do {
+            let arguments = launchArguments(for: plan)
             let execution = try await subprocess.run(
                 wineBinary,
-                arguments: [plan.windowsExecutablePath ?? plan.executable.path] + plan.arguments,
+                arguments: arguments,
                 environment: hostEnvironment.merging(plan.environment) { _, new in new }
                     .merging(["WINEPREFIX": plan.bottle.root.path]) { current, _ in current },
                 workingDirectory: plan.executable.deletingLastPathComponent(),
@@ -113,12 +114,24 @@ public struct WineRuntimeProvider: RuntimeProvider, Sendable {
     public func launchDetached(_ plan: LaunchPlan, logURL: URL) async throws -> Int32 {
         try await subprocess.launchDetached(
             wineBinary,
-            arguments: [plan.windowsExecutablePath ?? plan.executable.path] + plan.arguments,
+            arguments: launchArguments(for: plan),
             environment: hostEnvironment.merging(plan.environment) { _, new in new }
                 .merging(["WINEPREFIX": plan.bottle.root.path]) { current, _ in current },
             workingDirectory: plan.executable.deletingLastPathComponent(),
             logURL: logURL
         )
+    }
+
+    /// Wine's virtual desktop is the only generic resolution control that does
+    /// not rely on engine-specific flags. Steam and all of its child processes
+    /// stay inside the same per-launch desktop.
+    public func launchArguments(for plan: LaunchPlan) -> [String] {
+        let executable = plan.windowsExecutablePath ?? plan.executable.path
+        guard let resolution = plan.virtualDesktop, resolution.isValid else {
+            return [executable] + plan.arguments
+        }
+        let name = "MacGamingUncle-\(plan.id.uuidString.prefix(8))"
+        return ["explorer", "/desktop=\(name),\(resolution.width)x\(resolution.height)", executable] + plan.arguments
     }
 
     public func stopBottle(_ bottle: BottleRecord) async {
@@ -181,6 +194,27 @@ public struct WineRuntimeProvider: RuntimeProvider, Sendable {
         )
     }
 
+    /// Enables Wine's SDL winebus backend and maps SDL GameController devices
+    /// to the XInput-compatible HID interface expected by most Windows games.
+    /// These values are read when winebus starts, so callers must stop the
+    /// bottle before applying them.
+    public func configureControllerSupport(in bottle: BottleRecord) async throws {
+        for arguments in Self.controllerRegistryArguments {
+            try await subprocess.run(
+                wineBinary,
+                arguments: arguments,
+                environment: hostEnvironment.merging([
+                    "WINEPREFIX": bottle.root.path,
+                    "WINEDEBUG": "-all",
+                    "LANG": "zh_CN.UTF-8",
+                    "LC_ALL": "zh_CN.UTF-8",
+                ]) { _, new in new },
+                workingDirectory: bottle.root,
+                timeout: .seconds(30)
+            )
+        }
+    }
+
     /// GPTK's Wine build uses a fixed `crossover` profile name. Repointing its
     /// volatile environment keeps saves shared with the primary Wine runtime.
     public func configureWindowsUserProfile(in bottle: BottleRecord, username: String) async throws {
@@ -214,6 +248,17 @@ public struct WineRuntimeProvider: RuntimeProvider, Sendable {
     public static let wineD3DRegistryArguments = [
         "reg", "add", #"HKCU\Software\Wine\Direct3D"#,
         "/v", "renderer", "/t", "REG_SZ", "/d", "gl", "/f",
+    ]
+
+    public static let controllerRegistryArguments = [
+        [
+            "reg", "add", #"HKLM\System\CurrentControlSet\Services\WineBus"#,
+            "/v", "Enable SDL", "/t", "REG_DWORD", "/d", "1", "/f",
+        ],
+        [
+            "reg", "add", #"HKLM\System\CurrentControlSet\Services\WineBus"#,
+            "/v", "Map Controllers", "/t", "REG_DWORD", "/d", "1", "/f",
+        ],
     ]
 
     public static let vulkanEnvironment = [

@@ -29,6 +29,14 @@
       "sha256": "120398ff95336d04f3ce7ac820e0490059625976264100dcc9af9d11e992b0ca",
       "size": 77857,
       "reason": "Provides kqueue-backed filesystem notifications used by the macOS wineserver."
+    },
+    {
+      "name": "SDL2",
+      "version": "2.32.10",
+      "url": "https://github.com/libsdl-org/SDL/releases/download/release-2.32.10/SDL2-2.32.10.tar.gz",
+      "sha256": "5f5993c530f084535c65a6879e9b26ad441169b3e25d789d83287040a9ca5165",
+      "size": 7630262,
+      "reason": "Provides the macOS SDL winebus backend that maps supported controllers to Wine HID and XInput devices."
     }
   ],
   "buildToolchain": {
@@ -49,13 +57,15 @@
     "MSync",
     "new WoW64",
     "kqueue-backed inotify filesystem notifications",
-    "native WINEDLLPATH_PREPEND support for user-imported D3DMetal"
+    "native WINEDLLPATH_PREPEND support for user-imported D3DMetal",
+    "SDL2 winebus controller-to-XInput mapping"
   ],
   "licenses": [
     "LGPL-2.1-or-later",
     "LGPL-3.0-or-later OR GPL-2.0-or-later",
     "FTL-or-GPL-2.0-only",
-    "MIT"
+    "MIT",
+    "Zlib"
   ],
   "closedSourcePayloads": []
 }

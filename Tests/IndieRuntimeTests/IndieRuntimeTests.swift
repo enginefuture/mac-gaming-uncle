@@ -49,6 +49,71 @@ final class IndieRuntimeTests: XCTestCase {
         XCTAssertNil(plan.environment["MTL_HUD_LOG_ENABLED"])
     }
 
+    func testVirtualDesktopWrapsLaunchWithoutChangingGameArguments() {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("indie-desktop-test")
+        let provider = WineRuntimeProvider(manifest: makeManifest(signature: nil), root: root)
+        let bottle = BottleRecord(name: "Desktop", root: root.appendingPathComponent("bottle"), runtimeID: "wine")
+        let plan = LaunchPlan(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+            executable: root.appendingPathComponent("Game.exe"),
+            windowsExecutablePath: #"C:\Games\Game.exe"#,
+            bottle: bottle, runtimeID: "wine", renderer: .wineD3D,
+            arguments: ["--profile", "Player One"], environment: [:],
+            virtualDesktop: .init(width: 1920, height: 1080)
+        )
+
+        XCTAssertEqual(provider.launchArguments(for: plan), [
+            "explorer", "/desktop=MacGamingUncle-00000000,1920x1080",
+            #"C:\Games\Game.exe"#, "--profile", "Player One",
+        ])
+    }
+
+    func testEnhancedControllerEnvironmentIncludesHIDAPIAndRumbleChoice() {
+        let automatic = ControllerLaunchEnvironment.make(mode: .automatic, rumble: true)
+        XCTAssertEqual(automatic["SDL_JOYSTICK_HIDAPI"], "1")
+        XCTAssertEqual(automatic["SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS"], "1")
+        XCTAssertEqual(automatic["SDL_GAMECONTROLLER_USE_BUTTON_LABELS"], "0")
+        XCTAssertNil(automatic["SDL_JOYSTICK_HIDAPI_PS5_RUMBLE"])
+
+        let environment = ControllerLaunchEnvironment.make(mode: .enhanced, rumble: false)
+        XCTAssertEqual(environment["SDL_JOYSTICK_HIDAPI"], "1")
+        XCTAssertEqual(environment["SDL_JOYSTICK_HIDAPI_PS5_RUMBLE"], "0")
+        XCTAssertEqual(environment["SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS"], "1")
+        XCTAssertEqual(environment["SDL_GAMECONTROLLER_USE_BUTTON_LABELS"], "0")
+    }
+
+    func testControllerRegistryEnablesSDLXInputMapping() {
+        XCTAssertEqual(WineRuntimeProvider.controllerRegistryArguments, [
+            [
+                "reg", "add", #"HKLM\System\CurrentControlSet\Services\WineBus"#,
+                "/v", "Enable SDL", "/t", "REG_DWORD", "/d", "1", "/f",
+            ],
+            [
+                "reg", "add", #"HKLM\System\CurrentControlSet\Services\WineBus"#,
+                "/v", "Map Controllers", "/t", "REG_DWORD", "/d", "1", "/f",
+            ],
+        ])
+    }
+
+    func testExplicitWineServerSyncOverridesRecipeMSync() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("indie-sync-test")
+        let bottle = BottleRecord(name: "Sync", root: root, runtimeID: "wine")
+        let analysis = GameAnalysis(
+            identity: .init(executableName: "game.exe"), architecture: .x86_64,
+            directX: .d3d11, antiCheat: .none, importedLibraries: ["d3d11.dll"]
+        )
+        let recipe = GameRecipe(
+            id: "sync", name: "Sync",
+            profiles: [.init(renderer: .wineD3D, syncBackend: .msync)]
+        )
+        let plan = try LaunchPlanBuilder.build(
+            executable: root.appendingPathComponent("game.exe"), bottle: bottle,
+            profile: .init(runtimeID: "wine", preferredRenderer: .wineD3D, syncBackend: .wineserver),
+            analysis: analysis, recipe: recipe, installed: .init(available: [.wineD3D])
+        )
+        XCTAssertNil(plan.environment["WINEMSYNC"])
+    }
+
     func testSubprocessEnvironmentDoesNotLeakUnrelatedSecrets() {
         let environment = Subprocess.sanitizedEnvironment(
             inherited: ["HOME": "/Users/test", "PATH": "/usr/bin", "API_SECRET": "do-not-inherit"],
@@ -119,7 +184,7 @@ final class IndieRuntimeTests: XCTestCase {
     func testIndieWine11RuntimeManifestIsPinned() {
         let manifest = CommunityIndieWineBootstrapper.manifest
         XCTAssertEqual(manifest.id, "org.indie.wine11")
-        XCTAssertEqual(manifest.version, SemanticVersion(major: 11, minor: 0, patch: 1))
+        XCTAssertEqual(manifest.version, SemanticVersion(major: 11, minor: 0, patch: 2))
         XCTAssertEqual(manifest.artifacts.count, 1)
         XCTAssertTrue(manifest.artifacts.allSatisfy { $0.sha256.count == 64 && $0.size > 0 })
         XCTAssertTrue(manifest.capabilities.renderers.contains(.d3dMetal))
@@ -143,6 +208,7 @@ final class IndieRuntimeTests: XCTestCase {
         for executable in ["bin/wine", "bin/wineserver"] {
             try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: payload.appendingPathComponent(executable).path)
         }
+        try Data("11.0.1\n".utf8).write(to: payload.appendingPathComponent("runtime-version.txt"))
 
         let installed = try await CommunityIndieWineBootstrapper(paths: paths).installLocalBuild(
             from: payload.deletingLastPathComponent()
@@ -150,6 +216,61 @@ final class IndieRuntimeTests: XCTestCase {
         XCTAssertEqual(installed.manifest.id, CommunityIndieWineBootstrapper.runtimeID)
         XCTAssertTrue(CommunityIndieWineBootstrapper.isCompleteRuntime(installed.root))
         XCTAssertTrue(FileManager.default.fileExists(atPath: installed.root.appendingPathComponent("local-runtime.json").path))
+    }
+
+    func testControllerEnabledLocalBuildUsesPayloadVersion() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("indie-wine11-controller-local-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let paths = IndiePaths(root: root.appendingPathComponent("data"))
+        let payload = root.appendingPathComponent("build/wine-runtime")
+        for relativePath in [
+            "bin/wine", "bin/wineserver", "lib/wine/x86_64-unix/ntdll.so",
+            "lib/wine/i386-windows/ntdll.dll", "lib/libgnutls.30.dylib",
+            "lib/libSDL2-2.0.0.dylib",
+        ] {
+            let file = payload.appendingPathComponent(relativePath)
+            try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try Data().write(to: file)
+        }
+        for executable in ["bin/wine", "bin/wineserver"] {
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: payload.appendingPathComponent(executable).path)
+        }
+        try Data("11.0.2\n".utf8).write(to: payload.appendingPathComponent("runtime-version.txt"))
+
+        let installed = try await CommunityIndieWineBootstrapper(paths: paths).installLocalBuild(
+            from: payload.deletingLastPathComponent()
+        )
+        XCTAssertEqual(installed.manifest.version, SemanticVersion(major: 11, minor: 0, patch: 2))
+        XCTAssertTrue(CommunityIndieWineBootstrapper.hasControllerSupport(installed.root))
+        XCTAssertEqual(installed.root.lastPathComponent, "11.0.2")
+    }
+
+    func testControllerRuntimeRejectsSDLFreePayload() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("indie-wine11-no-controller-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let paths = IndiePaths(root: root.appendingPathComponent("data"))
+        let payload = root.appendingPathComponent("build/wine-runtime")
+        for relativePath in [
+            "bin/wine", "bin/wineserver", "lib/wine/x86_64-unix/ntdll.so",
+            "lib/wine/i386-windows/ntdll.dll", "lib/libgnutls.30.dylib",
+        ] {
+            let file = payload.appendingPathComponent(relativePath)
+            try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try Data().write(to: file)
+        }
+        for executable in ["bin/wine", "bin/wineserver"] {
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: payload.appendingPathComponent(executable).path)
+        }
+        try Data("11.0.2\n".utf8).write(to: payload.appendingPathComponent("runtime-version.txt"))
+
+        do {
+            _ = try await CommunityIndieWineBootstrapper(paths: paths).installLocalBuild(
+                from: payload.deletingLastPathComponent()
+            )
+            XCTFail("SDL-free Wine 11.0.2 payload should be rejected")
+        } catch {
+            XCTAssertTrue(error.localizedDescription.contains("SDL2"))
+        }
     }
 
     func testD3DMetalEnvironmentUsesWine11HostHooks() throws {
@@ -439,13 +560,21 @@ final class IndieRuntimeTests: XCTestCase {
             SteamCompatibilityManager.launchArguments(appID: 42, launchOption: 1),
             ["-noverifyfiles", "-no-cef-sandbox", "steam://launch/42/dialog"]
         )
+        XCTAssertEqual(
+            SteamCompatibilityManager.launchArguments(appID: 42, silent: true),
+            ["-noverifyfiles", "-no-cef-sandbox", "-silent", "-applaunch", "42"]
+        )
         let relayed = SteamCompatibilityManager.relayEnvironment(for: [
             "MTL_HUD_ENABLED": "1",
             "WINEDLLOVERRIDES": "d3d11,dxgi=n,b",
+            "SteamAppId": "42",
+            "SteamGameId": "42",
         ])
         XCTAssertEqual(relayed["MTL_HUD_ENABLED"], "1")
         XCTAssertEqual(relayed["WINE_WAIT_CHILD_PIPE_IGNORE"], "steam.exe")
         XCTAssertEqual(relayed["WINEDLLOVERRIDES"], "d3d11,dxgi=n,b;mscoree,mshtml=;winedbg.exe=d")
+        XCTAssertNil(relayed["SteamAppId"])
+        XCTAssertNil(relayed["SteamGameId"])
     }
 
     func testSteamDefaultLaunchOptionIsUpdatedWithBackup() throws {

@@ -13,12 +13,15 @@ indie_nettle_url="https://ftp.gnu.org/gnu/nettle/nettle-3.10.tar.gz"
 indie_nettle_sha256="b4c518adb174e484cb4acea54118f02380c7133771e7e9beb98a0787194ee47c"
 indie_inotify_url="https://github.com/libinotify-kqueue/libinotify-kqueue/archive/refs/tags/20240724.tar.gz"
 indie_inotify_sha256="120398ff95336d04f3ce7ac820e0490059625976264100dcc9af9d11e992b0ca"
-indie_runtime_version="11.0.1"
+indie_sdl_url="https://github.com/libsdl-org/SDL/releases/download/release-2.32.10/SDL2-2.32.10.tar.gz"
+indie_sdl_sha256="5f5993c530f084535c65a6879e9b26ad441169b3e25d789d83287040a9ca5165"
+indie_runtime_version="11.0.2"
 indie_output_dir=${INDIE_WINE_OUTPUT_DIR:-"$indie_root/dist/runtime"}
 indie_work_root=${INDIE_WINE_BUILD_ROOT:-$(mktemp -d /tmp/indie-wine11.XXXXXX)}
 indie_source_archive=${INDIE_WINE_SOURCE_ARCHIVE:-"$indie_work_root/crossover-sources-26.3.0.tar.gz"}
 indie_nettle_archive=${INDIE_NETTLE_SOURCE_ARCHIVE:-"$indie_work_root/nettle-3.10.tar.gz"}
 indie_inotify_archive=${INDIE_INOTIFY_SOURCE_ARCHIVE:-"$indie_work_root/libinotify-kqueue-20240724.tar.gz"}
+indie_sdl_archive=${INDIE_SDL_SOURCE_ARCHIVE:-"$indie_work_root/SDL2-2.32.10.tar.gz"}
 indie_extract_root="$indie_work_root/source"
 indie_dependency_root="$indie_work_root/dependencies"
 indie_freetype_build="$indie_work_root/freetype-build"
@@ -26,6 +29,8 @@ indie_gmp_build="$indie_work_root/gmp-build"
 indie_nettle_source="$indie_work_root/nettle-3.10"
 indie_nettle_build="$indie_work_root/nettle-build"
 indie_inotify_source="$indie_work_root/libinotify-kqueue-20240724"
+indie_sdl_source="$indie_work_root/SDL2-2.32.10"
+indie_sdl_build="$indie_work_root/sdl2-build"
 indie_gnutls_build="$indie_work_root/gnutls-build"
 indie_wine_build="$indie_work_root/wine-build"
 indie_wine_install="$indie_work_root/wine-install"
@@ -65,6 +70,9 @@ fi
 if [[ ! -f "$indie_inotify_archive" ]]; then
   curl --fail --location --retry 3 --output "$indie_inotify_archive" "$indie_inotify_url"
 fi
+if [[ ! -f "$indie_sdl_archive" ]]; then
+  curl --fail --location --retry 3 --output "$indie_sdl_archive" "$indie_sdl_url"
+fi
 
 indie_actual_sha256=$(shasum -a 256 "$indie_source_archive" | awk '{print $1}')
 if [[ "$indie_actual_sha256" != "$indie_source_sha256" ]]; then
@@ -79,6 +87,11 @@ fi
 indie_inotify_actual_sha256=$(shasum -a 256 "$indie_inotify_archive" | awk '{print $1}')
 if [[ "$indie_inotify_actual_sha256" != "$indie_inotify_sha256" ]]; then
   print -u2 "libinotify-kqueue 上游源码校验失败：期望 $indie_inotify_sha256，实际 $indie_inotify_actual_sha256"
+  exit 3
+fi
+indie_sdl_actual_sha256=$(shasum -a 256 "$indie_sdl_archive" | awk '{print $1}')
+if [[ "$indie_sdl_actual_sha256" != "$indie_sdl_sha256" ]]; then
+  print -u2 "SDL2 上游源码校验失败：期望 $indie_sdl_sha256，实际 $indie_sdl_actual_sha256"
   exit 3
 fi
 
@@ -100,12 +113,17 @@ done
 
 tar -xf "$indie_nettle_archive" -C "$indie_work_root"
 tar -xf "$indie_inotify_archive" -C "$indie_work_root"
+tar -xf "$indie_sdl_archive" -C "$indie_work_root"
 if [[ ! -f "$indie_nettle_source/configure" ]]; then
   print -u2 "Nettle 源码包结构与锁定清单不一致"
   exit 4
 fi
 if [[ ! -f "$indie_inotify_source/configure.ac" ]]; then
   print -u2 "libinotify-kqueue 源码包结构与锁定清单不一致"
+  exit 4
+fi
+if [[ ! -f "$indie_sdl_source/CMakeLists.txt" ]]; then
+  print -u2 "SDL2 源码包结构与锁定清单不一致"
   exit 4
 fi
 
@@ -157,6 +175,17 @@ arch -x86_64 /usr/bin/env \
   ./configure --prefix="$indie_dependency_root" --enable-shared --disable-static
 make -j"$(sysctl -n hw.logicalcpu)" install
 
+cmake -S "$indie_sdl_source" -B "$indie_sdl_build" \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+  -DCMAKE_OSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET" \
+  -DCMAKE_INSTALL_PREFIX="$indie_dependency_root" \
+  -DCMAKE_INSTALL_NAME_DIR="$indie_dependency_root/lib" \
+  -DSDL_SHARED=ON -DSDL_STATIC=OFF -DSDL_TEST=OFF \
+  -DSDL_HIDAPI=ON -DSDL_HIDAPI_JOYSTICK=ON
+cmake --build "$indie_sdl_build" --parallel "$(sysctl -n hw.logicalcpu)"
+cmake --install "$indie_sdl_build"
+
 mkdir -p "$indie_gnutls_build"
 cd "$indie_gnutls_build"
 arch -x86_64 /usr/bin/env \
@@ -197,7 +226,7 @@ arch -x86_64 /usr/bin/env \
     --with-inotify --without-x --without-wayland --without-vulkan --without-gstreamer \
     --with-gnutls --with-freetype --without-fontconfig --without-cups \
     --without-dbus --without-krb5 --without-opencl --without-pcap \
-    --without-pulse --without-sane --without-sdl --without-udev \
+    --without-pulse --without-sane --with-sdl --without-udev \
     --without-usb --without-v4l2
 
 DYLD_LIBRARY_PATH="$indie_dependency_root/lib" make -j"$(sysctl -n hw.logicalcpu)" install
@@ -222,7 +251,7 @@ find "$indie_stage/bin" "$indie_stage/lib/wine" -type f -print0 | while IFS= rea
 done
 for indie_library in \
   libfreetype.6.20.2.dylib libgmp.10.dylib libnettle.8.9.dylib \
-  libhogweed.6.9.dylib libgnutls.30.dylib libinotify.0.dylib; do
+  libhogweed.6.9.dylib libgnutls.30.dylib libinotify.0.dylib libSDL2-2.0.0.dylib; do
   ditto "$indie_dependency_root/lib/$indie_library" "$indie_stage/lib/$indie_library"
 done
 ln -s libfreetype.6.20.2.dylib "$indie_stage/lib/libfreetype.6.dylib"
@@ -234,6 +263,7 @@ ln -s libhogweed.6.9.dylib "$indie_stage/lib/libhogweed.6.dylib"
 ln -s libhogweed.6.dylib "$indie_stage/lib/libhogweed.dylib"
 ln -s libgnutls.30.dylib "$indie_stage/lib/libgnutls.dylib"
 ln -s libinotify.0.dylib "$indie_stage/lib/libinotify.dylib"
+ln -s libSDL2-2.0.0.dylib "$indie_stage/lib/libSDL2.dylib"
 
 typeset -A indie_library_ids=(
   libfreetype.6.20.2.dylib libfreetype.6.dylib
@@ -242,6 +272,7 @@ typeset -A indie_library_ids=(
   libhogweed.6.9.dylib libhogweed.6.dylib
   libgnutls.30.dylib libgnutls.30.dylib
   libinotify.0.dylib libinotify.0.dylib
+  libSDL2-2.0.0.dylib libSDL2-2.0.0.dylib
 )
 for indie_library in ${(k)indie_library_ids}; do
   install_name_tool -id "@rpath/${indie_library_ids[$indie_library]}" "$indie_stage/lib/$indie_library"
@@ -259,7 +290,9 @@ ditto "$indie_gmp_source/COPYING.LESSERv3" "$indie_stage/licenses/GMP-LGPL-3.0.t
 ditto "$indie_nettle_source/COPYING.LESSERv3" "$indie_stage/licenses/Nettle-LGPL-3.0.txt"
 ditto "$indie_gnutls_source/LICENSE" "$indie_stage/licenses/GnuTLS-License.txt"
 ditto "$indie_inotify_source/LICENSE" "$indie_stage/licenses/libinotify-kqueue-MIT.txt"
+ditto "$indie_sdl_source/LICENSE.txt" "$indie_stage/licenses/SDL2-Zlib.txt"
 ditto "$indie_root/runtime/indie-wine11/source.lock.json" "$indie_stage/source.lock.json"
+print "$indie_runtime_version" > "$indie_stage/runtime-version.txt"
 
 DYLD_LIBRARY_PATH="$indie_stage/lib" "$indie_stage/bin/wine" --version | grep -q "wine-11.0"
 # Normalize archive metadata so the same locked sources and toolchain produce

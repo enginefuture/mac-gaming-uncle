@@ -17,7 +17,8 @@ public enum GrimDawnCompatibility {
         return "\(evenPixels(width)) \(evenPixels(height))"
     }
 
-    /// Selects the classic HUD and a conservative windowed swap chain. Grim
+    /// Enables native gamepad input, selects the classic HUD and uses a
+    /// conservative windowed swap chain. Grim
     /// Dawn otherwise rebuilds a 2560x1440 exclusive/borderless surface on a
     /// much smaller logical Mac display when a character starts, which can
     /// detach both the game UI and Metal HUD layers under Wine.
@@ -46,6 +47,7 @@ public enum GrimDawnCompatibility {
                   fileManager.fileExists(atPath: options.path),
                   var contents = try? String(contentsOf: options, encoding: .utf8) else { continue }
             let desired = [
+                (key: "gamepadSupport", value: "true"),
                 (key: "standardHUD", value: "true"),
                 (key: "screenMode", value: "0"),
                 (key: "resolution", value: safeResolution),

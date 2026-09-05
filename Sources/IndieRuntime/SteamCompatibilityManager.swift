@@ -20,9 +20,11 @@ public enum SteamCompatibilityManager {
     public static func launchArguments(
         appID: UInt64? = nil,
         gameArguments: [String] = [],
-        launchOption: Int? = nil
+        launchOption: Int? = nil,
+        silent: Bool = false
     ) -> [String] {
         var arguments = ["-noverifyfiles", "-no-cef-sandbox"]
+        if silent { arguments.append("-silent") }
         if let appID {
             if launchOption != nil {
                 // Steam's -applaunch always selects the first entry for games
@@ -84,6 +86,11 @@ public enum SteamCompatibilityManager {
     /// Metal HUD to Steam; its child game then inherits the exact launch plan.
     public static func relayEnvironment(for gameEnvironment: [String: String]) -> [String: String] {
         var environment = gameEnvironment
+        // A reused Steam client launches more than one AppID. Steam injects
+        // these values into each child itself; pinning either on the client
+        // would make later games inherit the first launch's identity.
+        environment.removeValue(forKey: "SteamAppId")
+        environment.removeValue(forKey: "SteamGameId")
         environment["WINE_WAIT_CHILD_PIPE_IGNORE"] = "steam.exe"
         let compatibility = "mscoree,mshtml=;winedbg.exe=d"
         if let overrides = environment["WINEDLLOVERRIDES"], !overrides.isEmpty {

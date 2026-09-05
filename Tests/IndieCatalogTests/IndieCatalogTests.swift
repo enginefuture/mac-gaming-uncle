@@ -91,6 +91,40 @@ final class IndieCatalogTests: XCTestCase {
         XCTAssertEqual(games.first?.installDirectory.standardizedFileURL, secondary.appendingPathComponent("common/Test Game").standardizedFileURL)
     }
 
+    func testSteamAccountLibraryReadsLocalPlaytimeWithoutCredentials() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("indie-account-library-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let config = root.appendingPathComponent("userdata/123/config/localconfig.vdf")
+        try FileManager.default.createDirectory(at: config.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let source = #"""
+        "UserLocalConfigStore" {
+          "Software" { "Valve" { "Steam" { "apps" {
+            "42" { "Playtime" "125" "LastPlayed" "1700000000" }
+            "760" { "Playtime" "999" }
+          } } } }
+        }
+        """#
+        try Data(source.utf8).write(to: config)
+
+        let games = try SteamAccountLibraryScanner.scan(steamRoot: root, installed: [])
+        XCTAssertEqual(games.map(\.appID), [42])
+        XCTAssertEqual(games.first?.playtimeMinutes, 125)
+        XCTAssertEqual(games.first?.lastPlayed, Date(timeIntervalSince1970: 1_700_000_000))
+        XCTAssertFalse(games.first?.isInstalled ?? true)
+    }
+
+    func testSteamNativeStoreCacheRoundTrip() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("steam-store-cache-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let item = SteamStoreItem(
+            id: 42, name: "Test Game", imageURL: URL(string: "https://example.com/header.jpg"),
+            originalPrice: 1000, finalPrice: 500, currency: "CNY", discountPercent: 50
+        )
+        let catalog = SteamStoreCatalog(specials: [item], topSellers: [], newReleases: [])
+        try SteamNativeStoreCache.save(catalog, to: url)
+        XCTAssertEqual(SteamNativeStoreCache.load(from: url), catalog)
+    }
+
     func testSteamExecutableResolverPrefersTopLevelGameLauncher() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("indie-steam-executable-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: root) }
@@ -156,12 +190,13 @@ final class IndieCatalogTests: XCTestCase {
         let settings = root.appendingPathComponent("drive_c/users/player/Documents/My Games/Grim Dawn/Settings")
         try FileManager.default.createDirectory(at: settings, withIntermediateDirectories: true)
         let options = settings.appendingPathComponent("options.txt")
-        let original = "uiScale                   = 0.5\nstandardHUD               = false\nscreenMode                = 2\nresolution                = 2560 1440\nsyncToRefresh             = true\n"
+        let original = "uiScale                   = 0.5\r\ngamepadSupport            = false\r\nstandardHUD               = false\r\nscreenMode                = 2\r\nresolution                = 2560 1440\r\nsyncToRefresh             = true\r\n"
         try original.write(to: options, atomically: true, encoding: .utf8)
 
         let first = try GrimDawnCompatibility.prepare(bottleRoot: root, safeResolution: "1512 982")
         XCTAssertTrue(first.changed)
         let updated = try String(contentsOf: options, encoding: .utf8)
+        XCTAssertTrue(updated.contains("gamepadSupport             = true"))
         XCTAssertTrue(updated.contains("standardHUD                = true"))
         XCTAssertTrue(updated.contains("screenMode                 = 0"))
         XCTAssertTrue(updated.contains("resolution                 = 1512 982"))

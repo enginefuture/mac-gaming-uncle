@@ -276,6 +276,134 @@ public enum GameSource: String, Codable, Sendable {
     case steam
 }
 
+public struct GameResolution: Codable, Hashable, Sendable {
+    public let width: Int
+    public let height: Int
+
+    public init(width: Int, height: Int) {
+        self.width = width
+        self.height = height
+    }
+
+    public var label: String { "\(width) × \(height)" }
+
+    public var isValid: Bool {
+        width >= 640 && width <= 7680 && height >= 480 && height <= 4320
+    }
+}
+
+public enum GameSettingOverride: String, Codable, CaseIterable, Sendable {
+    case inherit
+    case enabled
+    case disabled
+
+    public func resolve(default defaultValue: Bool) -> Bool {
+        switch self {
+        case .inherit: defaultValue
+        case .enabled: true
+        case .disabled: false
+        }
+    }
+}
+
+public enum ControllerMode: String, Codable, CaseIterable, Sendable {
+    /// Let Wine and Steam select their normal input path.
+    case automatic
+    /// Prefer SDL HIDAPI and expose a stable Xbox-style button layout.
+    case enhanced
+}
+
+/// User-owned launch preferences. The id is stable across rescans: Steam games
+/// use `steam:<app-id>` and imported games use `local:<game-uuid>`.
+public struct GameConfiguration: Codable, Hashable, Sendable, Identifiable {
+    public let id: String
+    public var virtualDesktop: GameResolution?
+    public var preferredRenderer: RendererKind?
+    public var syncBackend: SyncBackend
+    public var metalHUD: GameSettingOverride
+    public var metalFX: GameSettingOverride
+    public var metal4: GameSettingOverride
+    public var controllerMode: ControllerMode
+    public var controllerRumble: Bool
+    public var arguments: [String]
+    public var updatedAt: Date
+
+    public init(
+        id: String,
+        virtualDesktop: GameResolution? = nil,
+        preferredRenderer: RendererKind? = nil,
+        syncBackend: SyncBackend = .automatic,
+        metalHUD: GameSettingOverride = .inherit,
+        metalFX: GameSettingOverride = .inherit,
+        metal4: GameSettingOverride = .inherit,
+        controllerMode: ControllerMode = .automatic,
+        controllerRumble: Bool = true,
+        arguments: [String] = [],
+        updatedAt: Date = Date()
+    ) {
+        self.id = id
+        self.virtualDesktop = virtualDesktop
+        self.preferredRenderer = preferredRenderer
+        self.syncBackend = syncBackend
+        self.metalHUD = metalHUD
+        self.metalFX = metalFX
+        self.metal4 = metal4
+        self.controllerMode = controllerMode
+        self.controllerRumble = controllerRumble
+        self.arguments = arguments
+        self.updatedAt = updatedAt
+    }
+
+    public static func steam(appID: UInt64) -> Self { .init(id: "steam:\(appID)") }
+    public static func local(gameID: UUID) -> Self { .init(id: "local:\(gameID.uuidString)") }
+
+    public var isCustomized: Bool {
+        virtualDesktop != nil || preferredRenderer != nil || syncBackend != .automatic ||
+            metalHUD != .inherit || metalFX != .inherit || metal4 != .inherit ||
+            controllerMode != .automatic || !controllerRumble || !arguments.isEmpty
+    }
+}
+
+public struct SteamSessionDescriptor: Codable, Equatable, Sendable {
+    public let bottleID: UUID
+    public let runtimeID: String
+    public let environment: [String: String]
+    public let virtualDesktop: GameResolution?
+
+    public init(
+        bottleID: UUID,
+        runtimeID: String,
+        environment: [String: String],
+        virtualDesktop: GameResolution?
+    ) {
+        self.bottleID = bottleID
+        self.runtimeID = runtimeID
+        self.environment = environment
+        self.virtualDesktop = virtualDesktop
+    }
+}
+
+public struct SteamSessionTracker: Sendable {
+    public private(set) var current: SteamSessionDescriptor?
+    public private(set) var reuseCount = 0
+
+    public init() {}
+
+    public func canReuse(_ candidate: SteamSessionDescriptor) -> Bool {
+        current == candidate
+    }
+
+    public mutating func didLaunch(_ descriptor: SteamSessionDescriptor, reused: Bool) {
+        current = descriptor
+        reuseCount = reused ? reuseCount + 1 : 0
+    }
+
+    public mutating func didStop() {
+        current = nil
+        reuseCount = 0
+    }
+}
+
 public struct GameRecord: Codable, Hashable, Sendable, Identifiable {
     public let id: UUID
     public var displayName: String
@@ -359,14 +487,16 @@ public struct LaunchProfile: Codable, Hashable, Sendable {
     public let arguments: [String]
     public let environment: [String: String]
     public let metalHUD: Bool
+    public let virtualDesktop: GameResolution?
 
-    public init(runtimeID: String, preferredRenderer: RendererKind? = nil, syncBackend: SyncBackend = .automatic, arguments: [String] = [], environment: [String: String] = [:], metalHUD: Bool = false) {
+    public init(runtimeID: String, preferredRenderer: RendererKind? = nil, syncBackend: SyncBackend = .automatic, arguments: [String] = [], environment: [String: String] = [:], metalHUD: Bool = false, virtualDesktop: GameResolution? = nil) {
         self.runtimeID = runtimeID
         self.preferredRenderer = preferredRenderer
         self.syncBackend = syncBackend
         self.arguments = arguments
         self.environment = environment
         self.metalHUD = metalHUD
+        self.virtualDesktop = virtualDesktop
     }
 }
 
@@ -380,9 +510,10 @@ public struct LaunchPlan: Codable, Hashable, Sendable, Identifiable {
     public let arguments: [String]
     public let environment: [String: String]
     public let warnings: [String]
+    public let virtualDesktop: GameResolution?
     public let generatedAt: Date
 
-    public init(id: UUID = UUID(), executable: URL, windowsExecutablePath: String? = nil, bottle: BottleRecord, runtimeID: String, renderer: RendererKind, arguments: [String], environment: [String: String], warnings: [String] = [], generatedAt: Date = Date()) {
+    public init(id: UUID = UUID(), executable: URL, windowsExecutablePath: String? = nil, bottle: BottleRecord, runtimeID: String, renderer: RendererKind, arguments: [String], environment: [String: String], warnings: [String] = [], virtualDesktop: GameResolution? = nil, generatedAt: Date = Date()) {
         self.id = id
         self.executable = executable
         self.windowsExecutablePath = windowsExecutablePath
@@ -392,6 +523,7 @@ public struct LaunchPlan: Codable, Hashable, Sendable, Identifiable {
         self.arguments = arguments
         self.environment = environment
         self.warnings = warnings
+        self.virtualDesktop = virtualDesktop
         self.generatedAt = generatedAt
     }
 }

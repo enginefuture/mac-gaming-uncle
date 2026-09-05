@@ -7,7 +7,7 @@ import IndieCore
 /// dependencies. Apple D3DMetal remains a separate, user-imported component.
 public actor CommunityIndieWineBootstrapper {
     public static let runtimeID = "org.indie.wine11"
-    public static let version = SemanticVersion(major: 11, minor: 0, patch: 1)
+    public static let version = SemanticVersion(major: 11, minor: 0, patch: 2)
 
     private let paths: IndiePaths
     private let session: URLSession
@@ -35,7 +35,13 @@ public actor CommunityIndieWineBootstrapper {
         guard Self.isCompleteRuntime(sourceRoot) else {
             throw IndieError.invalidData("本地 Mac Gaming Uncle Wine 11 构建不完整")
         }
-        let destination = runtimeDestination
+        let sourceVersion = Self.runtimeVersion(in: sourceRoot) ?? Self.version
+        if sourceVersion >= SemanticVersion(major: 11, minor: 0, patch: 2),
+           !Self.hasControllerSupport(sourceRoot) {
+            throw IndieError.invalidData("手柄版 Wine 运行时缺少 SDL2 winebus 组件")
+        }
+        let localManifest = Self.manifest(for: sourceVersion)
+        let destination = runtimeDestination(for: sourceVersion)
         if FileManager.default.fileExists(atPath: destination.path) {
             if Self.isCompleteRuntime(destination) {
                 return try finishInstallation(at: destination)
@@ -45,7 +51,7 @@ public actor CommunityIndieWineBootstrapper {
         let staging = paths.runtimes.appendingPathComponent(".indie-wine11-\(UUID().uuidString)", isDirectory: true)
         do {
             try FileManager.default.copyItem(at: sourceRoot, to: staging)
-            let installed = try finishInstallation(at: staging, metadataRoot: staging)
+            let installed = try finishInstallation(at: staging, metadataRoot: staging, manifest: localManifest)
             try FileManager.default.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
             try FileManager.default.moveItem(at: staging, to: destination)
             return LocalWineRuntime(manifest: installed.manifest, root: destination, importedAt: installed.importedAt)
@@ -56,9 +62,13 @@ public actor CommunityIndieWineBootstrapper {
     }
 
     private var runtimeDestination: URL {
+        runtimeDestination(for: Self.version)
+    }
+
+    private func runtimeDestination(for version: SemanticVersion) -> URL {
         paths.runtimes
             .appendingPathComponent(Self.runtimeID, isDirectory: true)
-            .appendingPathComponent(Self.version.description, isDirectory: true)
+            .appendingPathComponent(version.description, isDirectory: true)
     }
 
     private func installedRuntime() -> LocalWineRuntime? {
@@ -72,11 +82,15 @@ public actor CommunityIndieWineBootstrapper {
         return LocalWineRuntime(manifest: value.manifest, root: destination, importedAt: value.importedAt)
     }
 
-    private func finishInstallation(at root: URL, metadataRoot: URL? = nil) throws -> LocalWineRuntime {
+    private func finishInstallation(
+        at root: URL,
+        metadataRoot: URL? = nil,
+        manifest: RuntimeManifest? = nil
+    ) throws -> LocalWineRuntime {
         guard Self.isCompleteRuntime(root) else {
             throw IndieError.invalidData("Mac Gaming Uncle Wine 11 运行环境不完整")
         }
-        let installed = LocalWineRuntime(manifest: Self.manifest, root: root, importedAt: Date())
+        let installed = LocalWineRuntime(manifest: manifest ?? Self.manifest, root: root, importedAt: Date())
         try IndieJSON.encoder(pretty: true).encode(installed)
             .write(to: (metadataRoot ?? root).appendingPathComponent("local-runtime.json"), options: .atomic)
         return installed
@@ -95,9 +109,37 @@ public actor CommunityIndieWineBootstrapper {
             FileManager.default.fileExists(atPath: root.appendingPathComponent("lib/libgnutls.30.dylib").path)
     }
 
+    public static func hasControllerSupport(_ root: URL) -> Bool {
+        FileManager.default.fileExists(atPath: root.appendingPathComponent("lib/libSDL2-2.0.0.dylib").path) &&
+            ((try? String(contentsOf: root.appendingPathComponent("runtime-version.txt"), encoding: .utf8)) != nil)
+    }
+
+    private static func runtimeVersion(in root: URL) -> SemanticVersion? {
+        guard let text = try? String(contentsOf: root.appendingPathComponent("runtime-version.txt"), encoding: .utf8) else {
+            return nil
+        }
+        return try? SemanticVersion(text.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    private static func manifest(for version: SemanticVersion) -> RuntimeManifest {
+        guard version != Self.version else { return Self.manifest }
+        return RuntimeManifest(
+            id: runtimeID,
+            displayName: "Mac Gaming Uncle Wine \(version) 手柄增强引擎",
+            version: version,
+            channel: .experimental,
+            hostArchitecture: .x86_64,
+            minimumMacOS: SemanticVersion(major: 15, minor: 0),
+            capabilities: Self.manifest.capabilities,
+            artifacts: [],
+            licenses: Self.manifest.licenses,
+            publishedAt: Date()
+        )
+    }
+
     public static let manifest = RuntimeManifest(
         id: runtimeID,
-        displayName: "Mac Gaming Uncle Wine 11 开源游戏引擎",
+        displayName: "Mac Gaming Uncle Wine 11 手柄增强游戏引擎",
         version: version,
         channel: .experimental,
         hostArchitecture: .x86_64,
@@ -109,9 +151,9 @@ public actor CommunityIndieWineBootstrapper {
             supportsMSync: true
         ),
         artifacts: [ArtifactDescriptor(
-            url: URL(string: "https://github.com/enginefuture/mac-gaming-uncle/releases/download/runtime-wine-11.0.1/indie-wine-11.0.1-macos-x86_64.tar.xz")!,
-            sha256: "78c57653b5fb62f2df2a31d6074a99506e68b3d375b86573dc4adcfc280e3680",
-            size: 46_058_220,
+            url: URL(string: "https://github.com/enginefuture/mac-gaming-uncle/releases/download/runtime-wine-11.0.2/indie-wine-11.0.2-macos-x86_64.tar.xz")!,
+            sha256: "412d2135f70683c34e80f50c4fa209a53be8ec9656dd51dcb92af8049fce3150",
+            size: 46_596_600,
             archiveRoot: "wine-runtime"
         )],
         licenses: [
@@ -130,7 +172,12 @@ public actor CommunityIndieWineBootstrapper {
                 sourceURL: URL(string: "https://github.com/libinotify-kqueue/libinotify-kqueue")!,
                 correspondingSourceURL: URL(string: "https://github.com/libinotify-kqueue/libinotify-kqueue/archive/refs/tags/20240724.tar.gz")!
             ),
+            LicenseDescriptor(
+                identifier: "Zlib", name: "SDL2 zlib License",
+                sourceURL: URL(string: "https://github.com/libsdl-org/SDL")!,
+                correspondingSourceURL: URL(string: "https://github.com/libsdl-org/SDL/releases/download/release-2.32.10/SDL2-2.32.10.tar.gz")!
+            ),
         ],
-        publishedAt: Date(timeIntervalSince1970: 1_788_451_200)
+        publishedAt: Date(timeIntervalSince1970: 1_788_576_603)
     )
 }

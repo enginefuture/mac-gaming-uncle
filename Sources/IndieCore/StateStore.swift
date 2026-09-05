@@ -47,6 +47,20 @@ public actor StateStore {
         try fetch(kind: "game").map { try IndieJSON.decoder().decode(GameRecord.self, from: $0) }
     }
 
+    public func saveGameConfiguration(_ configuration: GameConfiguration) throws {
+        try ensureOpen()
+        try upsert(
+            kind: "game-configuration", id: configuration.id,
+            data: IndieJSON.encoder().encode(configuration), updatedAt: configuration.updatedAt
+        )
+    }
+
+    public func gameConfigurations() throws -> [GameConfiguration] {
+        try fetch(kind: "game-configuration").map {
+            try IndieJSON.decoder().decode(GameConfiguration.self, from: $0)
+        }
+    }
+
     public func saveSession(_ session: RunSession) throws {
         try ensureOpen()
         try upsert(kind: "session", id: session.id.uuidString, data: IndieJSON.encoder().encode(session), updatedAt: session.endedAt)

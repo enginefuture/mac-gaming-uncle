@@ -13,6 +13,8 @@ x86_64-w64-mingw32-g++ -std=c++20 -O2 -municode -static -static-libgcc -static-l
   "$indie_root/Fixtures/Windows/d3d11-clear.cpp" -ld3d11 -ldxgi -ldxguid -lgdi32 -o "$indie_output/indie-d3d11-fixture.exe"
 x86_64-w64-mingw32-g++ -std=c++20 -O2 -municode -static -static-libgcc -static-libstdc++ \
   "$indie_root/Fixtures/Windows/d3d12-clear.cpp" -ld3d12 -ldxgi -ldxguid -lgdi32 -o "$indie_output/indie-d3d12-fixture.exe"
+x86_64-w64-mingw32-g++ -std=c++20 -O2 -municode -static -static-libgcc -static-libstdc++ \
+  "$indie_root/Fixtures/Windows/xinput-probe.cpp" -lxinput -o "$indie_output/indie-xinput-probe.exe"
 
 for indie_fixture in "$indie_output"/*.exe; do
   shasum -a 256 "$indie_fixture"

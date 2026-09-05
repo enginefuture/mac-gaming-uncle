@@ -3,6 +3,7 @@
   <h1>Mac Gaming Uncle</h1>
   <p><strong>Run Windows games you own on Apple Silicon Macs.</strong></p>
   <p>Native SwiftUI · Wine · Apple D3DMetal · MetalFX · DXVK</p>
+  <p><a href="https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.0/Mac-Gaming-Uncle-0.2.0-macOS-arm64.dmg">Download the 0.2.0 DMG</a> · <a href="https://github.com/enginefuture/mac-gaming-uncle/releases/tag/v0.2.0">Release notes</a></p>
   <p>English · <a href="README.md">简体中文</a></p>
 </div>
 
@@ -27,24 +28,32 @@ The official Mac Gaming Uncle project and its official releases will remain perm
 
 ## Project status
 
-Mac Gaming Uncle is currently a `0.1.0` research preview for Apple Silicon and macOS 15 or later. The native app covers environment setup, Windows Steam installation, Steam library discovery, and D3DMetal game launching.
+Mac Gaming Uncle is currently a `0.2.0` research preview for Apple Silicon and macOS 15 or later. It now provides a Steam-client shell, native Store and Library, per-game settings, a reusable global Steam session, and an SDL/XInput controller launch path.
 
-Hardware validation: Apple M3 Max, macOS 26.6.2, GPTK 4.0 beta 2, and Mac Gaming Uncle Wine 11.0.1. `Grim Dawn 1.3.0.8 (x64)` has been validated with its complete Chinese UI, Steam integration, and Apple's in-game Metal HUD (D3D11, approximately 114 FPS); `Ruins of Dawn` reaches its main menu.
+Hardware validation: Apple M3 Max, macOS 26.6.2, GPTK 4.0 beta 2, and Mac Gaming Uncle Wine 11.0.2. `Grim Dawn 1.3.0.8 (x64)` has been validated with its complete Chinese UI, Steam integration, XInput controller support, and Apple's in-game Metal HUD (D3D11, approximately 114 FPS); `Ruins of Dawn` reaches its main menu.
 
 ## Features
 
 - Native SwiftUI/AppKit interface with a guided Chinese onboarding flow.
+- Pixel-game brand art: a tired mustached uncle app icon, a whole-apple controller mark, and a transparent pixel apple for launch buttons, with no bite or play triangle.
+- Top-level navigation focuses on Home, Store, and Library; controllers, downloads, and runtime setup remain supporting tools without a separate Community channel.
+- A focused Steam-client shell with a native Store home/categories/search experience, account library, artwork, details, install, and launch actions.
+- Public Store browsing requires no web login; wishlist, purchase, and account actions open a clearly labeled `store.steampowered.com` secure page without copying Steam CEF's encrypted session cookies.
+- Reads AppIDs, playtime, and recent activity from the local Steam `localconfig.vdf` without reading or uploading authentication tokens, and caches official Store metadata locally.
 - Downloads the Windows Steam installer from Valve's official CDN.
 - Opens Apple's official download page, watches for GPTK 4, and automatically verifies the DMG, SHA-256, and Apple code signature.
 - Imports the complete D3DMetal framework, Wine PE bridge, and Unix bridge without redistributing Apple binaries.
-- Builds and installs Mac Gaming Uncle Wine 11 from corresponding public source, with GCC 15 MinGW, new WoW64, MSync, Steam CEF fixes, and a native D3DMetal bridge path.
+- Builds and installs Mac Gaming Uncle Wine 11 from corresponding public source, with GCC 15 MinGW, new WoW64, MSync, SDL2 winebus/XInput, Steam CEF fixes, and a native D3DMetal bridge path.
 - Repairs Steam CEF compatibility and installs CJK fonts with DirectWrite font linking.
 - Resolves the x64/`*-Win64-Shipping.exe` target, then lets Steam create it through `-applaunch` so SteamAPI, renderer, and HUD state are inherited intact.
+- Keeps a global signed-in Steam session and reuses it whenever launch environments are compatible; it restarts only for conflicting renderer, HUD, synchronization, or virtual-desktop settings.
 - Installs native D3DMetal PE bridges into the bottle with versioned backups, and automatically repairs the CEF wrapper after a Steam update replaces it.
 - Invalidates shader caches when the GPTK version, source hash, MetalFX, DXR, Metal 4, macOS version, or compatibility arguments change.
 - Auditable game recipes matched by Steam AppID and executable name.
 - Static PE architecture, DirectX import, and anti-cheat inspection; kernel anti-cheat is blocked before launch.
 - Apple Metal Performance HUD in the same Mac Gaming Uncle Wine 11 process that runs the game.
+- Per-game settings for virtual-desktop resolution, renderer, synchronization, Metal HUD, MetalFX, Metal 4, and launch arguments; settings survive Steam rescans.
+- A dedicated Controller Center for Bluetooth discovery, device/battery/capability status, player assignment, live input and rumble tests, plus per-game SDL HIDAPI compatibility.
 - SQLite state, isolated Wine bottles, recoverable backups, CLI diagnostics, and automated tests.
 
 ## How it works
@@ -73,6 +82,8 @@ Mac Gaming Uncle composes, verifies, and launches these layers. It does not modi
 - A Steam account and games you legally own
 
 ### Build from source
+
+If you do not need a development environment, download the mount-verified [Mac Gaming Uncle 0.2.0 DMG](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.0/Mac-Gaming-Uncle-0.2.0-macOS-arm64.dmg) and verify it with the adjacent [SHA-256 file](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.0/Mac-Gaming-Uncle-0.2.0-macOS-arm64.dmg.sha256).
 
 ```bash
 git clone https://github.com/enginefuture/mac-gaming-uncle.git
@@ -105,14 +116,14 @@ MAC_GAMING_UNCLE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)
 1. Select “Prepare environment” to install Mac Gaming Uncle's reproducibly built open-source Wine 11 runtime.
 2. Select “Install GPTK 4.” Mac Gaming Uncle opens the official Apple page. After the user signs in and starts the download, verification and import continue automatically.
 3. Select “Install Steam,” complete the Windows Steam installer inside Wine, and sign in.
-4. Install a game in Steam, return to Mac Gaming Uncle's Library, and scan Steam.
-5. Select “Smart launch.” Mac Gaming Uncle selects D3DMetal, DXMT, or WineD3D from the game recipe. The first graphics-cache build may take several minutes.
+4. Browse Steam inside Mac Gaming Uncle's Store, then install or launch account games from the native Library.
+5. Use the settings button beside a game to configure resolution, HUD, renderer, and controller behavior, then select “Smart launch.” The first graphics-cache build may take several minutes.
 
 MetalFX/DLSS mapping is experimental and disabled by default. It can only help games that already implement DLSS, and recipes can explicitly disable it. `Grim Dawn` does not use DLSS, so Mac Gaming Uncle ignores the global MetalFX toggle for that title to prevent the NVNGX GPU-spoof path from dropping its UI.
 
 “Prefer Metal 4” is enabled by default, but Mac Gaming Uncle first queries the active `MTLDevice` for hardware and OS support. Unsupported systems fall back automatically, and the option can be disabled for a title that regresses. The D3DMetal release, the game's Direct3D API, and the Metal submission path are separate dimensions; a HUD reading `Game Porting Toolkit 4.0b2 · D3D11` is expected.
 
-“Show Apple Metal HUD” relays Apple's HUD environment through Steam to the target game. It does not switch to Apple Evaluation Wine or bypass Steam. The HUD appears only with D3DMetal or DXMT. The `Grim Dawn 1.3` recipe selects the x64 executable and D3DMetal 4, matches the game resolution to the Mac display's logical-point dimensions, and backs up `options.txt` before enabling the classic HUD. It also disables MSync and Steam Overlay for this title to avoid missing UI and displaced pointer hit regions.
+“Show Apple Metal HUD” relays Apple's HUD environment through Steam to the target game. It does not switch to Apple Evaluation Wine or bypass Steam. The HUD appears only with D3DMetal or DXMT. The `Grim Dawn 1.3` recipe selects the x64 executable and D3DMetal 4, matches the game resolution to the Mac display's logical-point dimensions, and backs up `options.txt` before enabling the classic HUD and native gamepad support. It also disables MSync and Steam Overlay for this title to avoid missing UI and displaced pointer hit regions.
 
 ## Development and testing
 

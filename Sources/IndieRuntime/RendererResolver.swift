@@ -73,7 +73,14 @@ public enum LaunchPlanBuilder {
         if profile.metalHUD {
             environment["MTL_HUD_ENABLED"] = "1"
         }
-        if profile.syncBackend == .msync || recipeProfile?.syncBackend == .msync { environment["WINEMSYNC"] = "1" }
+        let syncBackend = profile.syncBackend == .automatic
+            ? (recipeProfile?.syncBackend ?? .automatic)
+            : profile.syncBackend
+        if syncBackend == .msync {
+            environment["WINEMSYNC"] = "1"
+        } else {
+            environment.removeValue(forKey: "WINEMSYNC")
+        }
         if let overlay = installed.overlayPaths[resolution.renderer] {
             // D3DMetalLaunchEnvironment supplies two deliberately different
             // paths: the Wine PE bridge and the native `external` libraries.
@@ -114,7 +121,8 @@ public enum LaunchPlanBuilder {
             // switches contributed by a recipe.
             arguments: profile.arguments + (recipeProfile?.arguments ?? []),
             environment: environment,
-            warnings: resolution.warnings + (recipe?.knownIssues ?? [])
+            warnings: resolution.warnings + (recipe?.knownIssues ?? []),
+            virtualDesktop: profile.virtualDesktop
         )
     }
 }
