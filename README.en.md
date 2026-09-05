@@ -32,6 +32,25 @@ Mac Gaming Uncle is currently a `0.2.0` research preview for Apple Silicon and m
 
 Hardware validation: Apple M3 Max, macOS 26.6.2, GPTK 4.0 beta 2, and Mac Gaming Uncle Wine 11.0.2. `Grim Dawn 1.3.0.8 (x64)` has been validated with its complete Chinese UI, Steam integration, XInput controller support, and Apple's in-game Metal HUD (D3D11, approximately 114 FPS); `Ruins of Dawn` reaches its main menu.
 
+## Screenshots
+
+These screenshots were captured from Mac Gaming Uncle 0.2.0 running on real hardware.
+
+<table>
+  <tr>
+    <td width="50%"><strong>Home and recently played</strong><br><a href="docs/screenshots/0.2.0/home.png"><img src="docs/screenshots/0.2.0/home.png" width="100%" alt="Mac Gaming Uncle Home"></a></td>
+    <td width="50%"><strong>Native Steam Store</strong><br><a href="docs/screenshots/0.2.0/store.png"><img src="docs/screenshots/0.2.0/store.png" width="100%" alt="Mac Gaming Uncle native Steam Store"></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><strong>Account Library and game details</strong><br><a href="docs/screenshots/0.2.0/library.png"><img src="docs/screenshots/0.2.0/library.png" width="100%" alt="Mac Gaming Uncle Library"></a></td>
+    <td width="50%"><strong>Per-game settings entry</strong><br><a href="docs/screenshots/0.2.0/library-settings-entry.png"><img src="docs/screenshots/0.2.0/library-settings-entry.png" width="100%" alt="Mac Gaming Uncle settings entry"></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><strong>Per-game configuration</strong><br><a href="docs/screenshots/0.2.0/per-game-settings.png"><img src="docs/screenshots/0.2.0/per-game-settings.png" width="100%" alt="Mac Gaming Uncle per-game settings"></a></td>
+    <td width="50%"><strong>Controller Center</strong><br><a href="docs/screenshots/0.2.0/controller-center.png"><img src="docs/screenshots/0.2.0/controller-center.png" width="100%" alt="Mac Gaming Uncle Controller Center"></a></td>
+  </tr>
+</table>
+
 ## Features
 
 - Native SwiftUI/AppKit interface with a guided Chinese onboarding flow.

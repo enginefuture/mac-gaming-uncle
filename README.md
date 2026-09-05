@@ -32,6 +32,25 @@ Mac Gaming Uncle 目前处于 `0.2.0` 研究预览阶段，面向 Apple Silicon 
 
 实机验证环境：Apple M3 Max、macOS 26.6.2、GPTK 4.0 beta 2、Mac Gaming Uncle Wine 11.0.2。`Grim Dawn 1.3.0.8 (x64)` 已验证完整中文 UI、Steam 集成、XInput 手柄与 Apple 官方 Metal HUD（D3D11，实测约 114 FPS）；`Ruins of Dawn` 已验证进入主菜单。
 
+## 实际界面
+
+以下截图来自 Mac Gaming Uncle 0.2.0 实机运行界面。
+
+<table>
+  <tr>
+    <td width="50%"><strong>主页与最近游戏</strong><br><a href="docs/screenshots/0.2.0/home.png"><img src="docs/screenshots/0.2.0/home.png" width="100%" alt="Mac Gaming Uncle 主页"></a></td>
+    <td width="50%"><strong>原生 Steam 商店</strong><br><a href="docs/screenshots/0.2.0/store.png"><img src="docs/screenshots/0.2.0/store.png" width="100%" alt="Mac Gaming Uncle 原生 Steam 商店"></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><strong>账户游戏库与游戏详情</strong><br><a href="docs/screenshots/0.2.0/library.png"><img src="docs/screenshots/0.2.0/library.png" width="100%" alt="Mac Gaming Uncle 游戏库"></a></td>
+    <td width="50%"><strong>从游戏库进入独立设置</strong><br><a href="docs/screenshots/0.2.0/library-settings-entry.png"><img src="docs/screenshots/0.2.0/library-settings-entry.png" width="100%" alt="Mac Gaming Uncle 游戏设置入口"></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><strong>每游戏独立设置</strong><br><a href="docs/screenshots/0.2.0/per-game-settings.png"><img src="docs/screenshots/0.2.0/per-game-settings.png" width="100%" alt="Mac Gaming Uncle 每游戏独立设置"></a></td>
+    <td width="50%"><strong>手柄中心</strong><br><a href="docs/screenshots/0.2.0/controller-center.png"><img src="docs/screenshots/0.2.0/controller-center.png" width="100%" alt="Mac Gaming Uncle 手柄中心"></a></td>
+  </tr>
+</table>
+
 ## 已实现
 
 - 原生 SwiftUI/AppKit 界面，全中文新手引导。
