@@ -6,7 +6,7 @@
 "overview.subtitle" = "Mac Gaming Uncle orchestrates Wine, D3DMetal, and open Metal renderers without installing a Windows VM.";
 "overview.quickStart" = "Quick Start";
 "overview.step.runtime" = "Install a signed and verified Wine runtime";
-"overview.step.gptk" = "Import D3DMetal from Apple's Game Porting Toolkit";
+"overview.step.gptk" = "Automatically download and install GPTK graphics components";
 "overview.step.game" = "Install Steam or import a Windows game you own";
 "status.ready" = "Ready";
 "status.required" = "Required";
@@ -24,7 +24,7 @@
 "library.local" = "Local games";
 "library.chooseSteamApps" = "Choose steamapps";
 "runtime.title" = "Runtimes";
-"runtime.gptk.detail" = "D3DMetal is Apple's DirectX 11/12 to Metal layer from GPTK. Mac Gaming Uncle only imports and verifies the copy you obtain from Apple.";
+"runtime.gptk.detail" = "D3DMetal is Apple's DirectX 11/12 to Metal layer. The original GPTK image downloads through our separate R2 channel and is verified before import.";
 "runtime.downloadGPTK" = "Open Apple Download Page";
 "runtime.importGPTK" = "Import GPTK";
 "runtime.wine.detail" = "Mac Gaming Uncle builds Wine 11 from public corresponding source and does not bundle or redistribute commercial CrossOver binaries.";

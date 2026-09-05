@@ -151,7 +151,7 @@ public actor CommunityIndieWineBootstrapper {
             supportsMSync: true
         ),
         artifacts: [ArtifactDescriptor(
-            url: URL(string: "https://github.com/enginefuture/mac-gaming-uncle/releases/download/runtime-wine-11.0.2/indie-wine-11.0.2-macos-x86_64.tar.xz")!,
+            url: URL(string: "https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.1/indie-wine-11.0.2-macos-x86_64.tar.xz")!,
             sha256: "412d2135f70683c34e80f50c4fa209a53be8ec9656dd51dcb92af8049fce3150",
             size: 46_596_600,
             archiveRoot: "wine-runtime"

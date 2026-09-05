@@ -3,7 +3,7 @@
   <h1>Mac Gaming Uncle</h1>
   <p><strong>Run Windows games you own on Apple Silicon Macs.</strong></p>
   <p>Native SwiftUI · Wine · Apple D3DMetal · MetalFX · DXVK</p>
-  <p><a href="https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.0/Mac-Gaming-Uncle-0.2.0-macOS-arm64.dmg">Download the 0.2.0 DMG</a> · <a href="https://github.com/enginefuture/mac-gaming-uncle/releases/tag/v0.2.0">Release notes</a></p>
+  <p><a href="https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.1/Mac-Gaming-Uncle-0.2.1-macOS-arm64.dmg">Download the 0.2.1 DMG</a> · <a href="https://github.com/enginefuture/mac-gaming-uncle/releases/tag/v0.2.1">Release notes</a></p>
   <p>English · <a href="README.md">简体中文</a></p>
 </div>
 
@@ -12,7 +12,7 @@
 </p>
 
 > [!IMPORTANT]
-> Mac Gaming Uncle is an open-source compatibility research project. It is not a virtual machine and does not include Windows, Steam, games, or Apple D3DMetal. Apple components must be obtained by the user from the official Apple Developer site and imported locally.
+> Mac Gaming Uncle is an open-source compatibility research project, not a virtual machine. The app bundle contains no Windows, Steam, games, or Apple D3DMetal. Onboarding downloads the original GPTK image separately through our R2 channel and verifies it before local import. Apple's original license and noncommercial distribution terms still apply. See [GPTK distribution](docs/GPTK_DISTRIBUTION.md).
 
 ## Why this project exists
 
@@ -28,7 +28,7 @@ The official Mac Gaming Uncle project and its official releases will remain perm
 
 ## Project status
 
-Mac Gaming Uncle is currently a `0.2.0` research preview for Apple Silicon and macOS 15 or later. It now provides a Steam-client shell, native Store and Library, per-game settings, a reusable global Steam session, and an SDL/XInput controller launch path.
+Mac Gaming Uncle is currently a `0.2.1` research preview for Apple Silicon and macOS 15 or later. It now provides a Steam-client shell, native Store and Library, per-game settings, a reusable global Steam session, and an SDL/XInput controller launch path.
 
 Hardware validation: Apple M3 Max, macOS 26.6.2, GPTK 4.0 beta 2, and Mac Gaming Uncle Wine 11.0.2. `Grim Dawn 1.3.0.8 (x64)` has been validated with its complete Chinese UI, Steam integration, XInput controller support, and Apple's in-game Metal HUD (D3D11, approximately 114 FPS); `Ruins of Dawn` reaches its main menu.
 
@@ -60,8 +60,8 @@ These screenshots were captured from Mac Gaming Uncle 0.2.0 running on real hard
 - Public Store browsing requires no web login; wishlist, purchase, and account actions open a clearly labeled `store.steampowered.com` secure page without copying Steam CEF's encrypted session cookies.
 - Reads AppIDs, playtime, and recent activity from the local Steam `localconfig.vdf` without reading or uploading authentication tokens, and caches official Store metadata locally.
 - Downloads the Windows Steam installer from Valve's official CDN.
-- Opens Apple's official download page, watches for GPTK 4, and automatically verifies the DMG, SHA-256, and Apple code signature.
-- Imports the complete D3DMetal framework, Wine PE bridge, and Unix bridge without redistributing Apple binaries.
+- Downloads the original GPTK 4 image through the project's Cloudflare R2 channel, verifying size, SHA-256, DMG integrity and Apple signature.
+- Imports the complete D3DMetal framework, Wine PE bridge and Unix bridge while retaining the original image and license separately.
 - Builds and installs Mac Gaming Uncle Wine 11 from corresponding public source, with GCC 15 MinGW, new WoW64, MSync, SDL2 winebus/XInput, Steam CEF fixes, and a native D3DMetal bridge path.
 - Repairs Steam CEF compatibility and installs CJK fonts with DirectWrite font linking.
 - Resolves the x64/`*-Win64-Shipping.exe` target, then lets Steam create it through `-applaunch` so SteamAPI, renderer, and HUD state are inherited intact.
@@ -97,12 +97,12 @@ Mac Gaming Uncle composes, verifies, and launches these layers. It does not modi
 - Apple Silicon Mac
 - macOS 15 or later
 - Xcode 26, or a compatible full Swift 6 toolchain
-- An Apple Developer login for the initial D3DMetal download
+- Network access to the component download servers
 - A Steam account and games you legally own
 
 ### Build from source
 
-If you do not need a development environment, download the mount-verified [Mac Gaming Uncle 0.2.0 DMG](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.0/Mac-Gaming-Uncle-0.2.0-macOS-arm64.dmg) and verify it with the adjacent [SHA-256 file](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.0/Mac-Gaming-Uncle-0.2.0-macOS-arm64.dmg.sha256).
+If you do not need a development environment, download the mount-verified [Mac Gaming Uncle 0.2.1 DMG](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.1/Mac-Gaming-Uncle-0.2.1-macOS-arm64.dmg) and verify it with the adjacent [SHA-256 file](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.1/Mac-Gaming-Uncle-0.2.1-macOS-arm64.dmg.sha256).
 
 ```bash
 git clone https://github.com/enginefuture/mac-gaming-uncle.git
@@ -133,7 +133,7 @@ MAC_GAMING_UNCLE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)
 ### First run
 
 1. Select “Prepare environment” to install Mac Gaming Uncle's reproducibly built open-source Wine 11 runtime.
-2. Select “Install GPTK 4.” Mac Gaming Uncle opens the official Apple page. After the user signs in and starts the download, verification and import continue automatically.
+2. The environment card downloads, verifies and installs GPTK 4 automatically. Verified downloads are reused and failed operations can be retried.
 3. Select “Install Steam,” complete the Windows Steam installer inside Wine, and sign in.
 4. Browse Steam inside Mac Gaming Uncle's Store, then install or launch account games from the native Library.
 5. Use the settings button beside a game to configure resolution, HUD, renderer, and controller behavior, then select “Smart launch.” The first graphics-cache build may take several minutes.

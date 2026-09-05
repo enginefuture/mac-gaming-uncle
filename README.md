@@ -3,7 +3,7 @@
   <h1>Mac Gaming Uncle</h1>
   <p><strong>在 Apple Silicon Mac 上运行你拥有的 Windows 游戏。</strong></p>
   <p>原生 SwiftUI · Wine · Apple D3DMetal · MetalFX · DXVK</p>
-  <p><a href="https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.0/Mac-Gaming-Uncle-0.2.0-macOS-arm64.dmg">下载 0.2.0 DMG</a> · <a href="https://github.com/enginefuture/mac-gaming-uncle/releases/tag/v0.2.0">版本说明</a></p>
+  <p><a href="https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.1/Mac-Gaming-Uncle-0.2.1-macOS-arm64.dmg">下载 0.2.1 DMG</a> · <a href="https://github.com/enginefuture/mac-gaming-uncle/releases/tag/v0.2.1">版本说明</a></p>
   <p><a href="README.en.md">English</a> · 简体中文</p>
 </div>
 
@@ -12,7 +12,7 @@
 </p>
 
 > [!IMPORTANT]
-> Mac Gaming Uncle 是开源兼容性研究项目，不是虚拟机，也不包含 Windows、Steam、游戏或 Apple D3DMetal。Apple 组件只能由用户从 Apple 官方开发者页面获取并在本机导入。
+> Mac Gaming Uncle 是开源兼容性研究项目，不是虚拟机。应用包不包含 Windows、Steam、游戏或 Apple D3DMetal。首次引导通过独立 R2 下载通道自动获取原始 GPTK 镜像并验证、导入；Apple 组件保留原始许可，按非商业条款分发。详见 [GPTK 下载说明](docs/GPTK_DISTRIBUTION.md)。
 
 ## 为什么做这个项目
 
@@ -28,7 +28,7 @@ Mac Gaming Uncle 官方项目和官方发行将永久保持非商业化：不推
 
 ## 项目状态
 
-Mac Gaming Uncle 目前处于 `0.2.0` 研究预览阶段，面向 Apple Silicon 与 macOS 15 及以上版本。应用已经打通 Steam 客户端式外壳、原生商店与游戏库、每游戏独立配置、全局 Steam 会话以及 SDL/XInput 手柄启动闭环。
+Mac Gaming Uncle 目前处于 `0.2.1` 研究预览阶段，面向 Apple Silicon 与 macOS 15 及以上版本。应用已经打通 Steam 客户端式外壳、原生商店与游戏库、每游戏独立配置、全局 Steam 会话以及 SDL/XInput 手柄启动闭环。
 
 实机验证环境：Apple M3 Max、macOS 26.6.2、GPTK 4.0 beta 2、Mac Gaming Uncle Wine 11.0.2。`Grim Dawn 1.3.0.8 (x64)` 已验证完整中文 UI、Steam 集成、XInput 手柄与 Apple 官方 Metal HUD（D3D11，实测约 114 FPS）；`Ruins of Dawn` 已验证进入主菜单。
 
@@ -60,8 +60,8 @@ Mac Gaming Uncle 目前处于 `0.2.0` 研究预览阶段，面向 Apple Silicon 
 - 商店公开浏览无需网页登录；愿望单、购买和账户操作才进入明确标识的 `store.steampowered.com` 安全页面，不复制 Steam CEF 的加密登录 Cookie。
 - 账户游戏库直接读取本机 Steam `localconfig.vdf` 的 AppID、游玩时长和最近记录；不读取或上传认证令牌，并在本地缓存官方商店元数据。
 - 从 Valve 官方 CDN 下载并安装 Windows 版 Steam。
-- 打开 Apple 官方下载页，监测 GPTK 4 下载并自动完成 DMG、SHA-256 与 Apple 签名验证。
-- 导入完整 D3DMetal framework、Wine PE Bridge 与 Unix Bridge，不重新分发 Apple 二进制。
+- 从项目的 Cloudflare R2 下载 GPTK 4 原始镜像，自动完成大小、SHA-256、DMG 与 Apple 签名验证。
+- 导入完整 D3DMetal framework、Wine PE Bridge 与 Unix Bridge，原始镜像和许可独立保留。
 - 从公开对应源码构建并安装 Mac Gaming Uncle Wine 11（GCC 15 MinGW、新 WoW64、MSync、SDL2 winebus/XInput、Steam CEF 补丁与原生 D3DMetal Bridge 路径）。
 - Steam CEF 兼容包装器、中文字体注册与 DirectWrite 字体链接。
 - 解析目标 x64/`*-Win64-Shipping.exe`，再通过 Steam `-applaunch` 创建游戏进程，保证 SteamAPI、渲染器和 HUD 环境完整继承。
@@ -97,12 +97,12 @@ Mac Gaming Uncle 负责组合、验证和启动这些层。它不会修改游戏
 - Apple Silicon Mac
 - macOS 15 或更高版本
 - Xcode 26，或兼容 Swift 6 的完整开发工具链
-- 用于首次获取 D3DMetal 的 Apple Developer 登录
+- 可访问组件下载服务器的网络连接
 - 合法拥有的 Steam 账户和游戏
 
 ### 从源码构建
 
-不需要开发环境时，可直接下载经过挂载和签名结构验证的 [Mac Gaming Uncle 0.2.0 DMG](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.0/Mac-Gaming-Uncle-0.2.0-macOS-arm64.dmg)，并用同目录的 [SHA-256 文件](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.0/Mac-Gaming-Uncle-0.2.0-macOS-arm64.dmg.sha256) 校验。
+不需要开发环境时，可直接下载经过挂载和签名结构验证的 [Mac Gaming Uncle 0.2.1 DMG](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.1/Mac-Gaming-Uncle-0.2.1-macOS-arm64.dmg)，并用同目录的 [SHA-256 文件](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.1/Mac-Gaming-Uncle-0.2.1-macOS-arm64.dmg.sha256) 校验。
 
 ```bash
 git clone https://github.com/enginefuture/mac-gaming-uncle.git
@@ -133,7 +133,7 @@ MAC_GAMING_UNCLE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)
 ### 第一次使用
 
 1. 点击“一键准备环境”，安装 Mac Gaming Uncle 自行构建的开源 Wine 11 运行环境。
-2. 点击“一键安装 GPTK 4”。Mac Gaming Uncle 会打开 Apple 官方页面；用户登录并点击下载后，其余验证和导入自动完成。
+2. 环境卡片自动下载、校验并安装 GPTK 4；已完成的下载可复用，失败后可重试。
 3. 点击“安装 Steam”，在 Wine 安装窗口中完成 Windows 版 Steam 安装并登录。
 4. 直接在 Mac Gaming Uncle 的“商店”浏览 Steam，在“游戏库”查看账户游戏并安装或启动。
 5. 点击游戏旁的设置按钮可单独调整分辨率、HUD、图形后端与手柄；点击“智能启动”应用该游戏的配置。首次图形缓存构建可能需要几分钟。

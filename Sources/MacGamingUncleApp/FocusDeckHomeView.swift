@@ -229,9 +229,12 @@ struct FocusDeckHomeView: View {
         ContentUnavailableView {
             Label("等待 Steam 游戏库", systemImage: "gamecontroller")
         } description: {
-            Text("登录 Windows Steam 后，最近游戏会出现在主页。")
+            Text("Steam 登录后会自动同步游戏库，首次同步可能需要一些时间。")
         } actions: {
-            Button("打开 Steam") { Task { await model.launchSteam() } }.buttonStyle(.borderedProminent)
+            Button("同步游戏库") { model.syncSteamLibrary() }.buttonStyle(.borderedProminent)
+            Button("Steam 登录窗口") { Task { await model.launchSteam() } }
+                .disabled(model.isWorking || model.onboardingBusy)
+            Text(model.status).font(.caption).foregroundStyle(.secondary)
         }
     }
 

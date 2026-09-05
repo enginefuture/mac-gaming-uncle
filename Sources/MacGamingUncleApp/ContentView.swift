@@ -41,6 +41,16 @@ struct ContentView: View {
             }
         }
         .background(WindowPlacementReader().frame(width: 0, height: 0))
+        .task {
+            while !Task.isCancelled {
+                model.syncSteamLibrary()
+                do { try await Task.sleep(for: .seconds(5)) }
+                catch { return }
+            }
+        }
+        .overlay {
+            if model.onboardingStage != .complete { FirstRunView().environmentObject(model) }
+        }
         .onChange(of: model.requestedDestination) { _, request in
             guard let request else { return }
             destination = switch request {
@@ -54,7 +64,7 @@ struct ContentView: View {
         }
         .preferredColorScheme(.dark)
         .alert("无法完成操作", isPresented: Binding(
-            get: { model.lastError != nil },
+            get: { model.lastError != nil && model.onboardingStage == .complete },
             set: { if !$0 { model.lastError = nil } }
         )) {
             Button("知道了") { model.lastError = nil }
@@ -207,7 +217,8 @@ private struct GlobalNavigationBar: View {
 struct UncleAppleMark: View {
     var size: CGFloat = 21
     private var image: NSImage? {
-        Bundle.module.url(forResource: "uncle-apple", withExtension: "png").flatMap(NSImage.init(contentsOf:))
+        PackagedResources.bundle(named: "MacGamingUncle_MacGamingUncleApp", development: Bundle.module)?
+            .url(forResource: "uncle-apple", withExtension: "png").flatMap(NSImage.init(contentsOf:))
     }
     var body: some View {
         Group {
@@ -540,7 +551,8 @@ private struct NextStepStrip: View {
 
 private struct SteamLogoAsset: View {
     var body: some View {
-        if let url = Bundle.module.url(forResource: "steam-logo", withExtension: "svg"),
+        if let url = PackagedResources.bundle(named: "MacGamingUncle_MacGamingUncleApp", development: Bundle.module)?
+            .url(forResource: "steam-logo", withExtension: "svg"),
            let image = NSImage(contentsOf: url) {
             Image(nsImage: image).resizable().scaledToFit().padding(.horizontal, 16).accessibilityLabel("Steam")
         } else {

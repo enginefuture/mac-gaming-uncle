@@ -6,7 +6,7 @@
 "overview.subtitle" = "Mac Gaming Uncle 编排 Wine、D3DMetal 与开源 Metal 图形后端，不安装 Windows 虚拟机。";
 "overview.quickStart" = "开始使用";
 "overview.step.runtime" = "安装经过签名验证的 Wine 运行时";
-"overview.step.gptk" = "从 Apple 官方 Game Porting Toolkit 导入 D3DMetal";
+"overview.step.gptk" = "自动下载并安装 GPTK 图形组件";
 "overview.step.game" = "安装 Steam 或导入你拥有的 Windows 游戏";
 "status.ready" = "就绪";
 "status.required" = "需要安装";
@@ -24,7 +24,7 @@
 "library.local" = "本地游戏";
 "library.chooseSteamApps" = "选择 steamapps";
 "runtime.title" = "运行时";
-"runtime.gptk.detail" = "D3DMetal 是 Apple 官方 GPTK 中的 DirectX 11/12 → Metal 转译层。Mac Gaming Uncle 只导入并验证你从 Apple 获取的副本。";
+"runtime.gptk.detail" = "D3DMetal 是 Apple 的 DirectX 11/12 → Metal 转译层。原始 GPTK 镜像通过独立 R2 通道自动下载，校验后导入。";
 "runtime.downloadGPTK" = "打开 Apple 下载页";
 "runtime.importGPTK" = "导入 GPTK";
 "runtime.wine.detail" = "Mac Gaming Uncle 从公开对应源码构建 Wine 11；不封装或分发商业 CrossOver 二进制。";

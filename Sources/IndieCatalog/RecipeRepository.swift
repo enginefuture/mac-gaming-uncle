@@ -13,7 +13,9 @@ public struct RecipeRepository: Sendable {
     public init(recipes: [GameRecipe]) { self.recipes = recipes }
 
     public static func builtIn() throws -> RecipeRepository {
-        guard let directory = Bundle.module.resourceURL else {
+        guard let directory = PackagedResources.bundle(
+            named: "MacGamingUncle_IndieCatalog", development: Bundle.module
+        )?.resourceURL else {
             throw IndieError.notFound("内置配方资源缺失")
         }
         return RecipeRepository(recipes: try load(from: directory).recipes)

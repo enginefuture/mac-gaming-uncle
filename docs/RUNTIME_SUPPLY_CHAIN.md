@@ -18,7 +18,7 @@ Manifest Schema 位于 `Schemas/runtime-manifest.schema.json`。签名内容是�
 
 ## D3DMetal
 
-D3DMetal 不进入 Git、Release、缓存服务器或 Runtime Manifest。导入器只接受用户选择的 Apple GPTK：
+D3DMetal 不进入 Git、应用包或 Wine Runtime。原始 GPTK 4.0 beta 2 镜像通过项目 R2 非商业下载通道独立分发，保留随包许可及声明。客户端固定下载地址、大小与 SHA-256，校验通过后调用原有导入器；手动选择镜像仍可用。详见 [GPTK 下载说明](GPTK_DISTRIBUTION.md)。导入流程：
 
 1. 先用 `hdiutil verify` 校验镜像，再以 `hdiutil attach -readonly -nobrowse` 挂载外层 DMG；
 2. 必要时继续挂载其中的 Windows Evaluation Environment DMG；
@@ -27,7 +27,7 @@ D3DMetal 不进入 Git、Release、缓存服务器或 Runtime Manifest。导入�
 5. 记录版本、源镜像 SHA-256、导入时间并原子写入用户私有目录；
 6. 无论成功失败都卸载临时 Volume。
 
-在公开发布前仍需对所使用 GPTK 版本的最终许可证文本进行法律复核；代码层面保持“用户提供、仅本地导入、从不再分发”的边界。
+已检查本次镜像随附许可 EA18380 的非商业分发条款；换用其他版本时必须重新核对其随包许可。原始 DMG 保留在本地下载缓存，镜像不与 Wine 合并打包。
 
 ## 开源图形层
 

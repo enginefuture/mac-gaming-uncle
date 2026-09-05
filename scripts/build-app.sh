@@ -20,6 +20,10 @@ for resource_bundle in "$bin_dir"/MacGamingUncle_*.bundle(N); do
   ditto "$resource_bundle" "$app_destination/Contents/Resources/${resource_bundle:t}"
 done
 
+for resource_name in MacGamingUncle_IndieCatalog.bundle MacGamingUncle_MacGamingUncleApp.bundle; do
+  test -d "$app_destination/Contents/Resources/$resource_name"
+done
+
 mkdir -p "$app_destination/Contents/Resources/RuntimeSupport"
 ditto "$project_root/.build/runtime-support/steamwebhelper-wrapper.exe" "$app_destination/Contents/Resources/RuntimeSupport/steamwebhelper-wrapper.exe"
 ditto "$project_root/RuntimeSupport/SteamWebHelperWrapper/LICENSE" "$app_destination/Contents/Resources/RuntimeSupport/steamwebhelper-wrapper.LICENSE"

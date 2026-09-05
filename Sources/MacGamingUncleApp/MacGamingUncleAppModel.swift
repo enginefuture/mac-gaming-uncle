@@ -27,6 +27,11 @@ final class MacGamingUncleAppModel: ObservableObject {
     @Published var isGPTKSetupRunning = false
     @Published var status = ""
     @Published var lastError: String?
+    @Published var onboardingStage = FirstRunStage.checking
+    @Published var onboardingBusy = false
+    @Published var onboardingError: String?
+    @Published var onboardingMessage = "正在检查这台 Mac 的运行环境…"
+    private var onboardingTask: Task<Void, Never>?
 
     let paths = IndiePaths.userDefault
     let controllerManager: ControllerManager
@@ -97,7 +102,181 @@ final class MacGamingUncleAppModel: ObservableObject {
         store = StateStore(databaseURL: paths.database)
         controllerManager = ControllerManager()
         steamSessionManager = SteamSessionManager()
-        Task { await refresh() }
+        onboardingTask = Task {
+            await refresh()
+            await runOnboarding()
+        }
+    }
+
+    var onboardingGraphicsReady: Bool { d3dMetalRuntimeAvailable }
+    var onboardingWineReady: Bool { gamingWineRuntime != nil }
+    var onboardingDXMTReady: Bool { rendererOverlays.contains { $0.kind == .dxmt } }
+
+    func shutdownManagedSteam() async {
+        onboardingTask?.cancel()
+        gptkSetupTask?.cancel()
+        steamMetadataTask?.cancel()
+        // Join first so an installation cannot launch Steam after shutdown.
+        await onboardingTask?.value
+        await gptkSetupTask?.value
+        steamSessionManager.didStop()
+        guard let bottle = steamBottle, let runtime = gamingWineRuntime else { return }
+        let environment = ["WINEPREFIX": bottle.root.path, "WINEDEBUG": "-all",
+                           "DYLD_LIBRARY_PATH": runtime.root.appendingPathComponent("lib").path]
+        if let steam = steamExecutable {
+            _ = try? await Subprocess().run(
+                runtime.root.appendingPathComponent("bin/wine"),
+                arguments: [steam.path, "-shutdown"], environment: environment,
+                workingDirectory: steam.deletingLastPathComponent(),
+                timeout: .seconds(10), requireSuccess: false
+            )
+            _ = try? await Subprocess().run(
+                runtime.root.appendingPathComponent("bin/wineserver"),
+                arguments: ["-w"], environment: environment,
+                timeout: .seconds(8), requireSuccess: false
+            )
+        }
+        await WineRuntimeProvider(manifest: runtime.manifest, root: runtime.root).stopBottle(bottle)
+    }
+
+    func retryOnboarding() {
+        guard !onboardingBusy else { return }
+        onboardingTask = Task { await runOnboarding() }
+    }
+
+    private func runOnboarding() async {
+        guard !onboardingBusy else { return }
+        onboardingBusy = true
+        onboardingError = nil
+        defer { onboardingBusy = false }
+        do {
+            onboardingStage = .environment
+            guard let report = systemReport else {
+                throw IndieError.invalidData(lastError ?? "无法读取系统信息，请重新打开应用")
+            }
+            let failures = report.items.filter { $0.severity == .failure && $0.id != "rosetta" }
+            guard failures.isEmpty else {
+                throw IndieError.unsupported(failures.map(\.detail).joined(separator: "；"))
+            }
+            if !report.rosettaInstalled {
+                onboardingMessage = "正在安装 Apple Rosetta 2…"
+                try await Subprocess().run(
+                    URL(fileURLWithPath: "/usr/sbin/softwareupdate"),
+                    arguments: ["--install-rosetta", "--agree-to-license"], timeout: .seconds(600)
+                )
+                systemReport = await probe.run()
+            }
+            if !onboardingWineReady {
+                onboardingMessage = "正在下载并校验 Wine 与 SDL 手柄组件…"
+                await prepareEnvironment()
+                guard onboardingWineReady else { throw IndieError.invalidData(lastError ?? "Wine 安装未完成") }
+            }
+            if !onboardingDXMTReady {
+                onboardingMessage = "正在安装 DXMT 图形兼容组件…"
+                _ = try await communityDXMT.installLatest()
+                rendererOverlays = await overlayImporter.installed()
+            }
+            if !onboardingGraphicsReady {
+                onboardingMessage = "正在自动下载 GPTK 4 图形组件…"
+                await setupLatestGPTK()
+                guard onboardingGraphicsReady else { throw IndieError.invalidData(lastError ?? "GPTK 安装未完成") }
+            }
+            try Task.checkCancellation()
+            if steamExecutable != nil,
+               UserDefaults.standard.bool(forKey: "firstRunSteamLoginCompleted") {
+                onboardingStage = .complete
+                return
+            }
+            onboardingStage = .steam
+            onboardingMessage = "环境已就绪，正在准备 Steam…"
+            try await prepareOnboardingSteam()
+        } catch {
+            onboardingError = error.localizedDescription
+            lastError = nil
+        }
+    }
+
+    private func prepareOnboardingSteam() async throws {
+        guard let runtime = gamingWineRuntime else { throw IndieError.notFound("Wine 尚未安装") }
+        let provider = WineRuntimeProvider(manifest: runtime.manifest, root: runtime.root)
+        let bottle: BottleRecord
+        if let existing = steamBottle { bottle = existing }
+        else {
+            bottle = try await BottleManager(paths: paths, store: store).create(name: "Steam", runtime: provider)
+            bottles = try await store.bottles()
+        }
+        if steamExecutable == nil {
+            onboardingMessage = "正在从 Valve 官方下载并安装 Steam…"
+            let installer = SteamInstaller(paths: paths)
+            let staged = try await installer.stageForLaunch(try await installer.download(), in: bottle)
+            try await provider.prepareBottleForInstaller(bottle)
+            let plan = try LaunchPlanBuilder.build(
+                executable: staged.fileURL, windowsExecutablePath: staged.windowsPath,
+                bottle: bottle,
+                profile: .init(runtimeID: runtime.manifest.id, preferredRenderer: .wineD3D,
+                               arguments: ["/S"], environment: ["WINEDEBUG": "-all", "WINEDLLOVERRIDES": "mscoree,mshtml="]),
+                analysis: try PEAnalyzer.analyze(at: staged.fileURL), recipe: nil,
+                installed: .init(available: [.wineD3D])
+            )
+            _ = try await provider.launchDetached(plan, logURL: paths.logs.appendingPathComponent("onboarding-steam-install.log"))
+            let deadline = Date().addingTimeInterval(600)
+            while steamExecutable == nil {
+                try Task.checkCancellation()
+                guard Date() < deadline else { throw IndieError.timedOut("Steam 安装或更新，请检查网络后重试") }
+                try await Task.sleep(for: .seconds(2))
+            }
+        }
+        let helper = SteamCompatibilityManager.steamRoot(in: bottle).appendingPathComponent("bin/cef/cef.win64/steamwebhelper.exe")
+        if !FileManager.default.fileExists(atPath: helper.path), let steam = steamExecutable {
+            onboardingMessage = "Steam 基础安装已完成，正在下载客户端更新…"
+            let updatePlan = try LaunchPlanBuilder.build(
+                executable: steam, windowsExecutablePath: try WinePath.windowsPath(for: steam, in: bottle), bottle: bottle,
+                profile: .init(runtimeID: runtime.manifest.id, preferredRenderer: .wineD3D,
+                               arguments: ["-no-cef-sandbox"], environment: ["WINEDEBUG": "-all", "WINEDLLOVERRIDES": "mscoree,mshtml="]),
+                analysis: try PEAnalyzer.analyze(at: steam), recipe: nil, installed: .init(available: [.wineD3D])
+            )
+            _ = try await provider.launchDetached(updatePlan, logURL: paths.logs.appendingPathComponent("onboarding-steam-update.log"))
+            let deadline = Date().addingTimeInterval(900)
+            while !FileManager.default.fileExists(atPath: helper.path) {
+                try Task.checkCancellation()
+                guard Date() < deadline else { throw IndieError.timedOut("Steam 客户端更新") }
+                try await Task.sleep(for: .seconds(2))
+            }
+            // Allow the updater to finish replacing its other client files.
+            try await Task.sleep(for: .seconds(10))
+        }
+        guard let steam = steamExecutable,
+              let wrapper = SteamCompatibilityManager.bundledWrapperURL() else {
+            throw IndieError.notFound("Steam 登录组件不完整，请重试安装")
+        }
+        try await provider.prepareBottleForInstaller(bottle)
+        try await provider.configureControllerSupport(in: bottle)
+        _ = try SteamCompatibilityManager.prepare(bottle: bottle, wrapper: wrapper)
+        let environment = ["WINEDEBUG": "-all", "LANG": "zh_CN.UTF-8", "LC_ALL": "zh_CN.UTF-8",
+                           "WINEDLLOVERRIDES": "mscoree,mshtml=;winedbg.exe=d;dxgi,d3d10,d3d10core,d3d11,d3d12=b"]
+        let plan = try LaunchPlanBuilder.build(
+            executable: steam, windowsExecutablePath: try WinePath.windowsPath(for: steam, in: bottle), bottle: bottle,
+            profile: .init(runtimeID: runtime.manifest.id, preferredRenderer: .wineD3D,
+                           arguments: SteamCompatibilityManager.launchArguments(appID: nil), environment: environment),
+            analysis: .init(identity: .init(executableName: "steam.exe"), architecture: .x86_64,
+                            directX: .none, antiCheat: .none, importedLibraries: []),
+            recipe: nil, installed: .init(available: [.wineD3D])
+        )
+        let launchedAt = Date()
+        _ = try await provider.launchDetached(plan, logURL: paths.logs.appendingPathComponent("onboarding-steam-login.log"))
+        onboardingMessage = "请在 Steam 官方窗口中扫码，或输入账号密码登录。登录成功后会自动进入游戏库。"
+        let deadline = Date().addingTimeInterval(30 * 60)
+        while !SteamCompatibilityManager.isLoggedOn(in: bottle, since: launchedAt) {
+            try Task.checkCancellation()
+            guard Date() < deadline else { throw IndieError.timedOut("Steam 登录，可点击重试重新打开登录窗口") }
+            try await Task.sleep(for: .seconds(2))
+        }
+        steamSessionManager.didLaunch(.init(bottleID: bottle.id, runtimeID: runtime.manifest.id,
+                                           environment: plan.environment, virtualDesktop: nil), reused: false)
+        try scanDefaultSteamLibrary()
+        UserDefaults.standard.set(true, forKey: "firstRunSteamLoginCompleted")
+        onboardingStage = .complete
+        requestedDestination = "library"
     }
 
     func refresh() async {
@@ -234,6 +413,12 @@ final class MacGamingUncleAppModel: ObservableObject {
     }
 
     func launchSteam(appID: UInt64? = nil) async {
+        if appID == nil, steamSessionManager.state == .running,
+           let bottle = steamBottle, SteamCompatibilityManager.isLoggedOn(in: bottle) {
+            syncSteamLibrary()
+            requestedDestination = "library"
+            return
+        }
         await perform(appID == nil ? "正在打开 Steam…" : "正在通过 Steam 启动游戏…") {
             guard let runtime = self.gamingWineRuntime,
                   let bottle = self.steamBottle,
@@ -277,10 +462,13 @@ final class MacGamingUncleAppModel: ObservableObject {
             )
             let log = self.paths.logs.appendingPathComponent("\(plan.id.uuidString)-steam.log")
             self.status = appID == nil ? "Steam 正在运行；请登录并安装游戏" : "游戏正在运行"
-            let session = await provider.launch(plan, logURL: log)
-            try await self.store.saveSession(session)
+            _ = try await provider.launchDetached(plan, logURL: log)
+            self.steamSessionManager.didLaunch(
+                .init(bottleID: bottle.id, runtimeID: runtime.manifest.id,
+                      environment: plan.environment, virtualDesktop: nil), reused: false
+            )
             try self.scanDefaultSteamLibrary()
-            self.status = "Steam 已退出"
+            self.status = "Steam 已打开，登录后自动同步游戏库"
         }
     }
 
@@ -752,30 +940,9 @@ final class MacGamingUncleAppModel: ObservableObject {
     private func setupLatestGPTK() async {
         isGPTKSetupRunning = true
         defer { isGPTKSetupRunning = false }
-        await perform("正在查找 GPTK 4 安装镜像…") {
-            let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask)[0]
-            var snapshot = GPTKDownloadWatcher.scan(downloads)
-            if snapshot.completedImage == nil {
-                let downloadPage = URL(string: "https://developer.apple.com/download/all/?q=Evaluation%20environment%20for%20Windows%20games")!
-                guard NSWorkspace.shared.open(downloadPage) else {
-                    throw IndieError.processFailed(executable: "浏览器", status: 1, stderr: "无法打开 Apple Developer 下载页")
-                }
-                self.status = "请在 Apple 官方页面点击 GPTK 4 下载；Mac Gaming Uncle 会自动接管后续安装"
-                let deadline = Date().addingTimeInterval(45 * 60)
-                while snapshot.completedImage == nil {
-                    try Task.checkCancellation()
-                    if Date() >= deadline { throw IndieError.timedOut("GPTK 4 下载") }
-                    if let partial = snapshot.partialDownload {
-                        let size = ByteCountFormatter.string(fromByteCount: snapshot.partialSize, countStyle: .file)
-                        self.status = "正在等待 \(partial.deletingPathExtension().lastPathComponent) 下载完成（\(size)）…"
-                    }
-                    try await Task.sleep(for: .seconds(2))
-                    snapshot = GPTKDownloadWatcher.scan(downloads)
-                }
-            }
-            guard let image = snapshot.completedImage else {
-                throw IndieError.notFound("下载目录中没有找到 GPTK 4 镜像")
-            }
+        await perform("正在从下载服务器安装 GPTK 4…") {
+            self.status = "正在下载并校验 GPTK 4（约 26.5 MB）…"
+            let image = try await GPTKDownloadService(paths: self.paths).download()
             self.status = "正在验证 Apple 签名并安装 GPTK 4…"
             let component = try await self.importer.importFromAppleImage(image)
             self.d3dMetal = try await self.importer.installedComponents()
@@ -804,9 +971,10 @@ final class MacGamingUncleAppModel: ObservableObject {
 
     private func scanDefaultSteamLibrary() throws {
         guard let bottle = steamBottle else { return }
+        let previousIDs = steamAccountGames.map(\.appID)
         let steamApps = bottle.root.appendingPathComponent("drive_c/Program Files (x86)/Steam/steamapps", isDirectory: true)
-        guard FileManager.default.fileExists(atPath: steamApps.path) else { return }
-        steamGames = try SteamScanner.scan(steamApps: steamApps)
+        steamGames = FileManager.default.fileExists(atPath: steamApps.path)
+            ? try SteamScanner.scan(steamApps: steamApps) : []
         steamAccountGames = try SteamAccountLibraryScanner.scan(
             steamRoot: SteamCompatibilityManager.steamRoot(in: bottle),
             installed: steamGames
@@ -821,7 +989,23 @@ final class MacGamingUncleAppModel: ObservableObject {
             steamAccountGames[index].headerImageURL = metadata.headerImageURL
             steamAccountGames[index].description = metadata.description
         }
-        scheduleSteamMetadataHydration()
+        if previousIDs != steamAccountGames.map(\.appID) || steamMetadataTask == nil {
+            scheduleSteamMetadataHydration()
+        }
+    }
+
+    func syncSteamLibrary() {
+        guard !onboardingBusy, !isWorking else { return }
+        do {
+            try scanDefaultSteamLibrary()
+            if !steamAccountGames.isEmpty {
+                status = "已同步 \(steamAccountGames.count) 款账户游戏"
+            } else {
+                status = "正在等待 Steam 写入账户游戏库…"
+            }
+        } catch {
+            status = "游戏库同步失败：\(error.localizedDescription)"
+        }
     }
 
     private func scheduleSteamMetadataHydration() {
