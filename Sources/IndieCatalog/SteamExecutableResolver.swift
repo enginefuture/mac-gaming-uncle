@@ -7,7 +7,7 @@ public enum SteamExecutableResolver {
             at: game.installDirectory,
             includingPropertiesForKeys: [.isRegularFileKey],
             options: [.skipsHiddenFiles, .skipsPackageDescendants]
-        ) else { throw IndieError.notFound("无法读取 \(game.name) 的安装目录") }
+        ) else { throw IndieError.notFound(L("无法读取 \(game.name) 的安装目录")) }
         let matches = enumerator.compactMap { item -> URL? in
             guard let url = item as? URL else { return nil }
             return url.lastPathComponent.lowercased().hasSuffix("-win64-shipping.exe") ? url : nil
@@ -21,7 +21,7 @@ public enum SteamExecutableResolver {
             at: game.installDirectory,
             includingPropertiesForKeys: [.isRegularFileKey],
             options: [.skipsHiddenFiles, .skipsPackageDescendants]
-        ) else { throw IndieError.notFound("无法读取 \(game.name) 的安装目录") }
+        ) else { throw IndieError.notFound(L("无法读取 \(game.name) 的安装目录")) }
 
         var candidates: [(url: URL, score: Int, exactName: Bool, x64Variant: Bool)] = []
         for case let url as URL in enumerator where url.pathExtension.lowercased() == "exe" {
@@ -53,7 +53,7 @@ public enum SteamExecutableResolver {
         }
         guard let result = candidates.max(by: { lhs, rhs in
             lhs.score == rhs.score ? lhs.url.path.count > rhs.url.path.count : lhs.score < rhs.score
-        }) else { throw IndieError.notFound("未找到 \(game.name) 的 Windows 启动程序") }
+        }) else { throw IndieError.notFound(L("未找到 \(game.name) 的 Windows 启动程序")) }
         return result.url
     }
 

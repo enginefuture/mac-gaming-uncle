@@ -20,7 +20,7 @@ public actor LocalWineImporter {
     public func importRuntime(from source: URL) async throws -> LocalWineRuntime {
         try paths.createDirectories()
         guard let sourceWine = Self.findWine(in: source) else {
-            throw IndieError.notFound("所选目录中没有 Wine 可执行文件")
+            throw IndieError.notFound(L("所选目录中没有 Wine 可执行文件"))
         }
         let versionOutput = try await subprocess.run(sourceWine, arguments: ["--version"], timeout: .seconds(20))
         let version = try Self.parseVersion(versionOutput.stdout + versionOutput.stderr)
@@ -33,7 +33,7 @@ public actor LocalWineImporter {
         )
         let architectures = ((lipo?.stdout ?? "") + file.stdout).lowercased()
         guard architectures.contains("x86_64") else {
-            throw IndieError.unsupported("首版只接受包含 x86_64 的 macOS Wine 运行时")
+            throw IndieError.unsupported(L("首版只接受包含 x86_64 的 macOS Wine 运行时"))
         }
 
         let runtimeID = "org.indie.wine.local"
@@ -69,7 +69,7 @@ public actor LocalWineImporter {
             try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
             let payload = staging.appendingPathComponent("payload", isDirectory: true)
             try FileManager.default.copyItem(at: source, to: payload)
-            guard Self.findWine(in: payload) != nil else { throw IndieError.invalidData("复制后的 Wine 运行时不完整") }
+            guard Self.findWine(in: payload) != nil else { throw IndieError.invalidData(L("复制后的 Wine 运行时不完整")) }
             let imported = LocalWineRuntime(manifest: manifest, root: staging, importedAt: Date())
             try IndieJSON.encoder(pretty: true).encode(imported).write(to: staging.appendingPathComponent("local-runtime.json"), options: .atomic)
             try FileManager.default.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)

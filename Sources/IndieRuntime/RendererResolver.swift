@@ -24,7 +24,7 @@ public enum RendererResolver {
         installed: InstalledRenderers
     ) throws -> RendererResolution {
         if analysis.antiCheat == .kernel {
-            throw IndieError.unsupported("检测到内核级反作弊；Mac Gaming Uncle 不尝试绕过")
+            throw IndieError.unsupported(L("检测到内核级反作弊；Mac Gaming Uncle 不尝试绕过"))
         }
 
         let candidates: [RendererKind]
@@ -44,13 +44,13 @@ public enum RendererResolver {
         for renderer in candidates where installed.available.contains(renderer) {
             if renderer == .d3dMetal && analysis.architecture == .i386 { continue }
             var warnings = analysis.warnings
-            if renderer == .vkd3d { warnings.append("VKD3D/MoltenVK 是实验性 DX12 路径") }
+            if renderer == .vkd3d { warnings.append(L("VKD3D/MoltenVK 是实验性 DX12 路径")) }
             return RendererResolution(renderer: renderer, warnings: warnings)
         }
         if analysis.directX == .d3d12, !installed.available.contains(.d3dMetal) {
-            throw IndieError.notFound("此 DX12 游戏需要 D3DMetal；请从 Apple 官方 GPTK 导入")
+            throw IndieError.notFound(L("此 DX12 游戏需要 D3DMetal；请从 Apple 官方 GPTK 导入"))
         }
-        throw IndieError.notFound("没有适合此游戏的已安装图形后端")
+        throw IndieError.notFound(L("没有适合此游戏的已安装图形后端"))
     }
 }
 

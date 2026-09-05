@@ -38,14 +38,14 @@ public actor CommunityDXMTBootstrapper {
         try paths.createDirectories()
         let (download, response) = try await session.download(from: Self.downloadURL)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-            throw IndieError.invalidData("DXMT 下载失败")
+            throw IndieError.invalidData(L("DXMT 下载失败"))
         }
         let size = Int64(try download.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0)
         guard size == Self.release.downloadSize else {
-            throw IndieError.securityViolation("DXMT 制品尺寸不匹配")
+            throw IndieError.securityViolation(L("DXMT 制品尺寸不匹配"))
         }
         guard try ManifestSecurity.sha256(of: download) == Self.release.sha256 else {
-            throw IndieError.securityViolation("DXMT 制品 SHA-256 不匹配")
+            throw IndieError.securityViolation(L("DXMT 制品 SHA-256 不匹配"))
         }
 
         let staging = paths.downloads.appendingPathComponent("dxmt-\(UUID().uuidString)", isDirectory: true)
@@ -57,7 +57,7 @@ public actor CommunityDXMTBootstrapper {
             arguments: ["-xzf", download.path, "-C", staging.path], timeout: .seconds(120)
         )
         guard let source = Self.findPayload(in: staging) else {
-            throw IndieError.invalidData("DXMT 压缩包缺少 Wine builtin Bridge")
+            throw IndieError.invalidData(L("DXMT 压缩包缺少 Wine builtin Bridge"))
         }
         return try await RendererOverlayImporter(paths: paths).importOverlay(.dxmt, from: source)
     }
@@ -69,7 +69,7 @@ public actor CommunityDXMTBootstrapper {
         for entry in listing.stdout.split(whereSeparator: \.isNewline).map(String.init) {
             let path = entry.replacingOccurrences(of: "\\", with: "/")
             if path.hasPrefix("/") || path.split(separator: "/", omittingEmptySubsequences: false).contains("..") {
-                throw IndieError.securityViolation("DXMT 压缩包包含越界路径：\(entry)")
+                throw IndieError.securityViolation(L("DXMT 压缩包包含越界路径：\(entry)"))
             }
         }
     }

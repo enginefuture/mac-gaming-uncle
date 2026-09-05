@@ -24,10 +24,10 @@ public actor SteamInstaller {
         guard let http = response as? HTTPURLResponse,
               (200..<300).contains(http.statusCode),
               http.url?.host?.lowercased() == "cdn.fastly.steamstatic.com" else {
-            throw IndieError.securityViolation("Steam 安装器没有来自 Valve 官方 CDN")
+            throw IndieError.securityViolation(L("Steam 安装器没有来自 Valve 官方 CDN"))
         }
         let size = (try temporary.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
-        guard size > 1_000_000 else { throw IndieError.invalidData("Steam 安装器尺寸异常") }
+        guard size > 1_000_000 else { throw IndieError.invalidData(L("Steam 安装器尺寸异常")) }
         let staging = paths.downloads.appendingPathComponent(".SteamSetup-\(UUID().uuidString).exe")
         try FileManager.default.moveItem(at: temporary, to: staging)
         if FileManager.default.fileExists(atPath: destination.path) { try FileManager.default.removeItem(at: destination) }

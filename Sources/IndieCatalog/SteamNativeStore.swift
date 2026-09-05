@@ -1,3 +1,4 @@
+import IndieCore
 import Foundation
 
 public struct SteamStoreItem: Codable, Identifiable, Sendable, Equatable {
@@ -42,7 +43,7 @@ public struct SteamStoreCatalog: Codable, Sendable, Equatable {
 
 public enum SteamNativeStoreService {
     public static func featured(session: URLSession = .shared) async throws -> SteamStoreCatalog {
-        let url = URL(string: "https://store.steampowered.com/api/featuredcategories?cc=CN&l=schinese")!
+        let url = URL(string: "https://store.steampowered.com/api/featuredcategories?cc=CN&l=\(AppLanguage.steamLanguage)")!
         let response: FeaturedResponse = try await request(url, session: session)
         return SteamStoreCatalog(
             specials: response.specials.items.map(\.storeItem),
@@ -55,7 +56,7 @@ public enum SteamNativeStoreService {
         var components = URLComponents(string: "https://store.steampowered.com/api/storesearch/")!
         components.queryItems = [
             .init(name: "term", value: term),
-            .init(name: "l", value: "schinese"),
+            .init(name: "l", value: AppLanguage.steamLanguage),
             .init(name: "cc", value: "CN"),
         ]
         let response: SearchResponse = try await request(components.url!, session: session)

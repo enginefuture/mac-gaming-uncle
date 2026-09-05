@@ -49,7 +49,7 @@ public enum SteamCompatibilityManager {
         in bottle: BottleRecord,
         fileManager: FileManager = .default
     ) throws -> Bool {
-        guard option >= 0 else { throw IndieError.invalidArgument("Steam 启动项不能为负数") }
+        guard option >= 0 else { throw IndieError.invalidArgument(L("Steam 启动项不能为负数")) }
         let userdata = steamRoot(in: bottle).appendingPathComponent("userdata", isDirectory: true)
         let users = (try? fileManager.contentsOfDirectory(
             at: userdata, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]
@@ -121,14 +121,14 @@ public enum SteamCompatibilityManager {
         fileManager: FileManager = .default
     ) throws -> SteamCompatibilityResult {
         guard fileManager.isReadableFile(atPath: wrapper.path) else {
-            throw IndieError.notFound("Mac Gaming Uncle 缺少 Steam 界面兼容组件，请重新构建应用")
+            throw IndieError.notFound(L("Mac Gaming Uncle 缺少 Steam 界面兼容组件，请重新构建应用"))
         }
         let steam = steamRoot(in: bottle)
         let cef = steam.appendingPathComponent("bin/cef/cef.win64", isDirectory: true)
         let webHelper = cef.appendingPathComponent("steamwebhelper.exe")
         let realWebHelper = cef.appendingPathComponent("steamwebhelper_real.exe")
         guard fileManager.fileExists(atPath: webHelper.path) else {
-            throw IndieError.notFound("Steam 安装不完整：找不到 steamwebhelper.exe")
+            throw IndieError.notFound(L("Steam 安装不完整：找不到 steamwebhelper.exe"))
         }
 
         let wrapperHash = try ManifestSecurity.sha256(of: wrapper)
@@ -159,7 +159,7 @@ public enum SteamCompatibilityManager {
             if currentIsWrapper {
                 if !realIsUsable {
                     guard let recovery = try recoverableUpstream(in: bottle, fileManager: fileManager) else {
-                        throw IndieError.invalidData("Steam 原始 WebHelper 被包装器覆盖，且没有可恢复备份；请重新安装 Steam")
+                        throw IndieError.invalidData(L("Steam 原始 WebHelper 被包装器覆盖，且没有可恢复备份；请重新安装 Steam"))
                     }
                     try fileManager.copyItem(at: recovery, to: realCandidate)
                 }
@@ -183,7 +183,7 @@ public enum SteamCompatibilityManager {
         }
 
         guard try ManifestSecurity.sha256(of: webHelper) == wrapperHash else {
-            throw IndieError.securityViolation("Steam 界面包装器安装后校验失败")
+            throw IndieError.securityViolation(L("Steam 界面包装器安装后校验失败"))
         }
         return SteamCompatibilityResult(wrapperInstalled: true, upstreamWebHelper: realWebHelper, backupDirectory: backup)
     }

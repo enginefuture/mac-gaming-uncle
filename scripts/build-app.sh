@@ -20,7 +20,7 @@ for resource_bundle in "$bin_dir"/MacGamingUncle_*.bundle(N); do
   ditto "$resource_bundle" "$app_destination/Contents/Resources/${resource_bundle:t}"
 done
 
-for resource_name in MacGamingUncle_IndieCatalog.bundle MacGamingUncle_MacGamingUncleApp.bundle; do
+for resource_name in MacGamingUncle_IndieCore.bundle MacGamingUncle_IndieCatalog.bundle MacGamingUncle_MacGamingUncleApp.bundle; do
   test -d "$app_destination/Contents/Resources/$resource_name"
 done
 

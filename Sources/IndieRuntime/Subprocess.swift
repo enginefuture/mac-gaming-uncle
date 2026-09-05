@@ -27,7 +27,7 @@ public actor Subprocess {
         requireSuccess: Bool = true
     ) async throws -> ProcessResult {
         guard FileManager.default.isExecutableFile(atPath: executable.path) else {
-            throw IndieError.notFound("不可执行文件：\(executable.path)")
+            throw IndieError.notFound(L("不可执行文件：\(executable.path)"))
         }
 
         let scratch = FileManager.default.temporaryDirectory
@@ -104,7 +104,7 @@ public actor Subprocess {
         logURL: URL
     ) throws -> Int32 {
         guard FileManager.default.isExecutableFile(atPath: executable.path) else {
-            throw IndieError.notFound("不可执行文件：\(executable.path)")
+            throw IndieError.notFound(L("不可执行文件：\(executable.path)"))
         }
         try FileManager.default.createDirectory(at: logURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         if !FileManager.default.fileExists(atPath: logURL.path) {

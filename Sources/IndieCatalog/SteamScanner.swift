@@ -43,7 +43,7 @@ public enum SteamScanner {
               let appID = UInt64(idText),
               let name = value(caseInsensitive: "name", in: appState)?.string,
               let installDir = value(caseInsensitive: "installdir", in: appState)?.string else {
-            throw IndieError.invalidData("Steam AppManifest 缺少必填字段：\(url.lastPathComponent)")
+            throw IndieError.invalidData(L("Steam AppManifest 缺少必填字段：\(url.lastPathComponent)"))
         }
         return SteamGame(
             appID: appID,

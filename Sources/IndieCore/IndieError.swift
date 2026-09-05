@@ -18,9 +18,9 @@ public enum IndieError: Error, LocalizedError, Sendable, Equatable {
         case .securityViolation(let message): message
         case .notFound(let message): message
         case .processFailed(let executable, let status, let stderr):
-            "\(executable) 退出，状态码 \(status)：\(stderr)"
-        case .timedOut(let operation): "操作超时：\(operation)"
-        case .database(let message): "数据库错误：\(message)"
+            L("\(executable) 退出，状态码 \(status)：\(stderr)")
+        case .timedOut(let operation): L("操作超时：\(operation)")
+        case .database(let message): L("数据库错误：\(message)")
         }
     }
 }

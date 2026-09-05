@@ -8,14 +8,14 @@ public enum PEAnalyzer {
         defer { try? handle.close() }
         guard let header = try handle.read(upToCount: 4096), header.count >= 64,
               header[0] == 0x4d, header[1] == 0x5a else {
-            throw IndieError.invalidData("不是有效的 Windows PE 可执行文件")
+            throw IndieError.invalidData(L("不是有效的 Windows PE 可执行文件"))
         }
         let peOffset = Int(readUInt32(header, at: 0x3c))
         try handle.seek(toOffset: 0)
         guard let extended = try handle.read(upToCount: max(4096, peOffset + 32)), extended.count >= peOffset + 8,
               extended[peOffset] == 0x50, extended[peOffset + 1] == 0x45,
               extended[peOffset + 2] == 0, extended[peOffset + 3] == 0 else {
-            throw IndieError.invalidData("PE 文件头损坏")
+            throw IndieError.invalidData(L("PE 文件头损坏"))
         }
         let machine = readUInt16(extended, at: peOffset + 4)
         let architecture: CPUArchitecture = switch machine {

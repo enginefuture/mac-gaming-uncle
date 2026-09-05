@@ -30,7 +30,7 @@ final class MacGamingUncleAppModel: ObservableObject {
     @Published var onboardingStage = FirstRunStage.checking
     @Published var onboardingBusy = false
     @Published var onboardingError: String?
-    @Published var onboardingMessage = "正在检查这台 Mac 的运行环境…"
+    @Published var onboardingMessage = L("正在检查这台 Mac 的运行环境…")
     private var onboardingTask: Task<Void, Never>?
 
     let paths = IndiePaths.userDefault
@@ -152,14 +152,14 @@ final class MacGamingUncleAppModel: ObservableObject {
         do {
             onboardingStage = .environment
             guard let report = systemReport else {
-                throw IndieError.invalidData(lastError ?? "无法读取系统信息，请重新打开应用")
+                throw IndieError.invalidData(lastError ?? L("无法读取系统信息，请重新打开应用"))
             }
             let failures = report.items.filter { $0.severity == .failure && $0.id != "rosetta" }
             guard failures.isEmpty else {
                 throw IndieError.unsupported(failures.map(\.detail).joined(separator: "；"))
             }
             if !report.rosettaInstalled {
-                onboardingMessage = "正在安装 Apple Rosetta 2…"
+                onboardingMessage = L("正在安装 Apple Rosetta 2…")
                 try await Subprocess().run(
                     URL(fileURLWithPath: "/usr/sbin/softwareupdate"),
                     arguments: ["--install-rosetta", "--agree-to-license"], timeout: .seconds(600)
@@ -167,19 +167,19 @@ final class MacGamingUncleAppModel: ObservableObject {
                 systemReport = await probe.run()
             }
             if !onboardingWineReady {
-                onboardingMessage = "正在下载并校验 Wine 与 SDL 手柄组件…"
+                onboardingMessage = L("正在下载并校验 Wine 与 SDL 手柄组件…")
                 await prepareEnvironment()
-                guard onboardingWineReady else { throw IndieError.invalidData(lastError ?? "Wine 安装未完成") }
+                guard onboardingWineReady else { throw IndieError.invalidData(lastError ?? L("Wine 安装未完成")) }
             }
             if !onboardingDXMTReady {
-                onboardingMessage = "正在安装 DXMT 图形兼容组件…"
+                onboardingMessage = L("正在安装 DXMT 图形兼容组件…")
                 _ = try await communityDXMT.installLatest()
                 rendererOverlays = await overlayImporter.installed()
             }
             if !onboardingGraphicsReady {
-                onboardingMessage = "正在自动下载 GPTK 4 图形组件…"
+                onboardingMessage = L("正在自动下载 GPTK 4 图形组件…")
                 await setupLatestGPTK()
-                guard onboardingGraphicsReady else { throw IndieError.invalidData(lastError ?? "GPTK 安装未完成") }
+                guard onboardingGraphicsReady else { throw IndieError.invalidData(lastError ?? L("GPTK 安装未完成")) }
             }
             try Task.checkCancellation()
             if steamExecutable != nil,
@@ -188,7 +188,7 @@ final class MacGamingUncleAppModel: ObservableObject {
                 return
             }
             onboardingStage = .steam
-            onboardingMessage = "环境已就绪，正在准备 Steam…"
+            onboardingMessage = L("环境已就绪，正在准备 Steam…")
             try await prepareOnboardingSteam()
         } catch {
             onboardingError = error.localizedDescription
@@ -197,7 +197,7 @@ final class MacGamingUncleAppModel: ObservableObject {
     }
 
     private func prepareOnboardingSteam() async throws {
-        guard let runtime = gamingWineRuntime else { throw IndieError.notFound("Wine 尚未安装") }
+        guard let runtime = gamingWineRuntime else { throw IndieError.notFound(L("Wine 尚未安装")) }
         let provider = WineRuntimeProvider(manifest: runtime.manifest, root: runtime.root)
         let bottle: BottleRecord
         if let existing = steamBottle { bottle = existing }
@@ -206,7 +206,7 @@ final class MacGamingUncleAppModel: ObservableObject {
             bottles = try await store.bottles()
         }
         if steamExecutable == nil {
-            onboardingMessage = "正在从 Valve 官方下载并安装 Steam…"
+            onboardingMessage = L("正在从 Valve 官方下载并安装 Steam…")
             let installer = SteamInstaller(paths: paths)
             let staged = try await installer.stageForLaunch(try await installer.download(), in: bottle)
             try await provider.prepareBottleForInstaller(bottle)
@@ -222,13 +222,13 @@ final class MacGamingUncleAppModel: ObservableObject {
             let deadline = Date().addingTimeInterval(600)
             while steamExecutable == nil {
                 try Task.checkCancellation()
-                guard Date() < deadline else { throw IndieError.timedOut("Steam 安装或更新，请检查网络后重试") }
+                guard Date() < deadline else { throw IndieError.timedOut(L("Steam 安装或更新，请检查网络后重试")) }
                 try await Task.sleep(for: .seconds(2))
             }
         }
         let helper = SteamCompatibilityManager.steamRoot(in: bottle).appendingPathComponent("bin/cef/cef.win64/steamwebhelper.exe")
         if !FileManager.default.fileExists(atPath: helper.path), let steam = steamExecutable {
-            onboardingMessage = "Steam 基础安装已完成，正在下载客户端更新…"
+            onboardingMessage = L("Steam 基础安装已完成，正在下载客户端更新…")
             let updatePlan = try LaunchPlanBuilder.build(
                 executable: steam, windowsExecutablePath: try WinePath.windowsPath(for: steam, in: bottle), bottle: bottle,
                 profile: .init(runtimeID: runtime.manifest.id, preferredRenderer: .wineD3D,
@@ -239,7 +239,7 @@ final class MacGamingUncleAppModel: ObservableObject {
             let deadline = Date().addingTimeInterval(900)
             while !FileManager.default.fileExists(atPath: helper.path) {
                 try Task.checkCancellation()
-                guard Date() < deadline else { throw IndieError.timedOut("Steam 客户端更新") }
+                guard Date() < deadline else { throw IndieError.timedOut(L("Steam 客户端更新")) }
                 try await Task.sleep(for: .seconds(2))
             }
             // Allow the updater to finish replacing its other client files.
@@ -247,7 +247,7 @@ final class MacGamingUncleAppModel: ObservableObject {
         }
         guard let steam = steamExecutable,
               let wrapper = SteamCompatibilityManager.bundledWrapperURL() else {
-            throw IndieError.notFound("Steam 登录组件不完整，请重试安装")
+            throw IndieError.notFound(L("Steam 登录组件不完整，请重试安装"))
         }
         try await provider.prepareBottleForInstaller(bottle)
         try await provider.configureControllerSupport(in: bottle)
@@ -264,11 +264,11 @@ final class MacGamingUncleAppModel: ObservableObject {
         )
         let launchedAt = Date()
         _ = try await provider.launchDetached(plan, logURL: paths.logs.appendingPathComponent("onboarding-steam-login.log"))
-        onboardingMessage = "请在 Steam 官方窗口中扫码，或输入账号密码登录。登录成功后会自动进入游戏库。"
+        onboardingMessage = L("请在 Steam 官方窗口中扫码，或输入账号密码登录。登录成功后会自动进入游戏库。")
         let deadline = Date().addingTimeInterval(30 * 60)
         while !SteamCompatibilityManager.isLoggedOn(in: bottle, since: launchedAt) {
             try Task.checkCancellation()
-            guard Date() < deadline else { throw IndieError.timedOut("Steam 登录，可点击重试重新打开登录窗口") }
+            guard Date() < deadline else { throw IndieError.timedOut(L("Steam 登录，可点击重试重新打开登录窗口")) }
             try await Task.sleep(for: .seconds(2))
         }
         steamSessionManager.didLaunch(.init(bottleID: bottle.id, runtimeID: runtime.manifest.id,
@@ -307,14 +307,14 @@ final class MacGamingUncleAppModel: ObservableObject {
                (self.steamBottle.map { SteamCompatibilityManager.isLoggedOn(in: $0) } != true) {
                 self.steamSessionManager.didStop()
             }
-            status = "准备就绪"
+            status = L("准备就绪")
             Task { await self.loadNativeSteamStore() }
         } catch { present(error) }
     }
 
     func handleDeepLink(_ url: URL) {
         guard let scheme = url.scheme?.lowercased(), ["macgaminguncle", "indie"].contains(scheme) else {
-            present(IndieError.invalidArgument("无法识别 Mac Gaming Uncle 链接：\(url.absoluteString)"))
+            present(IndieError.invalidArgument(L("无法识别 Mac Gaming Uncle 链接：\(url.absoluteString)")))
             return
         }
         if let destination = url.host?.lowercased(),
@@ -326,14 +326,14 @@ final class MacGamingUncleAppModel: ObservableObject {
               url.host?.lowercased() == "launch",
               let appIDText = url.pathComponents.dropFirst().first,
               let appID = UInt64(appIDText) else {
-            present(IndieError.invalidArgument("无法识别 Mac Gaming Uncle 链接：\(url.absoluteString)"))
+            present(IndieError.invalidArgument(L("无法识别 Mac Gaming Uncle 链接：\(url.absoluteString)")))
             return
         }
         Task { @MainActor [weak self] in
             guard let self else { return }
             while self.isWorking { try? await Task.sleep(for: .milliseconds(100)) }
             guard let game = self.steamGames.first(where: { $0.appID == appID }) else {
-                self.present(IndieError.notFound("Steam 游戏库中没有 AppID \(appID)"))
+                self.present(IndieError.notFound(L("Steam 游戏库中没有 AppID \(appID)")))
                 return
             }
             await self.launchSteamGame(game)
@@ -341,38 +341,38 @@ final class MacGamingUncleAppModel: ObservableObject {
     }
 
     func prepareEnvironment() async {
-        await perform("正在安装 Mac Gaming Uncle Wine 11 开源运行环境…") {
+        await perform(L("正在安装 Mac Gaming Uncle Wine 11 开源运行环境…")) {
             guard self.systemReport?.isSupported == true else {
-                throw IndieError.unsupported("这台 Mac 尚未通过环境检查，请打开高级设置查看原因")
+                throw IndieError.unsupported(L("这台 Mac 尚未通过环境检查，请打开高级设置查看原因"))
             }
-            self.status = "正在下载并校验 Mac Gaming Uncle Wine 11…"
+            self.status = L("正在下载并校验 Mac Gaming Uncle Wine 11…")
             let installed = try await self.communityGamingWine.installLatest()
             self.wineRuntimes = await self.wineImporter.installed()
-            self.status = "游戏运行环境 \(installed.manifest.version) 已准备好"
+            self.status = L("游戏运行环境 \(installed.manifest.version) 已准备好")
         }
     }
 
     func importExecutable(_ url: URL) async {
-        await perform("正在分析 \(url.lastPathComponent)…") {
+        await perform(L("正在分析 \(url.lastPathComponent)…")) {
             let analysis = try PEAnalyzer.analyze(at: url)
             let game = GameRecord(displayName: url.deletingPathExtension().lastPathComponent, source: .local, executableURL: url, analysis: analysis)
             try await self.store.saveGame(game)
             self.games = try await self.store.games()
-            self.status = "已导入 \(url.lastPathComponent)：\(analysis.architecture.rawValue) / \(analysis.directX.rawValue)"
+            self.status = L("已导入 \(url.lastPathComponent)：\(analysis.architecture.rawValue) / \(analysis.directX.rawValue)")
         }
     }
 
     func scanSteam(_ steamApps: URL) async {
-        await perform("正在扫描 Steam 游戏库…") {
+        await perform(L("正在扫描 Steam 游戏库…")) {
             self.steamGames = try SteamScanner.scan(steamApps: steamApps)
-            self.status = "发现 \(self.steamGames.count) 个 Steam 游戏"
+            self.status = L("发现 \(self.steamGames.count) 个 Steam 游戏")
         }
     }
 
     func installSteam() async {
-        await perform("正在从 Valve 官方 CDN 下载 Steam…") {
+        await perform(L("正在从 Valve 官方 CDN 下载 Steam…")) {
             guard let runtime = self.gamingWineRuntime else {
-                throw IndieError.notFound("请先准备 Mac Gaming Uncle Wine 11 开源运行环境")
+                throw IndieError.notFound(L("请先准备 Mac Gaming Uncle Wine 11 开源运行环境"))
             }
             let steamInstaller = SteamInstaller(paths: self.paths)
             let installer = try await steamInstaller.download()
@@ -400,7 +400,7 @@ final class MacGamingUncleAppModel: ObservableObject {
                 recipe: nil, installed: InstalledRenderers(available: [.wineD3D])
             )
             let log = self.paths.logs.appendingPathComponent("\(plan.id.uuidString)-steam-install.log")
-            self.status = "请在 Wine 窗口中完成 Steam 安装…"
+            self.status = L("请在 Wine 窗口中完成 Steam 安装…")
             let session = await provider.launch(plan, logURL: log)
             try await self.store.saveSession(session)
             self.bottles = try await self.store.bottles()
@@ -408,7 +408,7 @@ final class MacGamingUncleAppModel: ObservableObject {
             if FileManager.default.fileExists(atPath: steamApps.path) {
                 self.steamGames = try SteamScanner.scan(steamApps: steamApps)
             }
-            self.status = "Steam 安装流程已结束"
+            self.status = L("Steam 安装流程已结束")
         }
     }
 
@@ -419,15 +419,15 @@ final class MacGamingUncleAppModel: ObservableObject {
             requestedDestination = "library"
             return
         }
-        await perform(appID == nil ? "正在打开 Steam…" : "正在通过 Steam 启动游戏…") {
+        await perform(appID == nil ? L("正在打开 Steam…") : L("正在通过 Steam 启动游戏…")) {
             guard let runtime = self.gamingWineRuntime,
                   let bottle = self.steamBottle,
                   let executable = self.steamExecutable else {
-                throw IndieError.notFound("尚未完成 Steam 安装")
+                throw IndieError.notFound(L("尚未完成 Steam 安装"))
             }
             let provider = WineRuntimeProvider(manifest: runtime.manifest, root: runtime.root)
             guard let wrapper = SteamCompatibilityManager.bundledWrapperURL() else {
-                throw IndieError.notFound("Mac Gaming Uncle 缺少 Steam 界面兼容组件，请重新安装应用")
+                throw IndieError.notFound(L("Mac Gaming Uncle 缺少 Steam 界面兼容组件，请重新安装应用"))
             }
             await provider.stopBottle(bottle)
             self.steamSessionManager.didStop()
@@ -461,35 +461,35 @@ final class MacGamingUncleAppModel: ObservableObject {
                 recipe: nil, installed: InstalledRenderers(available: [.wineD3D])
             )
             let log = self.paths.logs.appendingPathComponent("\(plan.id.uuidString)-steam.log")
-            self.status = appID == nil ? "Steam 正在运行；请登录并安装游戏" : "游戏正在运行"
+            self.status = appID == nil ? L("Steam 正在运行；请登录并安装游戏") : L("游戏正在运行")
             _ = try await provider.launchDetached(plan, logURL: log)
             self.steamSessionManager.didLaunch(
                 .init(bottleID: bottle.id, runtimeID: runtime.manifest.id,
                       environment: plan.environment, virtualDesktop: nil), reused: false
             )
             try self.scanDefaultSteamLibrary()
-            self.status = "Steam 已打开，登录后自动同步游戏库"
+            self.status = L("Steam 已打开，登录后自动同步游戏库")
         }
     }
 
     func launchSteamGame(_ game: SteamGame) async {
-        await perform("正在为 \(game.name) 选择最佳图形后端…") {
+        await perform(L("正在为 \(game.name) 选择最佳图形后端…")) {
             guard let bottle = self.steamBottle else {
-                throw IndieError.notFound("尚未完成 Steam 安装")
+                throw IndieError.notFound(L("尚未完成 Steam 安装"))
             }
             guard let gamingRuntime = self.gamingWineRuntime else {
-                throw IndieError.notFound("需要 Mac Gaming Uncle Wine 11 游戏引擎，请重新运行环境准备")
+                throw IndieError.notFound(L("需要 Mac Gaming Uncle Wine 11 游戏引擎，请重新运行环境准备"))
             }
             let gamingProvider = WineRuntimeProvider(manifest: gamingRuntime.manifest, root: gamingRuntime.root)
             let executable = try SteamExecutableResolver.shippingExecutable(for: game)
-            self.status = "正在快速检查游戏兼容性…"
+            self.status = L("正在快速检查游戏兼容性…")
             let analysis = try await Task.detached(priority: .userInitiated) {
                 try PEAnalyzer.analyze(at: executable, steamAppID: game.appID)
             }.value
             let configuration = self.configuration(for: game)
             let recipe = self.recipeRepository.match(analysis)
             if game.appID == 219990 {
-                self.status = "正在应用 Grim Dawn 1.3 HUD 兼容配置…"
+                self.status = L("正在应用 Grim Dawn 1.3 HUD 兼容配置…")
                 let screen = NSScreen.main?.frame.size
                 let safeResolution = configuration.virtualDesktop?.label.replacingOccurrences(of: " × ", with: " ")
                     ?? GrimDawnCompatibility.logicalDisplayResolution(
@@ -503,7 +503,7 @@ final class MacGamingUncleAppModel: ObservableObject {
             }
             if (configuration.preferredRenderer == .dxmt || recipe?.profiles.first?.renderer == .dxmt),
                !self.rendererOverlays.contains(where: { $0.kind == .dxmt }) {
-                self.status = "正在安装 \(game.name) 所需的 DXMT 0.80…"
+                self.status = L("正在安装 \(game.name) 所需的 DXMT 0.80…")
                 _ = try await self.communityDXMT.installLatest()
                 self.rendererOverlays = await self.overlayImporter.installed()
             }
@@ -553,7 +553,7 @@ final class MacGamingUncleAppModel: ObservableObject {
             if resolution.renderer == .d3dMetal {
                 guard let component = self.preferredD3DMetal,
                       let renderer = component.rendererRoot else {
-                    throw IndieError.notFound("请先使用“一键安装 GPTK 4”导入 D3DMetal")
+                    throw IndieError.notFound(L("请先使用“一键安装 GPTK 4”导入 D3DMetal"))
                 }
                 environment = try D3DMetalLaunchEnvironment.make(
                     rendererRoot: renderer,
@@ -623,7 +623,7 @@ final class MacGamingUncleAppModel: ObservableObject {
                     appID: game.appID, option: option, in: bottle
                 )
             }
-            guard let steam = self.steamExecutable else { throw IndieError.notFound("尚未完成 Steam 安装") }
+            guard let steam = self.steamExecutable else { throw IndieError.notFound(L("尚未完成 Steam 安装")) }
             let steamAnalysis = GameAnalysis(
                 identity: GameIdentity(steamAppID: game.appID, executableName: "steam.exe"),
                 architecture: .x86_64, directX: .none, antiCheat: .none, importedLibraries: []
@@ -658,11 +658,11 @@ final class MacGamingUncleAppModel: ObservableObject {
                 SteamCompatibilityManager.isLoggedOn(in: bottle)
             if !reusingSteam {
                 self.steamSessionManager.didStop()
-                self.status = "正在准备全局 Steam 会话…"
+                self.status = L("正在准备全局 Steam 会话…")
                 try await gamingProvider.prepareBottleForInstaller(bottle)
                 try await gamingProvider.configureControllerSupport(in: bottle)
                 guard let wrapper = SteamCompatibilityManager.bundledWrapperURL() else {
-                    throw IndieError.notFound("Mac Gaming Uncle 缺少 Steam 界面兼容组件，请重新安装应用")
+                    throw IndieError.notFound(L("Mac Gaming Uncle 缺少 Steam 界面兼容组件，请重新安装应用"))
                 }
                 _ = try SteamCompatibilityManager.prepare(bottle: bottle, wrapper: wrapper)
                 if resolution.renderer == .d3dMetal,
@@ -684,10 +684,10 @@ final class MacGamingUncleAppModel: ObservableObject {
             let log = self.paths.logs.appendingPathComponent("\(launchPlan.id.uuidString)-steam-\(resolution.renderer.rawValue).log")
             let architecture = analysis.architecture == .x86_64 ? "x64" : analysis.architecture.rawValue
             self.status = reusingSteam
-                ? "正在通过已登录的 Steam 启动 \(game.name)…"
+                ? L("正在通过已登录的 Steam 启动 \(game.name)…")
                 : needsWarmupProtection
-                ? "\(game.name) 正在首次构建图形缓存，可能需要几分钟…"
-                : "正在由 Steam 启动 \(game.name) · \(architecture) + \(resolution.renderer.rawValue.uppercased())\(metal4Enabled ? " + Metal 4" : "")"
+                ? L("\(game.name) 正在首次构建图形缓存，可能需要几分钟…")
+                : L("正在由 Steam 启动 \(game.name) · \(architecture) + \(resolution.renderer.rawValue.uppercased())\(metal4Enabled ? " + Metal 4" : "")")
             _ = try await gamingProvider.launchDetached(launchPlan, logURL: log)
             self.steamSessionManager.didLaunch(descriptor, reused: reusingSteam)
         }
@@ -703,12 +703,12 @@ final class MacGamingUncleAppModel: ObservableObject {
     func rescanSteam() {
         do {
             try scanDefaultSteamLibrary()
-            status = steamGames.isEmpty ? "尚未发现已安装的 Steam 游戏" : "发现 \(steamGames.count) 个 Steam 游戏"
+            status = steamGames.isEmpty ? L("尚未发现已安装的 Steam 游戏") : L("发现 \(steamGames.count) 个 Steam 游戏")
         } catch { present(error) }
     }
 
     func installSteamGame(appID: UInt64) async {
-        await sendSteamURI("steam://install/\(appID)", status: "正在通过 Steam 安装游戏…")
+        await sendSteamURI("steam://install/\(appID)", status: L("正在通过 Steam 安装游戏…"))
     }
 
     func loadNativeSteamStore(force: Bool = false) async {
@@ -727,7 +727,7 @@ final class MacGamingUncleAppModel: ObservableObject {
             steamStoreLoadedAt = Date()
         } catch {
             if steamStoreCatalog == nil {
-                steamStoreError = "Steam 商店暂时无法连接：\(error.localizedDescription)"
+                steamStoreError = L("Steam 商店暂时无法连接：\(error.localizedDescription)")
             }
         }
     }
@@ -741,25 +741,25 @@ final class MacGamingUncleAppModel: ObservableObject {
         do {
             steamStoreSearchResults = try await SteamNativeStoreService.search(term)
         } catch {
-            steamStoreError = "搜索失败：\(error.localizedDescription)"
+            steamStoreError = L("搜索失败：\(error.localizedDescription)")
         }
     }
 
     func openSteamStore(appID: UInt64) {
-        guard let url = URL(string: "https://store.steampowered.com/app/\(appID)/?l=schinese") else { return }
+        guard let url = URL(string: "https://store.steampowered.com/app/\(appID)/?l=\(AppLanguage.steamLanguage)") else { return }
         NSWorkspace.shared.open(url)
     }
 
     func handleSteamWebURL(_ url: URL) {
         guard url.scheme?.lowercased() == "steam" else { return }
-        Task { await sendSteamURI(url.absoluteString, status: "正在交给 Steam 处理…") }
+        Task { await sendSteamURI(url.absoluteString, status: L("正在交给 Steam 处理…")) }
     }
 
     func importGPTK(_ url: URL) async {
-        await perform("正在验证并导入 Apple D3DMetal…") {
+        await perform(L("正在验证并导入 Apple D3DMetal…")) {
             let component = try await self.importer.importFromAppleImage(url)
             self.d3dMetal = try await self.importer.installedComponents()
-            self.status = "D3DMetal \(component.version) 已导入"
+            self.status = L("D3DMetal \(component.version) 已导入")
         }
     }
 
@@ -777,25 +777,25 @@ final class MacGamingUncleAppModel: ObservableObject {
     }
 
     func importWine(_ url: URL) async {
-        await perform("正在验证并导入 Wine…") {
+        await perform(L("正在验证并导入 Wine…")) {
             let runtime = try await self.wineImporter.importRuntime(from: url)
             self.wineRuntimes = await self.wineImporter.installed()
-            self.status = "Wine \(runtime.manifest.version) 已导入"
+            self.status = L("Wine \(runtime.manifest.version) 已导入")
         }
     }
 
     func importRenderer(_ kind: RendererKind, from url: URL) async {
-        await perform("正在导入 \(kind.rawValue)…") {
+        await perform(L("正在导入 \(kind.rawValue)…")) {
             let overlay = try await self.overlayImporter.importOverlay(kind, from: url)
             self.rendererOverlays = await self.overlayImporter.installed()
-            self.status = "\(overlay.kind.rawValue) \(overlay.version) 已导入"
+            self.status = L("\(overlay.kind.rawValue) \(overlay.version) 已导入")
         }
     }
 
     func play(_ game: GameRecord) async {
-        await perform("正在准备 \(game.displayName)…") {
+        await perform(L("正在准备 \(game.displayName)…")) {
             guard let runtime = self.gamingWineRuntime else {
-                throw IndieError.notFound("请先准备 Mac Gaming Uncle Wine 11 开源运行环境")
+                throw IndieError.notFound(L("请先准备 Mac Gaming Uncle Wine 11 开源运行环境"))
             }
             let provider = WineRuntimeProvider(manifest: runtime.manifest, root: runtime.root)
             let bottle: BottleRecord
@@ -847,7 +847,7 @@ final class MacGamingUncleAppModel: ObservableObject {
             if renderer == .d3dMetal {
                 guard let component = self.preferredD3DMetal,
                       let rendererRoot = component.rendererRoot else {
-                    throw IndieError.notFound("请先使用“一键安装 GPTK 4”导入 D3DMetal")
+                    throw IndieError.notFound(L("请先使用“一键安装 GPTK 4”导入 D3DMetal"))
                 }
                 try D3DMetalRendererPreparer.installBridge(
                     rendererRoot: rendererRoot, version: component.version, bottle: bottle
@@ -884,10 +884,10 @@ final class MacGamingUncleAppModel: ObservableObject {
             )
             try self.paths.createDirectories()
             let log = self.paths.logs.appendingPathComponent("\(plan.id.uuidString).log")
-            self.status = "正在运行 \(game.displayName)…"
+            self.status = L("正在运行 \(game.displayName)…")
             let session = await provider.launch(plan, logURL: log)
             try await self.store.saveSession(session)
-            self.status = "游戏已退出：\(String(describing: session.result))"
+            self.status = L("游戏已退出：\(String(describing: session.result))")
         }
     }
 
@@ -916,13 +916,13 @@ final class MacGamingUncleAppModel: ObservableObject {
         lastError = nil
         do {
             guard configuration.virtualDesktop?.isValid != false else {
-                throw IndieError.invalidArgument("分辨率必须在 640×480 到 7680×4320 之间")
+                throw IndieError.invalidArgument(L("分辨率必须在 640×480 到 7680×4320 之间"))
             }
             var updated = configuration
             updated.updatedAt = Date()
             try await store.saveGameConfiguration(updated)
             gameConfigurations[updated.id] = updated
-            status = "游戏设置已保存"
+            status = L("游戏设置已保存")
         } catch { present(error) }
     }
 
@@ -933,30 +933,30 @@ final class MacGamingUncleAppModel: ObservableObject {
         status = initialStatus
         defer { isWorking = false }
         do { try await operation() }
-        catch is CancellationError { status = "已取消 GPTK 安装" }
+        catch is CancellationError { status = L("已取消 GPTK 安装") }
         catch { present(error) }
     }
 
     private func setupLatestGPTK() async {
         isGPTKSetupRunning = true
         defer { isGPTKSetupRunning = false }
-        await perform("正在从下载服务器安装 GPTK 4…") {
-            self.status = "正在下载并校验 GPTK 4（约 26.5 MB）…"
+        await perform(L("正在从下载服务器安装 GPTK 4…")) {
+            self.status = L("正在下载并校验 GPTK 4（约 26.5 MB）…")
             let image = try await GPTKDownloadService(paths: self.paths).download()
-            self.status = "正在验证 Apple 签名并安装 GPTK 4…"
+            self.status = L("正在验证 Apple 签名并安装 GPTK 4…")
             let component = try await self.importer.importFromAppleImage(image)
             self.d3dMetal = try await self.importer.installedComponents()
             let version = component.version.split(whereSeparator: { !$0.isNumber }).first.flatMap { Int($0) } ?? 0
             guard version >= 4 else {
-                throw IndieError.invalidData("下载的 D3DMetal 版本是 \(component.version)，不是 GPTK 4")
+                throw IndieError.invalidData(L("下载的 D3DMetal 版本是 \(component.version)，不是 GPTK 4"))
             }
             guard component.rendererRoot != nil else {
-                throw IndieError.invalidData("GPTK 4 镜像缺少 D3DMetal Wine Bridge；请确认下载的是 Windows 游戏评估环境")
+                throw IndieError.invalidData(L("GPTK 4 镜像缺少 D3DMetal Wine Bridge；请确认下载的是 Windows 游戏评估环境"))
             }
-            self.status = "正在安装支持现代 Steam 的 Mac Gaming Uncle Wine 11（约 50 MB）…"
+            self.status = L("正在安装支持现代 Steam 的 Mac Gaming Uncle Wine 11（约 50 MB）…")
             _ = try await self.communityGamingWine.installLatest()
             self.wineRuntimes = await self.wineImporter.installed()
-            self.status = "GPTK \(component.version) 已验证并安装，可以启动游戏"
+            self.status = L("GPTK \(component.version) 已验证并安装，可以启动游戏")
         }
     }
 
@@ -966,7 +966,7 @@ final class MacGamingUncleAppModel: ObservableObject {
 
     private func present(_ error: Error) {
         lastError = error.localizedDescription
-        status = "操作失败"
+        status = L("操作失败")
     }
 
     private func scanDefaultSteamLibrary() throws {
@@ -999,12 +999,12 @@ final class MacGamingUncleAppModel: ObservableObject {
         do {
             try scanDefaultSteamLibrary()
             if !steamAccountGames.isEmpty {
-                status = "已同步 \(steamAccountGames.count) 款账户游戏"
+                status = L("已同步 \(steamAccountGames.count) 款账户游戏")
             } else {
-                status = "正在等待 Steam 写入账户游戏库…"
+                status = L("正在等待 Steam 写入账户游戏库…")
             }
         } catch {
-            status = "游戏库同步失败：\(error.localizedDescription)"
+            status = L("游戏库同步失败：\(error.localizedDescription)")
         }
     }
 
@@ -1045,7 +1045,7 @@ final class MacGamingUncleAppModel: ObservableObject {
             guard let runtime = self.gamingWineRuntime,
                   let bottle = self.steamBottle,
                   let steam = self.steamExecutable else {
-                throw IndieError.notFound("尚未完成 Steam 安装")
+                throw IndieError.notFound(L("尚未完成 Steam 安装"))
             }
             let provider = WineRuntimeProvider(manifest: runtime.manifest, root: runtime.root)
             let hasReusableSteam = self.steamSessionManager.state == .running &&
@@ -1055,7 +1055,7 @@ final class MacGamingUncleAppModel: ObservableObject {
                 try await provider.prepareBottleForInstaller(bottle)
                 try await provider.configureControllerSupport(in: bottle)
                 guard let wrapper = SteamCompatibilityManager.bundledWrapperURL() else {
-                    throw IndieError.notFound("缺少 Steam 界面兼容组件")
+                    throw IndieError.notFound(L("缺少 Steam 界面兼容组件"))
                 }
                 _ = try SteamCompatibilityManager.prepare(bottle: bottle, wrapper: wrapper)
             }
@@ -1090,7 +1090,7 @@ final class MacGamingUncleAppModel: ObservableObject {
                     reused: false
                 )
             }
-            self.status = "Steam 已接收请求"
+            self.status = L("Steam 已接收请求")
         }
     }
 }

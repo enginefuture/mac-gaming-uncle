@@ -1,158 +1,160 @@
 <div align="center">
-  <img src="Assets/MacGamingUncleIcon.png" width="144" alt="Mac Gaming Uncle 图标">
+  <img src="Assets/MacGamingUncleIcon.png" width="144" alt="Mac Gaming Uncle icon">
   <h1>Mac Gaming Uncle</h1>
-  <p><strong>在 Apple Silicon Mac 上运行你拥有的 Windows 游戏。</strong></p>
-  <p>原生 SwiftUI · Wine · Apple D3DMetal · MetalFX · DXVK</p>
-  <p><a href="https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.1/Mac-Gaming-Uncle-0.2.1-macOS-arm64.dmg">下载 0.2.1 DMG</a> · <a href="https://github.com/enginefuture/mac-gaming-uncle/releases/tag/v0.2.1">版本说明</a></p>
-  <p><a href="README.en.md">English</a> · 简体中文</p>
+  <p><strong>Run Windows games you own on Apple Silicon Macs.</strong></p>
+  <p>Native SwiftUI · Wine · Apple D3DMetal · MetalFX · DXVK</p>
+  <p><a href="https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.3.0/Mac-Gaming-Uncle-0.3.0-macOS-arm64.dmg">Download the 0.3.0 DMG</a> · <a href="https://github.com/enginefuture/mac-gaming-uncle/releases/tag/v0.3.0">Release notes</a></p>
+  <p>English · <a href="README.zh-CN.md">简体中文</a></p>
 </div>
 
 <p align="center">
-  <img src="Assets/MacGamingUncleHero.png" width="100%" alt="叔叔没有选错，只是选得太早。">
+  <img src="Assets/MacGamingUncleHero.png" width="100%" alt="Uncle was not wrong—he was simply early.">
 </p>
 
 > [!IMPORTANT]
-> Mac Gaming Uncle 是开源兼容性研究项目，不是虚拟机。应用包不包含 Windows、Steam、游戏或 Apple D3DMetal。首次引导通过独立 R2 下载通道自动获取原始 GPTK 镜像并验证、导入；Apple 组件保留原始许可，按非商业条款分发。详见 [GPTK 下载说明](docs/GPTK_DISTRIBUTION.md)。
+> Mac Gaming Uncle is an open-source compatibility research project, not a virtual machine. The app bundle contains no Windows, Steam, games, or Apple D3DMetal. Onboarding downloads the original GPTK image separately through our R2 channel and verifies it before local import. Apple's original license and noncommercial distribution terms still apply. See [GPTK distribution](docs/GPTK_DISTRIBUTION.md).
 
-## 新手下载安装指南
+## Beginner installation guide
 
-普通用户只需下载安装包，不需要编程、Xcode 或自行编译。
+You can install the DMG directly. No programming, Xcode, or source build is required.
 
-### 1. 确认你的 Mac 可以使用
+### 1. Check your Mac
 
-点击屏幕左上角 ** → 关于本机**：需要 Apple Silicon（M 系列芯片）和 **macOS 15 或更高版本**，暂不支持 Intel Mac。准备好网络连接和自己的 Steam 账户，并为运行组件和要安装的游戏预留磁盘空间。
+Open ** → About This Mac**. You need an Apple Silicon (M-series) Mac with **macOS 15 or later**; Intel Macs are not supported. Have an Internet connection, your Steam account, and enough free disk space for the components and games you plan to install.
 
-### 2. 下载应用安装包
+### 2. Download the installer
 
-点击 **[下载 Mac Gaming Uncle 0.2.1（DMG）](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.1/Mac-Gaming-Uncle-0.2.1-macOS-arm64.dmg)**。
+Select **[Download Mac Gaming Uncle 0.3.0 (DMG)](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.3.0/Mac-Gaming-Uncle-0.3.0-macOS-arm64.dmg)**.
 
-也可以打开 [Release 页面](https://github.com/enginefuture/mac-gaming-uncle/releases/tag/v0.2.1)，在 **Assets（资源）** 中选择 `Mac-Gaming-Uncle-0.2.1-macOS-arm64.dmg`。不要选择 `Source code`、`.sha256` 或 Wine 的 `.tar.xz`：它们分别是源码、校验文件和由应用自动安装的运行时。
+Alternatively, open the [Release page](https://github.com/enginefuture/mac-gaming-uncle/releases/tag/v0.3.0) and choose `Mac-Gaming-Uncle-0.3.0-macOS-arm64.dmg` under **Assets**. `Source code`, `.sha256`, and the Wine `.tar.xz` are source archives, checksums, and a runtime that the app downloads automatically—not the app installer.
 
-### 3. 安装到“应用程序”并打开
+### 3. Install and open the app
 
-1. 在 Finder 的“下载”目录中双击刚下载的 `.dmg`。
-2. 将 **Mac Gaming Uncle** 图标拖到窗口中的 **Applications（应用程序）** 文件夹图标上，等待复制完成。
-3. 从 Finder 的“应用程序”中打开 **Mac Gaming Uncle**，不要一直从 DMG 窗口运行。
-4. 安装完成后，可以在 Finder 侧栏推出安装磁盘。
+1. In Finder's Downloads folder, double-click the downloaded `.dmg`.
+2. Drag **Mac Gaming Uncle** onto the **Applications** folder icon and wait for copying to finish.
+3. Open **Mac Gaming Uncle** from Finder's Applications folder, rather than running it from the mounted DMG.
+4. Eject the installer disk from Finder's sidebar when finished.
 
-当前是尚未公证的研究预览版。如果 macOS 提示无法验证开发者，先确认安装包来自上面的官方仓库；决定信任该来源后，在尝试打开应用后前往 **系统设置 → 隐私与安全性 → 安全性 → 仍要打开**，按提示确认。具体界面以 [Apple 官方说明](https://support.apple.com/zh-cn/102445) 为准。若提示包含恶意软件或文件已损坏，请先停止安装、重新下载并反馈，不要关闭系统安全保护。
+This research preview is not notarized. If macOS cannot verify the developer, check that the download came from the official repository linked above. If you decide to trust it, after attempting to open the app, go to **System Settings → Privacy & Security → Security → Open Anyway** and follow the prompts. See [Apple's instructions](https://support.apple.com/en-us/102445). If macOS reports malware or a damaged file, stop, download again, and report the issue rather than disabling system protection.
 
-### 4. 等待环境安装，登录 Steam
+### 4. Choose your language, finish setup, and sign in to Steam
 
-第一次打开时会自动出现两步引导：
+The app follows your system language (English or Simplified Chinese, with English as the fallback). Use **Language / 语言** on the setup card or in **Advanced Settings → Preferences** to choose **System**, **English**, or **简体中文**, then reopen the app to apply. This changes the app interface and requested Store text, not the language of an already-running game or Steam client.
 
-1. **安装游戏环境**：自动检查并安装 Rosetta、Wine、手柄及图形组件。保持应用打开并等待；出错时查看卡片提示，点击“重试并继续”，已完成的组件会保留。
-2. **登录 Steam**：环境就绪后，应用自动安装并更新 Windows 版 Steam，随后打开 Steam 官方登录窗口。使用手机 Steam 扫码，或输入 Steam 账号、密码及所需验证码。此窗口单独出现是正常现象。
+The first launch automatically displays two setup steps:
 
-首次 Steam 客户端更新可能需要几分钟。登录成功后，回到 Mac Gaming Uncle，应用会自动同步游戏库。Mac 上已有的原生 Steam 登录不等于这里的 Windows Steam 已登录。
+1. **Install the game environment**: the app checks and installs Rosetta, Wine, controller support, and graphics components. Keep it open while setup runs. If a step fails, read the error and select **Retry and continue**; completed components are retained.
+2. **Sign in to Steam**: the app installs and updates Windows Steam, then opens its official login window. Scan the QR code using the Steam mobile app, or enter your Steam credentials and any required verification code. A separate Steam window is expected.
 
-### 5. 安装并开始游戏
+The initial Steam update can take several minutes. After signing in, return to Mac Gaming Uncle; library synchronization is automatic. Being signed in to the native macOS Steam app does not sign you in to this Windows Steam installation.
 
-打开顶部 **游戏库**，选择自己拥有的游戏，点击 **安装**，按 Steam 提示完成下载。安装完成后点击 **开始游戏**。在“商店”浏览或看到某款游戏并不代表已经拥有它，需要先在 Steam 获得相应授权。
+### 5. Install and play a game
 
-第一次游玩先保留默认配置；需要调整分辨率、HUD 或手柄时，再打开 **游戏设置**。手柄请先与 macOS 连接，再到顶部手柄入口检查。首次游戏启动可能需要构建图形缓存，请耐心等待。能显示在游戏库中不代表该游戏已验证兼容。
+Open **Library**, select a game you own, and choose **Install**. Follow Steam's prompts and wait for the download to finish, then choose **Start Game**. Browsing a title in the Store does not grant ownership; obtain the appropriate license through Steam first.
 
-### 遇到问题怎么办
+Start with default settings. Open **Game Settings** when you need to adjust resolution, HUD, or controller options. Pair a controller with macOS first, then inspect it using the controller shortcut in the top bar. The first game launch may take longer while graphics caches are built. A library listing does not mean a game has been verified compatible.
 
-| 现象 | 可以这样处理 |
+### Troubleshooting and updates
+
+| Symptom | What to do |
 | --- | --- |
-| 已登录，但主页或游戏库还是空的 | 等待 Steam 写入账户缓存，再点主页“同步游戏库”或游戏库“刷新”；确认登录的是本应用打开的 Windows Steam。当前列表依赖 Steam 本地缓存，可能不是账户全部已购游戏。 |
-| 安装组件失败 | 检查网络、磁盘空间和卡片错误信息，再点“重试并继续”。 |
-| 游戏启动失败或画面异常 | 记录游戏名称、错误提示和所用图形后端，到 [Issues](https://github.com/enginefuture/mac-gaming-uncle/issues) 反馈。不要附上密码、验证码或登录文件。 |
-| 想升级应用 | 先退出游戏和 Mac Gaming Uncle，再下载新 DMG，将应用拖入“应用程序”并选择替换；不要删除应用数据目录，已有组件和游戏可继续保留。 |
+| Signed in, but the library is empty | Wait for Steam to write its account cache, then choose **Sync Library** on Home or **Refresh** in Library. Check that you signed in to the Windows Steam opened by this app. The list depends on local Steam caches and may not include every owned title. |
+| Component installation fails | Check the error, network connection, and free disk space, then retry. |
+| A game fails to launch or renders incorrectly | Report its name, error, and renderer in [Issues](https://github.com/enginefuture/mac-gaming-uncle/issues). Do not include passwords, verification codes, or login files. |
+| Updating the app | Exit your game and Mac Gaming Uncle, download the new DMG, and replace the app in Applications. Keep the application data directory to retain components and games. |
 
-退出 Mac Gaming Uncle 会联动退出其管理的 Steam。请先保存并退出游戏，再关闭应用。
+Closing Mac Gaming Uncle also shuts down its managed Steam. Save and exit your game before closing the app.
 
-## 为什么做这个项目
+## Why this project exists
 
-过去，“用 Mac 玩游戏”常被当成一句调侃。我们想把它变成一件普通而简单的事：安装应用、登录 Steam、下载游戏、点击开始。用户不应该先学会 Wine、Bottle、图形转译和启动参数，才有资格玩自己已经购买的游戏。
+For years, “gaming on a Mac” was treated as a punchline. We want it to become ordinary and simple: install the app, sign in to Steam, download a game, and press Play. People should not need to learn Wine, bottles, graphics translation, and launch flags before they can enjoy games they already own.
 
-Mac Gaming Uncle 的长期目标，是在 Mac 上提供接近 SteamOS 的体验——由系统吸收兼容层的复杂度，让游戏安装、配置、更新和启动尽可能自动完成。它不是 SteamOS 的移植，也不隶属于 Valve；我们学习的是它“把复杂技术藏在简单体验之后”的产品方向。
+Mac Gaming Uncle's long-term goal is to provide a SteamOS-like experience on the Mac: the system absorbs compatibility complexity while game installation, configuration, updates, and launching become as automatic as possible. It is not a SteamOS port and is not affiliated with Valve; the inspiration is SteamOS's product principle of hiding difficult technology behind a simple experience.
 
-### 永久非商业化承诺
+### Permanent noncommercial commitment
 
-Mac Gaming Uncle 官方项目和官方发行将永久保持非商业化：不推出收费版、订阅、广告、付费兼容名单、游戏抽成或用户数据交易。兼容配方、问题记录和关键实现继续公开，项目的成功标准是让更多 Mac 用户更容易玩到自己合法拥有的游戏，而不是收入。
+The official Mac Gaming Uncle project and its official releases will remain permanently noncommercial: no paid edition, subscriptions, advertising, paid compatibility lists, game commissions, or sale of user data. Compatibility recipes, issue records, and core implementation remain public. Success means helping more Mac users play games they legally own—not generating revenue.
 
-> 本承诺约束官方项目的运营方向。源代码继续使用 Apache License 2.0；该开源许可证允许第三方在遵守许可证的前提下使用和再分发代码，官方项目不会借“非商业化”之名限制正常的开源协作。
+> This commitment governs the official project's operation. The source remains under Apache License 2.0, which permits third-party use and redistribution under its terms; the official project will not use “noncommercial” branding to restrict ordinary open-source collaboration.
 
-## 项目状态
+## Project status
 
-Mac Gaming Uncle 目前处于 `0.2.1` 研究预览阶段，面向 Apple Silicon 与 macOS 15 及以上版本。应用已经打通 Steam 客户端式外壳、原生商店与游戏库、每游戏独立配置、全局 Steam 会话以及 SDL/XInput 手柄启动闭环。
+Mac Gaming Uncle is currently a `0.3.0` research preview for Apple Silicon and macOS 15 or later. It now provides a Steam-client shell, native Store and Library, per-game settings, a reusable global Steam session, and an SDL/XInput controller launch path.
 
-实机验证环境：Apple M3 Max、macOS 26.6.2、GPTK 4.0 beta 2、Mac Gaming Uncle Wine 11.0.2。`Grim Dawn 1.3.0.8 (x64)` 已验证完整中文 UI、Steam 集成、XInput 手柄与 Apple 官方 Metal HUD（D3D11，实测约 114 FPS）；`Ruins of Dawn` 已验证进入主菜单。
+Hardware validation: Apple M3 Max, macOS 26.6.2, GPTK 4.0 beta 2, and Mac Gaming Uncle Wine 11.0.2. `Grim Dawn 1.3.0.8 (x64)` has been validated with its complete Chinese UI, Steam integration, XInput controller support, and Apple's in-game Metal HUD (D3D11, approximately 114 FPS); `Ruins of Dawn` reaches its main menu.
 
-## 实际界面
+## Screenshots
 
-以下截图来自 Mac Gaming Uncle 0.2.0 实机运行界面。
+These screenshots were captured from Mac Gaming Uncle 0.2.0 running on real hardware.
 
 <table>
   <tr>
-    <td width="50%"><strong>主页与最近游戏</strong><br><a href="docs/screenshots/0.2.0/home.png"><img src="docs/screenshots/0.2.0/home.png" width="100%" alt="Mac Gaming Uncle 主页"></a></td>
-    <td width="50%"><strong>原生 Steam 商店</strong><br><a href="docs/screenshots/0.2.0/store.png"><img src="docs/screenshots/0.2.0/store.png" width="100%" alt="Mac Gaming Uncle 原生 Steam 商店"></a></td>
+    <td width="50%"><strong>Home and recently played</strong><br><a href="docs/screenshots/0.2.0/home.png"><img src="docs/screenshots/0.2.0/home.png" width="100%" alt="Mac Gaming Uncle Home"></a></td>
+    <td width="50%"><strong>Native Steam Store</strong><br><a href="docs/screenshots/0.2.0/store.png"><img src="docs/screenshots/0.2.0/store.png" width="100%" alt="Mac Gaming Uncle native Steam Store"></a></td>
   </tr>
   <tr>
-    <td width="50%"><strong>账户游戏库与游戏详情</strong><br><a href="docs/screenshots/0.2.0/library.png"><img src="docs/screenshots/0.2.0/library.png" width="100%" alt="Mac Gaming Uncle 游戏库"></a></td>
-    <td width="50%"><strong>从游戏库进入独立设置</strong><br><a href="docs/screenshots/0.2.0/library-settings-entry.png"><img src="docs/screenshots/0.2.0/library-settings-entry.png" width="100%" alt="Mac Gaming Uncle 游戏设置入口"></a></td>
+    <td width="50%"><strong>Account Library and game details</strong><br><a href="docs/screenshots/0.2.0/library.png"><img src="docs/screenshots/0.2.0/library.png" width="100%" alt="Mac Gaming Uncle Library"></a></td>
+    <td width="50%"><strong>Per-game settings entry</strong><br><a href="docs/screenshots/0.2.0/library-settings-entry.png"><img src="docs/screenshots/0.2.0/library-settings-entry.png" width="100%" alt="Mac Gaming Uncle settings entry"></a></td>
   </tr>
   <tr>
-    <td width="50%"><strong>每游戏独立设置</strong><br><a href="docs/screenshots/0.2.0/per-game-settings.png"><img src="docs/screenshots/0.2.0/per-game-settings.png" width="100%" alt="Mac Gaming Uncle 每游戏独立设置"></a></td>
-    <td width="50%"><strong>手柄中心</strong><br><a href="docs/screenshots/0.2.0/controller-center.png"><img src="docs/screenshots/0.2.0/controller-center.png" width="100%" alt="Mac Gaming Uncle 手柄中心"></a></td>
+    <td width="50%"><strong>Per-game configuration</strong><br><a href="docs/screenshots/0.2.0/per-game-settings.png"><img src="docs/screenshots/0.2.0/per-game-settings.png" width="100%" alt="Mac Gaming Uncle per-game settings"></a></td>
+    <td width="50%"><strong>Controller Center</strong><br><a href="docs/screenshots/0.2.0/controller-center.png"><img src="docs/screenshots/0.2.0/controller-center.png" width="100%" alt="Mac Gaming Uncle Controller Center"></a></td>
   </tr>
 </table>
 
-## 已实现
+## Features
 
-- 原生 SwiftUI/AppKit 界面，全中文新手引导。
-- 像素游戏品牌视觉：疲惫胡子叔叔应用图标、手柄上的完整苹果标记，以及启动按钮的透明像素苹果；无咬痕或播放三角形。
-- 顶层导航聚焦主页、商店和游戏库；手柄、下载与运行环境作为辅助工具，不设置独立社区频道。
-- Steam 客户端式外壳：原生商店首页/分类/搜索、账户游戏库、封面详情、安装和启动均在同一窗口完成。
-- 商店公开浏览无需网页登录；愿望单、购买和账户操作才进入明确标识的 `store.steampowered.com` 安全页面，不复制 Steam CEF 的加密登录 Cookie。
-- 账户游戏库直接读取本机 Steam `localconfig.vdf` 的 AppID、游玩时长和最近记录；不读取或上传认证令牌，并在本地缓存官方商店元数据。
-- 从 Valve 官方 CDN 下载并安装 Windows 版 Steam。
-- 从项目的 Cloudflare R2 下载 GPTK 4 原始镜像，自动完成大小、SHA-256、DMG 与 Apple 签名验证。
-- 导入完整 D3DMetal framework、Wine PE Bridge 与 Unix Bridge，原始镜像和许可独立保留。
-- 从公开对应源码构建并安装 Mac Gaming Uncle Wine 11（GCC 15 MinGW、新 WoW64、MSync、SDL2 winebus/XInput、Steam CEF 补丁与原生 D3DMetal Bridge 路径）。
-- Steam CEF 兼容包装器、中文字体注册与 DirectWrite 字体链接。
-- 解析目标 x64/`*-Win64-Shipping.exe`，再通过 Steam `-applaunch` 创建游戏进程，保证 SteamAPI、渲染器和 HUD 环境完整继承。
-- 全局 Steam 会话会保持登录并在兼容配置相同时直接复用；只有渲染器、HUD、同步方式或虚拟桌面发生冲突时才安全重启。
-- D3DMetal 原生 PE Bridge 按版本安装到 Bottle，覆盖前自动备份；Steam 更新覆盖 CEF 包装器后会在下次启动自动修复。
-- 按 GPTK 版本、安装包哈希、MetalFX、DXR、Metal 4、macOS 和游戏参数管理着色器缓存。
-- Steam AppID/EXE 双重匹配的可审计游戏配方系统。
-- PE 架构、DirectX 导入和反作弊静态检测；内核级反作弊会在启动前阻断。
-- Apple Metal Performance HUD：由同一个 Mac Gaming Uncle Wine 11 游戏进程启用，直接显示在游戏画面内。
-- 每游戏独立配置：固定虚拟桌面分辨率、渲染后端、同步方式、Metal HUD、MetalFX、Metal 4 与启动参数分别持久化，Steam 重新扫描后仍会保留。
-- 独立“手柄中心”：搜索蓝牙手柄、查看设备/电量/能力、分配玩家编号、实时测试输入与震动，并可按游戏启用 SDL HIDAPI 增强兼容。
-- SQLite 状态存储、Bottle 隔离、可恢复备份、CLI 诊断和自动化测试。
+- Native SwiftUI/AppKit interface with English and Simplified Chinese, including onboarding, settings, controller management, diagnostics, and status/error messages.
+- Pixel-game brand art: a tired mustached uncle app icon, a whole-apple controller mark, and a transparent pixel apple for launch buttons, with no bite or play triangle.
+- Top-level navigation focuses on Home, Store, and Library; controllers, downloads, and runtime setup remain supporting tools without a separate Community channel.
+- A focused Steam-client shell with a native Store home/categories/search experience, account library, artwork, details, install, and launch actions.
+- Public Store browsing requires no web login; wishlist, purchase, and account actions open a clearly labeled `store.steampowered.com` secure page without copying Steam CEF's encrypted session cookies.
+- Reads AppIDs, playtime, and recent activity from the local Steam `localconfig.vdf` without reading or uploading authentication tokens, and caches official Store metadata locally.
+- Downloads the Windows Steam installer from Valve's official CDN.
+- Downloads the original GPTK 4 image through the project's Cloudflare R2 channel, verifying size, SHA-256, DMG integrity and Apple signature.
+- Imports the complete D3DMetal framework, Wine PE bridge and Unix bridge while retaining the original image and license separately.
+- Builds and installs Mac Gaming Uncle Wine 11 from corresponding public source, with GCC 15 MinGW, new WoW64, MSync, SDL2 winebus/XInput, Steam CEF fixes, and a native D3DMetal bridge path.
+- Repairs Steam CEF compatibility and installs CJK fonts with DirectWrite font linking.
+- Resolves the x64/`*-Win64-Shipping.exe` target, then lets Steam create it through `-applaunch` so SteamAPI, renderer, and HUD state are inherited intact.
+- Keeps a global signed-in Steam session and reuses it whenever launch environments are compatible; it restarts only for conflicting renderer, HUD, synchronization, or virtual-desktop settings.
+- Installs native D3DMetal PE bridges into the bottle with versioned backups, and automatically repairs the CEF wrapper after a Steam update replaces it.
+- Invalidates shader caches when the GPTK version, source hash, MetalFX, DXR, Metal 4, macOS version, or compatibility arguments change.
+- Auditable game recipes matched by Steam AppID and executable name.
+- Static PE architecture, DirectX import, and anti-cheat inspection; kernel anti-cheat is blocked before launch.
+- Apple Metal Performance HUD in the same Mac Gaming Uncle Wine 11 process that runs the game.
+- Per-game settings for virtual-desktop resolution, renderer, synchronization, Metal HUD, MetalFX, Metal 4, and launch arguments; settings survive Steam rescans.
+- A dedicated Controller Center for Bluetooth discovery, device/battery/capability status, player assignment, live input and rumble tests, plus per-game SDL HIDAPI compatibility.
+- SQLite state, isolated Wine bottles, recoverable backups, CLI diagnostics, and automated tests.
 
-## 工作原理
+## How it works
 
 ```text
-Windows 游戏
+Windows game
      │
-     ├─ Win32 / Win64 API ───────────────→ Wine
-     ├─ x86_64 指令 ─────────────────────→ Rosetta 2
+     ├─ Win32 / Win64 APIs ──────────────→ Wine
+     ├─ x86_64 instructions ─────────────→ Rosetta 2
      └─ Direct3D 11 / 12 ─→ D3DMetal ───→ Metal
-                           └→ DXVK/MoltenVK（回退路径）
+                           └→ DXVK/MoltenVK (fallback)
 
-Steam AppManifest → 游戏扫描 → 兼容配方 → 不可变 LaunchPlan → 独立 Bottle
+Steam AppManifest → discovery → game recipe → immutable LaunchPlan → isolated bottle
 ```
 
-Mac Gaming Uncle 负责组合、验证和启动这些层。它不会修改游戏内容，也不会绕过 DRM、授权或反作弊。
+Mac Gaming Uncle composes, verifies, and launches these layers. It does not modify game content or bypass DRM, licensing, or anti-cheat systems.
 
-## 快速开始
+## Quick start
 
-### 要求
+### Requirements
 
 - Apple Silicon Mac
-- macOS 15 或更高版本
-- 可访问组件下载服务器的网络连接
-- 合法拥有的 Steam 账户和游戏
+- macOS 15 or later
+- Network access to the component download servers
+- A Steam account and games you legally own
 
-### 从源码构建
+### Build from source
 
-以下仅供开发者使用，需要 Xcode 26 或兼容 Swift 6 的完整开发工具链。普通用户请按上方“新手下载安装指南”安装 DMG。
+For developers only: this requires Xcode 26 or a compatible full Swift 6 toolchain. Other users should follow the Beginner installation guide above.
 
-不需要开发环境时，可直接下载经过挂载和签名结构验证的 [Mac Gaming Uncle 0.2.1 DMG](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.1/Mac-Gaming-Uncle-0.2.1-macOS-arm64.dmg)，并用同目录的 [SHA-256 文件](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.1/Mac-Gaming-Uncle-0.2.1-macOS-arm64.dmg.sha256) 校验。
+If you do not need a development environment, download the mount-verified [Mac Gaming Uncle 0.3.0 DMG](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.3.0/Mac-Gaming-Uncle-0.3.0-macOS-arm64.dmg) and verify it with the adjacent [SHA-256 file](https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.3.0/Mac-Gaming-Uncle-0.3.0-macOS-arm64.dmg.sha256).
 
 ```bash
 git clone https://github.com/enginefuture/mac-gaming-uncle.git
@@ -161,34 +163,34 @@ scripts/build-app.sh
 open "dist/Mac Gaming Uncle.app"
 ```
 
-生成经过挂载验证的 DMG：
+Build and mount-verify a distributable DMG:
 
 ```bash
 scripts/build-dmg.sh
 ```
 
-当前开源研究预览使用 ad-hoc 签名，尚未公证。若 Gatekeeper 阻止打开，从 GitHub Release 下载并确认来源后可执行：
+The current open-source research preview is ad-hoc signed and not notarized. If Gatekeeper blocks a verified GitHub Release download, remove quarantine after reviewing its source:
 
 ```bash
 xattr -dr com.apple.quarantine "/Applications/Mac Gaming Uncle.app"
 ```
 
-开发构建使用 ad-hoc 签名。正式分发时设置 Developer ID：
+Development builds are ad-hoc signed. Set a Developer ID for distribution:
 
 ```bash
 MAC_GAMING_UNCLE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
   scripts/build-app.sh
 ```
 
-### 游戏设置说明
+### Game settings
 
-MetalFX/DLSS 映射是实验功能且默认关闭。只有游戏本身提供 DLSS 时才可能生效；游戏配方可以强制禁用它。`Grim Dawn` 不使用 DLSS，Mac Gaming Uncle 会忽略全局 MetalFX 开关，避免 NVNGX 显卡伪装导致 UI 消失。
+MetalFX/DLSS mapping is experimental and disabled by default. It can only help games that already implement DLSS, and recipes can explicitly disable it. `Grim Dawn` does not use DLSS, so Mac Gaming Uncle ignores the global MetalFX toggle for that title to prevent the NVNGX GPU-spoof path from dropping its UI.
 
-“优先使用 Metal 4”默认开启，但会先通过当前 `MTLDevice` 查询硬件和系统支持；不支持时自动回退，个别游戏异常时也可在高级设置中手动关闭。D3DMetal 版本、游戏 Direct3D 版本和 Metal 提交路径是三个不同维度，例如 HUD 显示 `Game Porting Toolkit 4.0b2 · D3D11` 完全正常。
+“Prefer Metal 4” is enabled by default, but Mac Gaming Uncle first queries the active `MTLDevice` for hardware and OS support. Unsupported systems fall back automatically, and the option can be disabled for a title that regresses. The D3DMetal release, the game's Direct3D API, and the Metal submission path are separate dimensions; a HUD reading `Game Porting Toolkit 4.0b2 · D3D11` is expected.
 
-“显示 Apple Metal HUD”会经 Steam 把 Apple HUD 环境变量传给目标游戏；不切换到 Apple Evaluation Wine，也不会跳过 Steam。HUD 只会在实际使用 D3DMetal 或 DXMT 的游戏中出现。`Grim Dawn 1.3` 配方优先选择 x64 主程序与 D3DMetal 4，按 Mac 屏幕的逻辑点尺寸同步游戏分辨率，并自动备份 `options.txt`、启用经典 HUD与原生手柄支持；该游戏还会关闭 MSync 与 Steam Overlay，避免 UI 漏绘和鼠标命中区域错位。
+“Show Apple Metal HUD” relays Apple's HUD environment through Steam to the target game. It does not switch to Apple Evaluation Wine or bypass Steam. The HUD appears only with D3DMetal or DXMT. The `Grim Dawn 1.3` recipe selects the x64 executable and D3DMetal 4, matches the game resolution to the Mac display's logical-point dimensions, and backs up `options.txt` before enabling the classic HUD and native gamepad support. It also disables MSync and Steam Overlay for this title to avoid missing UI and displaced pointer hit regions.
 
-## 开发与测试
+## Development and testing
 
 ```bash
 swift test
@@ -198,7 +200,7 @@ scripts/check.sh
 scripts/build-indie-wine11.sh
 ```
 
-常用 CLI：
+Useful CLI commands:
 
 ```text
 macgamingunclectl doctor
@@ -215,27 +217,27 @@ macgamingunclectl steam repair <bottle-root> [wrapper.exe]
 macgamingunclectl fonts repair <bottle-root> <runtime-root>
 ```
 
-更多资料：
+Further reading:
 
-- [架构说明](docs/ARCHITECTURE.md)
-- [运行时供应链](docs/RUNTIME_SUPPLY_CHAIN.md)
-- [测试指南](docs/TESTING.md)
-- [第三方声明](THIRD_PARTY_NOTICES.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Runtime supply chain](docs/RUNTIME_SUPPLY_CHAIN.md)
+- [Testing guide](docs/TESTING.md)
+- [Third-party notices](THIRD_PARTY_NOTICES.md)
 
-## 兼容性边界
+## Compatibility boundaries
 
-- Wine 是兼容层，不是安全沙箱；Windows 进程仍以当前 macOS 用户权限运行。
-- 内核级反作弊、Windows 驱动、UWP、部分 DRM 和依赖 AVX-512 的程序通常无法运行。
-- 32 位游戏、D3D9/10/11、启动器和视频播放的兼容性仍因游戏而异。
-- D3DMetal、Steam 和游戏受各自条款约束，本仓库不提供这些二进制文件。
-- Mac Gaming Uncle 不隶属于 Apple、Valve、CodeWeavers 或任何游戏发行商。
+- Wine is a compatibility layer, not a security sandbox. Windows processes still run with the current macOS user's permissions.
+- Kernel anti-cheat, Windows drivers, UWP, some DRM systems, and software requiring AVX-512 generally do not work.
+- Compatibility for 32-bit titles, D3D9/10/11, launchers, and video playback varies by game.
+- D3DMetal, Steam, and games remain subject to their own terms. This repository does not provide those binaries.
+- Mac Gaming Uncle is not affiliated with Apple, Valve, CodeWeavers, or any game publisher.
 
-## 参与贡献
+## Contributing
 
-欢迎提交可复现的兼容性报告、游戏配方、测试和代码改进。Issue 请至少包含：Mac 型号、macOS 版本、GPTK/D3DMetal 版本、Steam AppID、启动参数以及去除个人信息后的相关日志。
+Reproducible compatibility reports, game recipes, tests, and code improvements are welcome. Issues should include the Mac model, macOS version, GPTK/D3DMetal version, Steam AppID, launch arguments, and relevant logs with personal information removed.
 
-请勿提交游戏文件、账户凭据、Apple 下载介质、D3DMetal 二进制或用于绕过 DRM/反作弊的内容。
+Do not submit game files, account credentials, Apple download media, D3DMetal binaries, or material intended to bypass DRM or anti-cheat systems.
 
-## 许可证
+## License
 
-Mac Gaming Uncle 源代码使用 [Apache License 2.0](LICENSE)。第三方组件继续受各自许可证或使用条款约束，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+Mac Gaming Uncle source code is licensed under the [Apache License 2.0](LICENSE). Third-party components remain under their own licenses or terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

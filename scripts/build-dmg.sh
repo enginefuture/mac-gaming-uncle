@@ -32,11 +32,14 @@ trap cleanup EXIT
 /usr/bin/hdiutil attach -readonly -nobrowse -mountpoint "$mount_point" "$artifact" >/dev/null
 /usr/bin/codesign --verify --deep --strict "$mount_point/Mac Gaming Uncle.app"
 /bin/test -L "$mount_point/Applications"
-for resource_name in MacGamingUncle_IndieCatalog.bundle MacGamingUncle_MacGamingUncleApp.bundle; do
+for resource_name in MacGamingUncle_IndieCore.bundle MacGamingUncle_IndieCatalog.bundle MacGamingUncle_MacGamingUncleApp.bundle; do
   /bin/test -d "$mount_point/Mac Gaming Uncle.app/Contents/Resources/$resource_name"
 done
 /bin/test -f "$mount_point/Mac Gaming Uncle.app/Contents/Resources/MacGamingUncle_IndieCatalog.bundle/grim-dawn.json"
 /bin/test -f "$mount_point/Mac Gaming Uncle.app/Contents/Resources/MacGamingUncle_MacGamingUncleApp.bundle/uncle-apple.png"
+for app_language in en zh-Hans; do
+  /bin/test -f "$mount_point/Mac Gaming Uncle.app/Contents/Resources/MacGamingUncle_IndieCore.bundle/$app_language.lproj/Localizable.strings"
+done
 /usr/bin/hdiutil detach "$mount_point" >/dev/null
 
 digest=$(/usr/bin/shasum -a 256 "$artifact" | /usr/bin/awk '{print $1}')

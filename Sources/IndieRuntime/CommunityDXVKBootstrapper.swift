@@ -44,14 +44,14 @@ public actor CommunityDXVKBootstrapper {
         try paths.createDirectories()
         let (download, response) = try await session.download(from: Self.downloadURL)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-            throw IndieError.invalidData("DXVK-macOS 下载失败")
+            throw IndieError.invalidData(L("DXVK-macOS 下载失败"))
         }
         let size = Int64(try download.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0)
         guard size == Self.release.downloadSize else {
-            throw IndieError.securityViolation("DXVK-macOS 制品尺寸不匹配")
+            throw IndieError.securityViolation(L("DXVK-macOS 制品尺寸不匹配"))
         }
         guard try ManifestSecurity.sha256(of: download) == Self.release.sha256 else {
-            throw IndieError.securityViolation("DXVK-macOS 制品 SHA-256 不匹配")
+            throw IndieError.securityViolation(L("DXVK-macOS 制品 SHA-256 不匹配"))
         }
 
         let staging = paths.downloads.appendingPathComponent("dxvk-\(UUID().uuidString)", isDirectory: true)
@@ -64,7 +64,7 @@ public actor CommunityDXVKBootstrapper {
             timeout: .seconds(120)
         )
         guard let source = Self.findPayload(in: staging) else {
-            throw IndieError.invalidData("DXVK-macOS 压缩包缺少 x64/x32 D3D11 DLL")
+            throw IndieError.invalidData(L("DXVK-macOS 压缩包缺少 x64/x32 D3D11 DLL"))
         }
         return try await RendererOverlayImporter(paths: paths).importOverlay(.dxvk, from: source)
     }
@@ -77,7 +77,7 @@ public actor CommunityDXVKBootstrapper {
         for entry in listing.stdout.split(whereSeparator: \.isNewline).map(String.init) {
             let path = entry.replacingOccurrences(of: "\\", with: "/")
             if path.hasPrefix("/") || path.split(separator: "/", omittingEmptySubsequences: false).contains("..") {
-                throw IndieError.securityViolation("DXVK-macOS 压缩包包含越界路径：\(entry)")
+                throw IndieError.securityViolation(L("DXVK-macOS 压缩包包含越界路径：\(entry)"))
             }
         }
     }

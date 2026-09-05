@@ -22,8 +22,8 @@ public struct IndiePaths: Sendable {
     public var logs: URL { root.appendingPathComponent("Logs", isDirectory: true) }
     public var downloads: URL { root.appendingPathComponent("Downloads", isDirectory: true) }
     public var recipes: URL { root.appendingPathComponent("Recipes", isDirectory: true) }
-    public var steamCatalogCache: URL { root.appendingPathComponent("steam-store-metadata.json") }
-    public var steamNativeStoreCache: URL { root.appendingPathComponent("steam-native-store.json") }
+    public var steamCatalogCache: URL { root.appendingPathComponent("steam-store-metadata-\(AppLanguage.identifier).json") }
+    public var steamNativeStoreCache: URL { root.appendingPathComponent("steam-native-store-\(AppLanguage.identifier).json") }
 
     public func createDirectories(fileManager: FileManager = .default) throws {
         for directory in [root, bottles, runtimes, importedComponents, overlays, shaderCaches, shaderCacheBackups, logs, downloads, recipes] {

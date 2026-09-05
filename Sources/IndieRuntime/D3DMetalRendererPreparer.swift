@@ -35,7 +35,7 @@ public enum D3DMetalRendererPreparer {
         ]
         for (source, target) in aliases {
             guard fileManager.fileExists(atPath: source.path) else {
-                throw IndieError.invalidData("GPTK \(version) 缺少 MetalFX NVNGX Bridge")
+                throw IndieError.invalidData(L("GPTK \(version) 缺少 MetalFX NVNGX Bridge"))
             }
             if !fileManager.fileExists(atPath: target.path) {
                 try fileManager.copyItem(at: source, to: target)
@@ -65,7 +65,7 @@ public enum D3DMetalRendererPreparer {
         for name in names {
             let source = sourceDirectory.appendingPathComponent(name)
             guard fileManager.fileExists(atPath: source.path) else {
-                throw IndieError.invalidData("GPTK \(version) 缺少 \(name)")
+                throw IndieError.invalidData(L("GPTK \(version) 缺少 \(name)"))
             }
             let destination = system32.appendingPathComponent(name)
             let original = backup.appendingPathComponent(name)

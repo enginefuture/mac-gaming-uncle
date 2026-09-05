@@ -42,7 +42,7 @@ public actor GPTKImporter {
             framework = Self.find(named: "D3DMetal.framework", under: searchRoot)
         }
         guard let framework else {
-            throw IndieError.notFound("选择的 Apple GPTK 镜像中没有 D3DMetal.framework")
+            throw IndieError.notFound(L("选择的 Apple GPTK 镜像中没有 D3DMetal.framework"))
         }
         try Self.verifyAppleSignature(framework)
         let sourceRenderer = Self.findRendererRoot(containing: framework)
@@ -148,7 +148,7 @@ public actor GPTKImporter {
               let plist = try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
               let entities = plist["system-entities"] as? [[String: Any]],
               let point = entities.compactMap({ $0["mount-point"] as? String }).last else {
-            throw IndieError.invalidData("无法读取 GPTK 镜像挂载点")
+            throw IndieError.invalidData(L("无法读取 GPTK 镜像挂载点"))
         }
         return URL(fileURLWithPath: point, isDirectory: true)
     }
@@ -223,7 +223,7 @@ public actor GPTKImporter {
         let isD3DMetal = url.lastPathComponent == "libd3dshared.dylib" || details.contains("identifier=com.apple.d3dmetal") || details.contains("identifier=d3dmetal")
         let appleChain = details.contains("authority=apple") || details.contains("apple code signing certification authority")
         guard isD3DMetal, appleChain else {
-            throw IndieError.securityViolation("D3DMetal 组件不是可验证的 Apple 签名产物")
+            throw IndieError.securityViolation(L("D3DMetal 组件不是可验证的 Apple 签名产物"))
         }
     }
 

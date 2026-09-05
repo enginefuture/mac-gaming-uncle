@@ -49,7 +49,7 @@ public actor CommunityWineBootstrapper {
     public func installLatest() async throws -> LocalWineRuntime {
         let (release, asset) = try await resolveLatest()
         guard let digest = asset.digest?.lowercased(), digest.hasPrefix("sha256:"), digest.count == 71 else {
-            throw IndieError.securityViolation("上游 Release 没有提供 SHA-256，拒绝自动安装")
+            throw IndieError.securityViolation(L("上游 Release 没有提供 SHA-256，拒绝自动安装"))
         }
         let version = try SemanticVersion(release.tagName)
         let manifest = RuntimeManifest(
@@ -84,7 +84,7 @@ public actor CommunityWineBootstrapper {
             allowUnsignedDevelopmentManifest: true
         )
         guard LocalWineImporter.findWine(in: destination) != nil else {
-            throw IndieError.invalidData("下载的 Wine 运行时缺少可执行文件")
+            throw IndieError.invalidData(L("下载的 Wine 运行时缺少可执行文件"))
         }
         let installed = LocalWineRuntime(manifest: manifest, root: destination, importedAt: Date())
         try IndieJSON.encoder(pretty: true).encode(installed)
@@ -100,7 +100,7 @@ public actor CommunityWineBootstrapper {
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200,
               http.url?.host?.lowercased() == "api.github.com" else {
-            throw IndieError.invalidData("无法读取 Wine 上游 Release")
+            throw IndieError.invalidData(L("无法读取 Wine 上游 Release"))
         }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -109,10 +109,10 @@ public actor CommunityWineBootstrapper {
             let name = $0.name.lowercased()
             return name.hasPrefix("wine-staging-") && name.hasSuffix("-osx64.tar.xz")
         }) else {
-            throw IndieError.notFound("上游最新 Release 没有 macOS x86_64 Wine Staging 制品")
+            throw IndieError.notFound(L("上游最新 Release 没有 macOS x86_64 Wine Staging 制品"))
         }
         guard asset.browserDownloadURL.scheme == "https", asset.browserDownloadURL.host?.lowercased() == "github.com" else {
-            throw IndieError.securityViolation("Wine 下载地址不属于 GitHub")
+            throw IndieError.securityViolation(L("Wine 下载地址不属于 GitHub"))
         }
         return (release, asset)
     }

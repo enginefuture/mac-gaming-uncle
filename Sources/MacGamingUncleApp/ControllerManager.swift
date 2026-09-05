@@ -1,3 +1,4 @@
+import IndieCore
 import AppKit
 import CoreHaptics
 import Foundation
@@ -62,20 +63,20 @@ final class ControllerManager: ObservableObject {
             return snapshot(for: controller, id: id, fallbackIndex: index)
         }
         if !isDiscovering {
-            status = devices.isEmpty ? "尚未连接手柄" : "已连接 \(devices.count) 个手柄"
+            status = devices.isEmpty ? L("尚未连接手柄") : L("已连接 \(devices.count) 个手柄")
         }
     }
 
     func startDiscovery() {
         guard !isDiscovering else { return }
         isDiscovering = true
-        status = "正在搜索可发现的蓝牙手柄…"
+        status = L("正在搜索可发现的蓝牙手柄…")
         GCController.startWirelessControllerDiscovery { [weak self] in
             Task { @MainActor in
                 guard let self else { return }
                 self.isDiscovering = false
                 self.refresh()
-                self.status = self.devices.isEmpty ? "没有发现新手柄" : "搜索完成 · 已连接 \(self.devices.count) 个"
+                self.status = self.devices.isEmpty ? L("没有发现新手柄") : L("搜索完成 · 已连接 \(self.devices.count) 个")
             }
         }
     }
@@ -95,14 +96,14 @@ final class ControllerManager: ObservableObject {
         case 3: .index4
         default: .indexUnset
         }
-        status = player < 0 ? "已取消玩家编号" : "已分配给玩家 \(player + 1)"
+        status = player < 0 ? L("已取消玩家编号") : L("已分配给玩家 \(player + 1)")
         refresh()
     }
 
     func testRumble(_ id: UUID) {
         guard let controller = controllers[id], let haptics = controller.haptics,
               let engine = haptics.createEngine(withLocality: .default) else {
-            lastError = "这个手柄没有向 macOS 提供震动能力"
+            lastError = L("这个手柄没有向 macOS 提供震动能力")
             return
         }
         do {
@@ -121,7 +122,7 @@ final class ControllerManager: ObservableObject {
             try player.start(atTime: 0)
             hapticEngines[id] = engine
             hapticPlayers[id] = player
-            status = "已向 \(deviceName(id)) 发送震动测试"
+            status = L("已向 \(deviceName(id)) 发送震动测试")
             Task { @MainActor [weak self] in
                 try? await Task.sleep(for: .seconds(1))
                 self?.hapticPlayers[id] = nil
@@ -129,28 +130,28 @@ final class ControllerManager: ObservableObject {
                 self?.hapticEngines[id] = nil
             }
         } catch {
-            lastError = "震动测试失败：\(error.localizedDescription)"
+            lastError = L("震动测试失败：\(error.localizedDescription)")
         }
     }
 
     func openSystemControllerSettings() {
         guard let url = URL(string: "x-apple.systempreferences:com.apple.Game-Controller-Settings.extension"),
               NSWorkspace.shared.open(url) else {
-            lastError = "无法打开 macOS 游戏控制器设置"
+            lastError = L("无法打开 macOS 游戏控制器设置")
             return
         }
-        status = "已打开 macOS 游戏控制器设置"
+        status = L("已打开 macOS 游戏控制器设置")
     }
 
     private func installInputHandler(for controller: GCController, id: UUID) {
         if let gamepad = controller.extendedGamepad {
             gamepad.valueChangedHandler = { [weak self] _, element in
-                let label = element.localizedName ?? "手柄输入"
+                let label = element.localizedName ?? L("手柄输入")
                 Task { @MainActor in self?.recordInput(label, id: id) }
             }
         } else if let gamepad = controller.microGamepad {
             gamepad.valueChangedHandler = { [weak self] _, element in
-                let label = element.localizedName ?? "手柄输入"
+                let label = element.localizedName ?? L("手柄输入")
                 Task { @MainActor in self?.recordInput(label, id: id) }
             }
         }
@@ -161,16 +162,16 @@ final class ControllerManager: ObservableObject {
         guard let index = devices.firstIndex(where: { $0.id == id }),
               let controller = controllers[id] else { return }
         devices[index] = snapshot(for: controller, id: id, fallbackIndex: index)
-        status = "输入测试：\(label)"
+        status = L("输入测试：\(label)")
     }
 
     private func snapshot(for controller: GCController, id: UUID, fallbackIndex: Int) -> ControllerDeviceSnapshot {
         let trimmedName = controller.vendorName?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let name = trimmedName?.isEmpty == false ? trimmedName! : "游戏手柄 \(fallbackIndex + 1)"
+        let name = trimmedName?.isEmpty == false ? trimmedName! : L("游戏手柄 \(fallbackIndex + 1)")
         let profile: String
-        if controller.extendedGamepad != nil { profile = "扩展手柄 · 双摇杆与扳机" }
-        else if controller.microGamepad != nil { profile = "标准手柄" }
-        else { profile = "通用控制器" }
+        if controller.extendedGamepad != nil { profile = L("扩展手柄 · 双摇杆与扳机") }
+        else if controller.microGamepad != nil { profile = L("标准手柄") }
+        else { profile = L("通用控制器") }
         let battery = controller.battery
         return ControllerDeviceSnapshot(
             id: id,
@@ -188,14 +189,14 @@ final class ControllerManager: ObservableObject {
 
     private func batteryStateName(_ state: GCDeviceBattery.State) -> String {
         switch state {
-        case .charging: "充电中"
-        case .discharging: "使用电池"
-        case .full: "已充满"
-        default: "状态未知"
+        case .charging: L("充电中")
+        case .discharging: L("使用电池")
+        case .full: L("已充满")
+        default: L("状态未知")
         }
     }
 
     private func deviceName(_ id: UUID) -> String {
-        devices.first(where: { $0.id == id })?.name ?? "手柄"
+        devices.first(where: { $0.id == id })?.name ?? L("手柄")
     }
 }

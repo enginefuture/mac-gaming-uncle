@@ -7,7 +7,7 @@ public enum WinePath {
         let candidate = file.standardizedFileURL
         let prefix = driveC.path.hasSuffix("/") ? driveC.path : driveC.path + "/"
         guard candidate.path.hasPrefix(prefix) else {
-            throw IndieError.invalidArgument("文件不在 Bottle 的 C: 盘中")
+            throw IndieError.invalidArgument(L("文件不在 Bottle 的 C: 盘中"))
         }
         let relative = String(candidate.path.dropFirst(prefix.count))
         return "C:\\" + relative.replacingOccurrences(of: "/", with: "\\")

@@ -18,10 +18,10 @@ public enum BottleDXVKInstaller {
         fileManager: FileManager = .default
     ) throws -> BottleDXVKInstallation {
         guard overlay.kind == .dxvk else {
-            throw IndieError.invalidArgument("Bottle DXVK 安装器只接受 DXVK Overlay")
+            throw IndieError.invalidArgument(L("Bottle DXVK 安装器只接受 DXVK Overlay"))
         }
         guard let layout = sourceLayout(under: overlay.root, fileManager: fileManager) else {
-            throw IndieError.invalidData("DXVK Overlay 缺少 x64/x32 D3D11 DLL")
+            throw IndieError.invalidData(L("DXVK Overlay 缺少 x64/x32 D3D11 DLL"))
         }
 
         let metadataDirectory = bottle.root.appendingPathComponent(".indie", isDirectory: true)

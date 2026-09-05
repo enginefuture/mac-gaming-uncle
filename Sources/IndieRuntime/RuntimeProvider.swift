@@ -47,7 +47,7 @@ public struct WineRuntimeProvider: RuntimeProvider, Sendable {
     public func probeInstallation(at root: URL) async -> [ProbeItem] {
         let binary = wineBinary
         guard FileManager.default.isExecutableFile(atPath: binary.path) else {
-            return [.init(id: "wine", title: "Wine", detail: "未找到 \(binary.path)", severity: .failure)]
+            return [.init(id: "wine", title: "Wine", detail: L("未找到 \(binary.path)"), severity: .failure)]
         }
         do {
             let result = try await subprocess.run(binary, arguments: ["--version"], environment: hostEnvironment, timeout: .seconds(10))
@@ -220,7 +220,7 @@ public struct WineRuntimeProvider: RuntimeProvider, Sendable {
     public func configureWindowsUserProfile(in bottle: BottleRecord, username: String) async throws {
         let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_."))
         guard !username.isEmpty, username.unicodeScalars.allSatisfy(allowed.contains) else {
-            throw IndieError.invalidArgument("Windows 用户名包含不安全字符")
+            throw IndieError.invalidArgument(L("Windows 用户名包含不安全字符"))
         }
         let values = [
             "USERNAME": username,

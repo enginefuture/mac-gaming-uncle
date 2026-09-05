@@ -36,7 +36,7 @@ private enum RendererChoice: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .automatic: "自动（推荐）"
+        case .automatic: L("自动（推荐）")
         case .d3dMetal: "D3DMetal"
         case .dxmt: "DXMT"
         case .dxvk: "DXVK"
@@ -74,28 +74,28 @@ struct GameSettingsView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(target.name).font(.system(size: 24, weight: .bold, design: .rounded))
-                    Text("独立游戏设置 · \(target.detail)").font(.system(size: 13)).foregroundStyle(.secondary)
+                    Text(L("独立游戏设置 · \(target.detail)")).font(.system(size: 13)).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("恢复默认") { reset() }
-                Button("取消") { dismiss() }
-                Button("保存") { save() }.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                Button(L("恢复默认")) { reset() }
+                Button(L("取消")) { dismiss() }
+                Button(L("保存")) { save() }.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
             }
             .padding(24)
             Divider()
 
             Form {
-                Section("显示") {
-                    Toggle("使用 Wine 虚拟桌面", isOn: $useVirtualDesktop)
-                    Text("为这个游戏创建固定尺寸的 Windows 桌面，可避免 Retina 缩放导致的画面拉伸和鼠标错位。")
+                Section(L("显示")) {
+                    Toggle(L("使用 Wine 虚拟桌面"), isOn: $useVirtualDesktop)
+                    Text(L("为这个游戏创建固定尺寸的 Windows 桌面，可避免 Retina 缩放导致的画面拉伸和鼠标错位。"))
                         .font(.caption).foregroundStyle(.secondary)
                     HStack {
-                        TextField("宽度", text: $width).frame(width: 100)
+                        TextField(L("宽度"), text: $width).frame(width: 100)
                         Text("×").foregroundStyle(.secondary)
-                        TextField("高度", text: $height).frame(width: 100)
-                        Text("像素").foregroundStyle(.secondary)
+                        TextField(L("高度"), text: $height).frame(width: 100)
+                        Text(L("像素")).foregroundStyle(.secondary)
                         Spacer()
-                        Menu("常用分辨率") {
+                        Menu(L("常用分辨率")) {
                             resolutionButton(1280, 720)
                             resolutionButton(1600, 900)
                             resolutionButton(1920, 1080)
@@ -106,12 +106,12 @@ struct GameSettingsView: View {
                     .disabled(!useVirtualDesktop)
                 }
 
-                Section("图形") {
-                    Picker("渲染后端", selection: $renderer) {
+                Section(L("图形")) {
+                    Picker(L("渲染后端"), selection: $renderer) {
                         ForEach(rendererChoices) { choice in Text(choice.label).tag(choice) }
                     }
-                    Picker("同步方式", selection: $configuration.syncBackend) {
-                        Text("自动（推荐）").tag(SyncBackend.automatic)
+                    Picker(L("同步方式"), selection: $configuration.syncBackend) {
+                        Text(L("自动（推荐）")).tag(SyncBackend.automatic)
                         Text("MSync").tag(SyncBackend.msync)
                         Text("Wine Server").tag(SyncBackend.wineserver)
                     }
@@ -120,21 +120,21 @@ struct GameSettingsView: View {
                     overridePicker("Metal 4", selection: $configuration.metal4)
                 }
 
-                Section("手柄") {
-                    Picker("输入模式", selection: $configuration.controllerMode) {
-                        Text("自动（Wine / Steam Input）").tag(ControllerMode.automatic)
-                        Text("增强兼容（SDL HIDAPI）").tag(ControllerMode.enhanced)
+                Section(L("手柄")) {
+                    Picker(L("输入模式"), selection: $configuration.controllerMode) {
+                        Text(L("自动（Wine / Steam Input）")).tag(ControllerMode.automatic)
+                        Text(L("增强兼容（SDL HIDAPI）")).tag(ControllerMode.enhanced)
                     }
-                    Toggle("启用手柄震动", isOn: $configuration.controllerRumble)
+                    Toggle(L("启用手柄震动"), isOn: $configuration.controllerRumble)
                         .disabled(configuration.controllerMode != .enhanced)
                     ControllerConnectionSummary(manager: model.controllerManager)
-                    Text("Xbox、PlayStation、Switch Pro 及标准 USB/蓝牙手柄由 macOS 检测，再交给 Wine；部分 Steam 游戏仍需在 Steam 中启用 Steam Input。")
+                    Text(L("Xbox、PlayStation、Switch Pro 及标准 USB/蓝牙手柄由 macOS 检测，再交给 Wine；部分 Steam 游戏仍需在 Steam 中启用 Steam Input。"))
                         .font(.caption).foregroundStyle(.secondary)
                 }
 
-                Section("启动参数") {
+                Section(L("启动参数")) {
                     TextEditor(text: $argumentLines).font(.system(.body, design: .monospaced)).frame(minHeight: 70)
-                    Text("每行一个参数；仅应用于这个游戏。")
+                    Text(L("每行一个参数；仅应用于这个游戏。"))
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
@@ -154,9 +154,9 @@ struct GameSettingsView: View {
     @ViewBuilder
     private func overridePicker(_ title: String, selection: Binding<GameSettingOverride>) -> some View {
         Picker(title, selection: selection) {
-            Text("跟随全局设置").tag(GameSettingOverride.inherit)
-            Text("开启").tag(GameSettingOverride.enabled)
-            Text("关闭").tag(GameSettingOverride.disabled)
+            Text(L("跟随全局设置")).tag(GameSettingOverride.inherit)
+            Text(L("开启")).tag(GameSettingOverride.enabled)
+            Text(L("关闭")).tag(GameSettingOverride.disabled)
         }
     }
 

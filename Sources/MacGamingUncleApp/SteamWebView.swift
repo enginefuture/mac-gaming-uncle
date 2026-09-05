@@ -1,3 +1,4 @@
+import IndieCore
 import AppKit
 import SwiftUI
 import WebKit
@@ -58,10 +59,10 @@ struct SteamBrowserView: View {
                 .padding(.horizontal, 12).frame(maxWidth: .infinity, minHeight: 30, alignment: .leading)
                 .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 8))
                 if session.isLoading { ProgressView().controlSize(.small) }
-                Button("在浏览器打开", systemImage: "safari") {
+                Button(L("在浏览器打开"), systemImage: "safari") {
                     if let url = session.currentURL { NSWorkspace.shared.open(url) }
                 }
-                .labelStyle(.iconOnly).help("在默认浏览器打开")
+                .labelStyle(.iconOnly).help(L("在默认浏览器打开"))
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 16).frame(height: 48)

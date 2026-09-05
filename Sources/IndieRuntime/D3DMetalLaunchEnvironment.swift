@@ -21,7 +21,7 @@ public enum D3DMetalLaunchEnvironment {
             wineBridge.appendingPathComponent("x86_64-windows/d3d12.dll"),
         ]
         guard required.allSatisfy({ fileManager.fileExists(atPath: $0.path) }) else {
-            throw IndieError.invalidData("导入的 D3DMetal Wine Bridge 不完整")
+            throw IndieError.invalidData(L("导入的 D3DMetal Wine Bridge 不完整"))
         }
 
         var fallbackRoots = [external.path]

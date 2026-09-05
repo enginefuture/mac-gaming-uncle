@@ -22,15 +22,15 @@ public enum ManifestSecurity {
     }
 
     public static func verify(_ manifest: RuntimeManifest, publicKeyBase64: String) throws {
-        guard manifest.schemaVersion == 1 else { throw IndieError.invalidData("不支持的运行时清单版本") }
+        guard manifest.schemaVersion == 1 else { throw IndieError.invalidData(L("不支持的运行时清单版本")) }
         guard let signatureText = manifest.signature,
               let signature = Data(base64Encoded: signatureText),
               let keyData = Data(base64Encoded: publicKeyBase64) else {
-            throw IndieError.securityViolation("运行时清单缺少有效签名")
+            throw IndieError.securityViolation(L("运行时清单缺少有效签名"))
         }
         let key = try Curve25519.Signing.PublicKey(rawRepresentation: keyData)
         guard key.isValidSignature(signature, for: try canonicalPayload(for: manifest)) else {
-            throw IndieError.securityViolation("运行时清单签名验证失败")
+            throw IndieError.securityViolation(L("运行时清单签名验证失败"))
         }
     }
 

@@ -33,12 +33,12 @@ public actor CommunityIndieWineBootstrapper {
         try paths.createDirectories()
         let sourceRoot = Self.runtimePayloadRoot(in: source)
         guard Self.isCompleteRuntime(sourceRoot) else {
-            throw IndieError.invalidData("本地 Mac Gaming Uncle Wine 11 构建不完整")
+            throw IndieError.invalidData(L("本地 Mac Gaming Uncle Wine 11 构建不完整"))
         }
         let sourceVersion = Self.runtimeVersion(in: sourceRoot) ?? Self.version
         if sourceVersion >= SemanticVersion(major: 11, minor: 0, patch: 2),
            !Self.hasControllerSupport(sourceRoot) {
-            throw IndieError.invalidData("手柄版 Wine 运行时缺少 SDL2 winebus 组件")
+            throw IndieError.invalidData(L("手柄版 Wine 运行时缺少 SDL2 winebus 组件"))
         }
         let localManifest = Self.manifest(for: sourceVersion)
         let destination = runtimeDestination(for: sourceVersion)
@@ -46,7 +46,7 @@ public actor CommunityIndieWineBootstrapper {
             if Self.isCompleteRuntime(destination) {
                 return try finishInstallation(at: destination)
             }
-            throw IndieError.invalidData("运行时目标目录已存在但元数据无效：\(destination.path)")
+            throw IndieError.invalidData(L("运行时目标目录已存在但元数据无效：\(destination.path)"))
         }
         let staging = paths.runtimes.appendingPathComponent(".indie-wine11-\(UUID().uuidString)", isDirectory: true)
         do {
@@ -88,7 +88,7 @@ public actor CommunityIndieWineBootstrapper {
         manifest: RuntimeManifest? = nil
     ) throws -> LocalWineRuntime {
         guard Self.isCompleteRuntime(root) else {
-            throw IndieError.invalidData("Mac Gaming Uncle Wine 11 运行环境不完整")
+            throw IndieError.invalidData(L("Mac Gaming Uncle Wine 11 运行环境不完整"))
         }
         let installed = LocalWineRuntime(manifest: manifest ?? Self.manifest, root: root, importedAt: Date())
         try IndieJSON.encoder(pretty: true).encode(installed)
@@ -125,7 +125,7 @@ public actor CommunityIndieWineBootstrapper {
         guard version != Self.version else { return Self.manifest }
         return RuntimeManifest(
             id: runtimeID,
-            displayName: "Mac Gaming Uncle Wine \(version) 手柄增强引擎",
+            displayName: L("Mac Gaming Uncle Wine \(version) 手柄增强引擎"),
             version: version,
             channel: .experimental,
             hostArchitecture: .x86_64,
@@ -139,7 +139,7 @@ public actor CommunityIndieWineBootstrapper {
 
     public static let manifest = RuntimeManifest(
         id: runtimeID,
-        displayName: "Mac Gaming Uncle Wine 11 手柄增强游戏引擎",
+        displayName: L("Mac Gaming Uncle Wine 11 手柄增强游戏引擎"),
         version: version,
         channel: .experimental,
         hostArchitecture: .x86_64,
@@ -151,7 +151,7 @@ public actor CommunityIndieWineBootstrapper {
             supportsMSync: true
         ),
         artifacts: [ArtifactDescriptor(
-            url: URL(string: "https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.2.1/indie-wine-11.0.2-macos-x86_64.tar.xz")!,
+            url: URL(string: "https://github.com/enginefuture/mac-gaming-uncle/releases/download/v0.3.0/indie-wine-11.0.2-macos-x86_64.tar.xz")!,
             sha256: "412d2135f70683c34e80f50c4fa209a53be8ec9656dd51dcb92af8049fce3150",
             size: 46_596_600,
             archiveRoot: "wine-runtime"

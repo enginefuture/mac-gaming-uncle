@@ -90,7 +90,7 @@ public enum SteamActivityScanner {
                         let timestamp = (item["rtUnlocked"] as? NSNumber)?.doubleValue ?? 0
                         return SteamAchievement(
                             id: identifier,
-                            name: item["strName"] as? String ?? "Steam 成就",
+                            name: item["strName"] as? String ?? L("Steam 成就"),
                             imageURL: (item["strImage"] as? String).flatMap(URL.init(string:)),
                             unlockedAt: timestamp > 0 ? Date(timeIntervalSince1970: timestamp) : nil
                         )
@@ -137,7 +137,7 @@ public enum SteamAccountLibraryScanner {
                     ? Date(timeIntervalSince1970: TimeInterval(lastPlayedSeconds)) : nil
                 let candidate = SteamAccountGame(
                     appID: appID,
-                    name: installedGame?.name ?? "Steam 游戏 \(appID)",
+                    name: installedGame?.name ?? L("Steam 游戏 \(appID)"),
                     playtimeMinutes: playtime,
                     lastPlayed: lastPlayed,
                     isInstalled: installedGame != nil,
@@ -198,7 +198,7 @@ public enum SteamStoreMetadataService {
         var components = URLComponents(string: "https://store.steampowered.com/api/appdetails")!
         components.queryItems = [
             .init(name: "appids", value: String(appID)),
-            .init(name: "l", value: "schinese"),
+            .init(name: "l", value: AppLanguage.steamLanguage),
             .init(name: "cc", value: "cn"),
         ]
         guard let url = components.url,

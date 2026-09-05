@@ -19,7 +19,7 @@ public enum VDFParser {
 
     public static func parse(data: Data) throws -> [String: VDFValue] {
         guard let source = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .utf16) else {
-            throw IndieError.invalidData("VDF 文本编码无效")
+            throw IndieError.invalidData(L("VDF 文本编码无效"))
         }
         var tokens = try tokenize(source)
         var index = 0
@@ -32,13 +32,13 @@ public enum VDFParser {
         var object: [String: VDFValue] = [:]
         while index < tokens.count {
             if tokens[index] == .close {
-                guard expectsClose else { throw IndieError.invalidData("VDF 出现多余的右花括号") }
+                guard expectsClose else { throw IndieError.invalidData(L("VDF 出现多余的右花括号")) }
                 index += 1
                 return object
             }
-            guard case .text(let key) = tokens[index] else { throw IndieError.invalidData("VDF 缺少键") }
+            guard case .text(let key) = tokens[index] else { throw IndieError.invalidData(L("VDF 缺少键")) }
             index += 1
-            guard index < tokens.count else { throw IndieError.invalidData("VDF 键 \(key) 缺少值") }
+            guard index < tokens.count else { throw IndieError.invalidData(L("VDF 键 \(key) 缺少值")) }
             switch tokens[index] {
             case .text(let value):
                 object[key] = .string(value)
@@ -47,10 +47,10 @@ public enum VDFParser {
                 index += 1
                 object[key] = .object(try parseObject(tokens: &tokens, index: &index, expectsClose: true))
             case .close:
-                throw IndieError.invalidData("VDF 键 \(key) 缺少值")
+                throw IndieError.invalidData(L("VDF 键 \(key) 缺少值"))
             }
         }
-        if expectsClose { throw IndieError.invalidData("VDF 缺少右花括号") }
+        if expectsClose { throw IndieError.invalidData(L("VDF 缺少右花括号")) }
         return object
     }
 
@@ -66,7 +66,7 @@ public enum VDFParser {
             }
             if character == "{" { result.append(.open); index = source.index(after: index); continue }
             if character == "}" { result.append(.close); index = source.index(after: index); continue }
-            guard character == "\"" else { throw IndieError.invalidData("VDF 仅支持带引号的键值") }
+            guard character == "\"" else { throw IndieError.invalidData(L("VDF 仅支持带引号的键值")) }
             index = source.index(after: index)
             var value = ""
             var closed = false
@@ -84,7 +84,7 @@ public enum VDFParser {
                     }
                 } else { value.append(current) }
             }
-            guard closed else { throw IndieError.invalidData("VDF 字符串未闭合") }
+            guard closed else { throw IndieError.invalidData(L("VDF 字符串未闭合")) }
             result.append(.text(value))
         }
         return result

@@ -16,10 +16,10 @@ public actor BottleManager {
     public func create(name: String, runtime: any RuntimeProvider) async throws -> BottleRecord {
         try paths.createDirectories()
         let safeName = sanitized(name)
-        guard !safeName.isEmpty else { throw IndieError.invalidArgument("Bottle 名称不能为空") }
+        guard !safeName.isEmpty else { throw IndieError.invalidArgument(L("Bottle 名称不能为空")) }
         let id = UUID()
         let root = paths.bottles.appendingPathComponent("\(safeName)-\(id.uuidString.lowercased())", isDirectory: true)
-        guard !FileManager.default.fileExists(atPath: root.path) else { throw IndieError.invalidData("Bottle 目录已存在") }
+        guard !FileManager.default.fileExists(atPath: root.path) else { throw IndieError.invalidData(L("Bottle 目录已存在")) }
         let bottle = BottleRecord(id: id, name: name, root: root, runtimeID: runtime.manifest.id)
         do {
             try await withLock(id) { try await runtime.initializeBottle(bottle) }
@@ -53,7 +53,7 @@ public actor BottleManager {
     }
 
     private func withLock<T: Sendable>(_ id: UUID, operation: () async throws -> T) async throws -> T {
-        guard lockedBottles.insert(id).inserted else { throw IndieError.invalidData("Bottle 正在被另一个操作使用") }
+        guard lockedBottles.insert(id).inserted else { throw IndieError.invalidData(L("Bottle 正在被另一个操作使用")) }
         defer { lockedBottles.remove(id) }
         return try await operation()
     }

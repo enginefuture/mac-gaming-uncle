@@ -16,7 +16,7 @@ public actor RendererOverlayImporter {
 
     public func importOverlay(_ kind: RendererKind, from source: URL) throws -> RendererOverlay {
         guard [.dxmt, .dxvk, .vkd3d].contains(kind) else {
-            throw IndieError.invalidArgument("该渲染器不使用开源 DLL Overlay 导入")
+            throw IndieError.invalidArgument(L("该渲染器不使用开源 DLL Overlay 导入"))
         }
         try paths.createDirectories()
         let files = Self.fileNames(under: source)
@@ -29,7 +29,7 @@ public actor RendererOverlayImporter {
         default: []
         }
         guard required.isSubset(of: files) else {
-            throw IndieError.invalidData("\(kind.rawValue) Overlay 缺少：\(required.subtracting(files).sorted().joined(separator: ", "))")
+            throw IndieError.invalidData(L("\(kind.rawValue) Overlay 缺少：\(required.subtracting(files).sorted().joined(separator: ", "))"))
         }
         let version = Self.version(from: source.lastPathComponent)
         let destination = paths.overlays.appendingPathComponent(kind.rawValue, isDirectory: true).appendingPathComponent(version, isDirectory: true)

@@ -53,7 +53,7 @@ struct FocusDeckHomeView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text("最近游玩")
+                    Text(L("最近游玩"))
                         .font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.white.opacity(0.72))
                     Text(game.name)
                         .font(.system(size: 46, weight: .bold, design: .rounded))
@@ -61,15 +61,15 @@ struct FocusDeckHomeView: View {
                     HStack(spacing: 20) {
                         Label(playtime(game.playtimeMinutes), systemImage: "clock")
                         if let date = game.lastPlayed {
-                            Text("最近游玩：\(date.formatted(date: .abbreviated, time: .omitted))")
+                            Text(L("最近游玩：\(AppLanguage.date(date))"))
                         }
                     }
                     .font(.system(size: 14, weight: .medium)).foregroundStyle(Color.white.opacity(0.67))
                     HStack(spacing: 24) {
-                        Label("兼容性优秀", systemImage: "checkmark.seal.fill")
+                        Label(L("兼容性优秀"), systemImage: "checkmark.seal.fill")
                             .foregroundStyle(IndiePalette.green)
                         Label(
-                            model.steamSessionManager.state == .running ? "云存档已同步" : "Steam 待连接",
+                            model.steamSessionManager.state == .running ? L("云存档已同步") : L("Steam 待连接"),
                             systemImage: model.steamSessionManager.state == .running ? "cloud.fill" : "cloud"
                         )
                         .foregroundStyle(Color.white.opacity(0.72))
@@ -77,11 +77,11 @@ struct FocusDeckHomeView: View {
                     .font(.system(size: 13, weight: .semibold))
                     HStack(spacing: 12) {
                         primaryAction(game)
-                        Button("游戏设置", systemImage: "gearshape") { showSettings(game) }
+                        Button(L("游戏设置"), systemImage: "gearshape") { showSettings(game) }
                             .buttonStyle(FocusSecondaryButtonStyle())
                         Menu {
-                            Button("商店页面", systemImage: "bag") { openStore(game.appID) }
-                            Button("刷新游戏库", systemImage: "arrow.clockwise") { model.rescanSteam() }
+                            Button(L("商店页面"), systemImage: "bag") { openStore(game.appID) }
+                            Button(L("刷新游戏库"), systemImage: "arrow.clockwise") { model.rescanSteam() }
                         } label: {
                             Image(systemName: "ellipsis").frame(width: 42)
                         }
@@ -147,11 +147,11 @@ struct FocusDeckHomeView: View {
     private func primaryAction(_ game: SteamAccountGame) -> some View {
         if let installed = model.steamGames.first(where: { $0.appID == game.appID }) {
             Button { Task { await model.launchSteamGame(installed) } } label: {
-                HStack(spacing: 8) { UncleAppleMark(size: 24); Text("开始游戏") }
+                HStack(spacing: 8) { UncleAppleMark(size: 24); Text(L("开始游戏")) }
             }
             .buttonStyle(FocusPrimaryButtonStyle()).disabled(model.isWorking)
         } else {
-            Button("安装游戏", systemImage: "arrow.down.circle.fill") {
+            Button(L("安装游戏"), systemImage: "arrow.down.circle.fill") {
                 Task { await model.installSteamGame(appID: game.appID) }
             }
             .buttonStyle(FocusPrimaryButtonStyle()).disabled(model.isWorking)
@@ -160,21 +160,21 @@ struct FocusDeckHomeView: View {
 
     private func detailPanels(_ game: SteamAccountGame) -> some View {
         HStack(alignment: .top, spacing: 14) {
-            FocusPanel(title: "最近活动", icon: "clock.arrow.circlepath") {
-                activityRow("上次运行", value: game.lastPlayed?.formatted(date: .abbreviated, time: .shortened) ?? "尚未运行")
+            FocusPanel(title: L("最近活动"), icon: "clock.arrow.circlepath") {
+                activityRow(L("上次运行"), value: game.lastPlayed.map { AppLanguage.date($0, time: true) } ?? L("尚未运行"))
                 if let activity = model.steamActivities[game.appID] {
                     ForEach(Array(activity.recentAchievements.prefix(2))) { achievement in
                         achievementActivityRow(achievement)
                     }
                 }
-                Button("查看商店动态", systemImage: "newspaper") { openStore(game.appID) }
+                Button(L("查看商店动态"), systemImage: "newspaper") { openStore(game.appID) }
                     .buttonStyle(.borderless).foregroundStyle(Color.white.opacity(0.76))
             }
 
-            FocusPanel(title: "成就", icon: "trophy") {
+            FocusPanel(title: L("成就"), icon: "trophy") {
                 if let activity = model.steamActivities[game.appID], activity.total > 0 {
                     HStack {
-                        Text("\(activity.achieved) / \(activity.total) 已解锁")
+                        Text(L("\(activity.achieved) / \(activity.total) 已解锁"))
                         Spacer()
                         Text("\(Int(activity.progress * 100))%")
                     }.font(.caption).foregroundStyle(IndiePalette.secondaryText)
@@ -188,20 +188,20 @@ struct FocusDeckHomeView: View {
                         }
                     }
                 } else {
-                    Text("运行游戏后，Steam 成就进度会显示在这里。")
+                    Text(L("运行游戏后，Steam 成就进度会显示在这里。"))
                         .font(.system(size: 13)).foregroundStyle(IndiePalette.secondaryText)
                 }
-                Text("成就数据来自本机 Steam 缓存")
+                Text(L("成就数据来自本机 Steam 缓存"))
                     .font(.caption2).foregroundStyle(IndiePalette.secondaryText)
             }
 
-            FocusPanel(title: "兼容性与设置", icon: "switch.2") {
+            FocusPanel(title: L("兼容性与设置"), icon: "switch.2") {
                 let configuration = model.configuration(appID: game.appID)
-                activityRow("兼容层", value: rendererName(configuration.preferredRenderer))
-                activityRow("分辨率", value: configuration.virtualDesktop?.label ?? "自动（推荐）")
+                activityRow(L("兼容层"), value: rendererName(configuration.preferredRenderer))
+                activityRow(L("分辨率"), value: configuration.virtualDesktop?.label ?? L("自动（推荐）"))
                 activityRow("Metal HUD", value: overrideName(configuration.metalHUD))
-                activityRow("手柄", value: configuration.controllerMode == .enhanced ? "增强兼容" : "自动")
-                Button("管理游戏设置", systemImage: "slider.horizontal.3") { showSettings(game) }
+                activityRow(L("手柄"), value: configuration.controllerMode == .enhanced ? L("增强兼容") : L("自动"))
+                Button(L("管理游戏设置"), systemImage: "slider.horizontal.3") { showSettings(game) }
                     .buttonStyle(.bordered).controlSize(.small).frame(maxWidth: .infinity)
             }
         }
@@ -210,13 +210,13 @@ struct FocusDeckHomeView: View {
 
     private var controllerHintBar: some View {
         HStack {
-            Label("菜单", systemImage: "circle.circle")
+            Label(L("菜单"), systemImage: "circle.circle")
             Spacer()
             if !model.controllerManager.devices.isEmpty {
-                Text("A 选择").fontWeight(.semibold)
-                Text("B 返回").fontWeight(.semibold)
+                Text(L("A 选择")).fontWeight(.semibold)
+                Text(L("B 返回")).fontWeight(.semibold)
             } else {
-                Text(model.status.isEmpty ? "Mac Gaming Uncle 已就绪" : model.status)
+                Text(model.status.isEmpty ? L("Mac Gaming Uncle 已就绪") : model.status)
             }
         }
         .font(.system(size: 12.5)).foregroundStyle(Color.white.opacity(0.65))
@@ -227,12 +227,12 @@ struct FocusDeckHomeView: View {
 
     private var emptyState: some View {
         ContentUnavailableView {
-            Label("等待 Steam 游戏库", systemImage: "gamecontroller")
+            Label(L("等待 Steam 游戏库"), systemImage: "gamecontroller")
         } description: {
-            Text("Steam 登录后会自动同步游戏库，首次同步可能需要一些时间。")
+            Text(L("Steam 登录后会自动同步游戏库，首次同步可能需要一些时间。"))
         } actions: {
-            Button("同步游戏库") { model.syncSteamLibrary() }.buttonStyle(.borderedProminent)
-            Button("Steam 登录窗口") { Task { await model.launchSteam() } }
+            Button(L("同步游戏库")) { model.syncSteamLibrary() }.buttonStyle(.borderedProminent)
+            Button(L("Steam 登录窗口")) { Task { await model.launchSteam() } }
                 .disabled(model.isWorking || model.onboardingBusy)
             Text(model.status).font(.caption).foregroundStyle(.secondary)
         }
@@ -282,24 +282,24 @@ struct FocusDeckHomeView: View {
                 .frame(width: 30, height: 30).clipShape(RoundedRectangle(cornerRadius: 5))
             VStack(alignment: .leading, spacing: 2) {
                 Text(achievement.name).font(.system(size: 11.5, weight: .semibold)).lineLimit(1)
-                Text(achievement.unlockedAt?.formatted(date: .abbreviated, time: .omitted) ?? "最近解锁")
+                Text(achievement.unlockedAt.map { AppLanguage.date($0) } ?? L("最近解锁"))
                     .font(.caption2).foregroundStyle(IndiePalette.secondaryText)
             }
         }
     }
 
     private func rendererName(_ renderer: RendererKind?) -> String {
-        renderer?.rawValue.uppercased() ?? (model.d3dMetalRuntimeAvailable ? "D3DMetal 4" : "自动")
+        renderer?.rawValue.uppercased() ?? (model.d3dMetalRuntimeAvailable ? "D3DMetal 4" : L("自动"))
     }
 
     private func overrideName(_ value: GameSettingOverride) -> String {
-        switch value { case .inherit: "跟随全局"; case .enabled: "已开启"; case .disabled: "已关闭" }
+        switch value { case .inherit: L("跟随全局"); case .enabled: L("已开启"); case .disabled: L("已关闭") }
     }
 
     private func playtime(_ minutes: Int) -> String {
-        if minutes <= 0 { return "尚未游玩" }
-        if minutes < 60 { return "\(minutes) 分钟" }
-        return String(format: "%.1f 小时", Double(minutes) / 60)
+        if minutes <= 0 { return L("尚未游玩") }
+        if minutes < 60 { return L("\(minutes) 分钟") }
+        return String(format: L("%.1f 小时"), Double(minutes) / 60)
     }
 }
 

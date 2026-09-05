@@ -56,30 +56,30 @@ public actor SystemProbe {
         items.append(.init(
             id: "architecture",
             title: "Apple Silicon",
-            detail: architecture == .arm64 ? chip : "Mac Gaming Uncle 仅支持 Apple Silicon",
+            detail: architecture == .arm64 ? chip : L("Mac Gaming Uncle 仅支持 Apple Silicon"),
             severity: architecture == .arm64 ? .pass : .failure
         ))
         items.append(.init(
             id: "metal",
             title: "Metal GPU",
-            detail: metalDevice ?? "未检测到 Metal 设备",
+            detail: metalDevice ?? L("未检测到 Metal 设备"),
             severity: metalDevice == nil ? .failure : .pass
         ))
         items.append(.init(
             id: "macos",
-            title: "macOS 版本",
+            title: L("macOS 版本"),
             detail: version,
             severity: major >= 15 ? .pass : .failure
         ))
         items.append(.init(
             id: "rosetta",
             title: "Rosetta 2",
-            detail: rosetta ? "已安装" : "运行 x86/x64 Windows 游戏前必须安装",
+            detail: rosetta ? L("已安装") : L("运行 x86/x64 Windows 游戏前必须安装"),
             severity: rosetta ? .pass : .failure
         ))
         items.append(.init(
             id: "memory",
-            title: "内存",
+            title: L("内存"),
             detail: ByteCountFormatter.string(fromByteCount: Int64(memory), countStyle: .memory),
             severity: memory >= 16 * 1_073_741_824 ? .pass : .warning
         ))

@@ -1,3 +1,4 @@
+import IndieCore
 import Foundation
 
 public struct GPTKDownloadSnapshot: Sendable, Equatable {

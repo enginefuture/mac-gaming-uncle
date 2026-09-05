@@ -1,4 +1,6 @@
+import IndieCore
 import SwiftUI
+import IndieCore
 
 @main
 struct MacGamingUncleApplication: App {
@@ -9,6 +11,7 @@ struct MacGamingUncleApplication: App {
         Window("Mac Gaming Uncle", id: "steam-shell-main") {
             ContentView()
                 .environmentObject(model)
+                .environment(\.locale, AppLanguage.locale)
                 .frame(minWidth: 1100, minHeight: 720)
                 .onOpenURL { model.handleDeepLink($0) }
                 .onAppear { appDelegate.model = model }
@@ -21,6 +24,7 @@ struct MacGamingUncleApplication: App {
         Settings {
             SettingsView()
                 .environmentObject(model)
+                .environment(\.locale, AppLanguage.locale)
                 .frame(width: 560, height: 360)
         }
     }

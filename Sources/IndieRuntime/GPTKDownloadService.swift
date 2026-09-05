@@ -37,7 +37,7 @@ public actor GPTKDownloadService {
                 let (temporary, response) = try await session.download(for: request)
                 defer { try? FileManager.default.removeItem(at: temporary) }
                 guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-                    throw IndieError.invalidData("GPTK 下载失败，请检查网络后重试")
+                    throw IndieError.invalidData(L("GPTK 下载失败，请检查网络后重试"))
                 }
                 try Self.validate(temporary)
                 try Task.checkCancellation()
@@ -53,14 +53,14 @@ public actor GPTKDownloadService {
                 try await Task.sleep(for: .seconds(attempt + 1))
             }
         }
-        throw IndieError.invalidData("GPTK 下载未完成")
+        throw IndieError.invalidData(L("GPTK 下载未完成"))
     }
 
     public static func validate(_ file: URL) throws {
         let actualSize = Int64(try file.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0)
-        guard actualSize == size else { throw IndieError.securityViolation("GPTK 安装包大小校验失败") }
+        guard actualSize == size else { throw IndieError.securityViolation(L("GPTK 安装包大小校验失败")) }
         guard try ManifestSecurity.sha256(of: file) == sha256 else {
-            throw IndieError.securityViolation("GPTK 安装包 SHA-256 校验失败")
+            throw IndieError.securityViolation(L("GPTK 安装包 SHA-256 校验失败"))
         }
     }
 }

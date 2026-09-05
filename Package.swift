@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "MacGamingUncle",
-    defaultLocalization: "zh-Hans",
+    defaultLocalization: "en",
     platforms: [.macOS(.v15)],
     products: [
         .library(name: "IndieCore", targets: ["IndieCore"]),
@@ -17,7 +17,7 @@ let package = Package(
             name: "CSQLite",
             path: "Sources/CSQLite"
         ),
-        .target(name: "IndieCore", dependencies: ["CSQLite"]),
+        .target(name: "IndieCore", dependencies: ["CSQLite"], resources: [.process("Resources")]),
         .target(name: "IndieRuntime", dependencies: ["IndieCore"]),
         .target(name: "IndieCatalog", dependencies: ["IndieCore"], resources: [.process("Resources")]),
         .executableTarget(

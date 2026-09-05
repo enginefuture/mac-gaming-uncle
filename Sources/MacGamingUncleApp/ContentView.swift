@@ -63,12 +63,12 @@ struct ContentView: View {
             model.requestedDestination = nil
         }
         .preferredColorScheme(.dark)
-        .alert("无法完成操作", isPresented: Binding(
+        .alert(L("无法完成操作"), isPresented: Binding(
             get: { model.lastError != nil && model.onboardingStage == .complete },
             set: { if !$0 { model.lastError = nil } }
         )) {
-            Button("知道了") { model.lastError = nil }
-            Button("打开高级设置") { model.lastError = nil; showAdvanced = true }
+            Button(L("知道了")) { model.lastError = nil }
+            Button(L("打开高级设置")) { model.lastError = nil; showAdvanced = true }
         } message: {
             Text(model.lastError ?? "")
         }
@@ -150,13 +150,13 @@ private struct GlobalNavigationBar: View {
                 .resizable().scaledToFit().frame(width: 38, height: 38)
             .padding(.trailing, 14)
 
-            navigationButton("主页", icon: "house", target: .home)
-            navigationButton("商店", icon: "bag", target: .store)
-            navigationButton("游戏库", icon: "rectangle.stack", target: .library)
+            navigationButton(L("主页"), icon: "house", target: .home)
+            navigationButton(L("商店"), icon: "bag", target: .store)
+            navigationButton(L("游戏库"), icon: "rectangle.stack", target: .library)
             Spacer()
 
             Button { destination = .library } label: {
-                Label("下载", systemImage: "arrow.down.to.line")
+                Label(L("下载"), systemImage: "arrow.down.to.line")
                     .overlay(alignment: .topTrailing) {
                         if model.isWorking { Circle().fill(IndiePalette.blue).frame(width: 7, height: 7).offset(x: 8, y: -3) }
                     }
@@ -171,7 +171,7 @@ private struct GlobalNavigationBar: View {
                     }
                 }
             }
-            .buttonStyle(TopBarButtonStyle()).help("手柄中心")
+            .buttonStyle(TopBarButtonStyle()).help(L("手柄中心"))
 
             HStack(spacing: 7) {
                 Image(systemName: model.steamSessionManager.state == .running ? "antenna.radiowaves.left.and.right" : "wifi.slash")
@@ -182,10 +182,10 @@ private struct GlobalNavigationBar: View {
             .foregroundStyle(Color.white.opacity(0.74)).padding(.horizontal, 10)
 
             Menu {
-                Button("运行环境", systemImage: "shippingbox") { destination = .start }
-                Button("高级设置", systemImage: "gearshape") { showAdvanced = true }
+                Button(L("运行环境"), systemImage: "shippingbox") { destination = .start }
+                Button(L("高级设置"), systemImage: "gearshape") { showAdvanced = true }
                 Divider()
-                Button("打开 Windows Steam", systemImage: "arrow.up.forward.app") {
+                Button(L("打开 Windows Steam"), systemImage: "arrow.up.forward.app") {
                     Task { await model.launchSteam() }
                 }
             } label: {
@@ -196,7 +196,7 @@ private struct GlobalNavigationBar: View {
                         .overlay(Image(systemName: "person.fill").font(.caption).foregroundStyle(.white))
                     VStack(alignment: .leading, spacing: 1) {
                         Text("Mac Gaming Uncle").font(.system(size: 12.5, weight: .semibold))
-                        Text(model.steamSessionManager.state == .running ? "Steam 在线" : "Steam 离线")
+                        Text(model.steamSessionManager.state == .running ? L("Steam 在线") : L("Steam 离线"))
                             .font(.system(size: 10.5)).foregroundStyle(IndiePalette.secondaryText)
                     }
                     Image(systemName: "chevron.down").font(.caption2)
@@ -273,16 +273,16 @@ private struct IndieSidebar: View {
             .padding(.top, 24)
             .padding(.bottom, 30)
 
-            SidebarButton(title: "商店", icon: "bag", selected: destination == .store) { destination = .store }
-            SidebarButton(title: "游戏库", icon: "gamecontroller", selected: destination == .library) { destination = .library }
-            SidebarButton(title: "手柄中心", icon: "arcade.stick.console", selected: destination == .controllers) { destination = .controllers }
+            SidebarButton(title: L("商店"), icon: "bag", selected: destination == .store) { destination = .store }
+            SidebarButton(title: L("游戏库"), icon: "gamecontroller", selected: destination == .library) { destination = .library }
+            SidebarButton(title: L("手柄中心"), icon: "arcade.stick.console", selected: destination == .controllers) { destination = .controllers }
 
             Spacer()
 
-            SidebarButton(title: "运行环境", icon: "shippingbox", selected: destination == .start) { destination = .start }
+            SidebarButton(title: L("运行环境"), icon: "shippingbox", selected: destination == .start) { destination = .start }
 
             Button { showAdvanced = true } label: {
-                Label("高级设置", systemImage: "gearshape")
+                Label(L("高级设置"), systemImage: "gearshape")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(IndiePalette.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -292,7 +292,7 @@ private struct IndieSidebar: View {
             .buttonStyle(.plain)
             .background(IndiePalette.surface, in: RoundedRectangle(cornerRadius: 11))
             .padding(14)
-            .accessibilityHint("管理 Wine、D3DMetal 和诊断信息")
+            .accessibilityHint(L("管理 Wine、D3DMetal 和诊断信息"))
         }
         .background(.ultraThinMaterial)
         .background(IndiePalette.sidebar.opacity(0.84))
@@ -350,7 +350,7 @@ private struct SetupHomeView: View {
                 Spacer(minLength: 50)
 
                 VStack(spacing: 20) {
-                    Text("让 Windows 游戏在 Mac 上运行")
+                    Text(L("让 Windows 游戏在 Mac 上运行"))
                         .font(.system(size: 40, weight: .bold, design: .rounded))
                         .tracking(-0.6)
                         .multilineTextAlignment(.center)
@@ -424,43 +424,43 @@ private struct SetupHomeView: View {
 
     private var systemBlocked: Bool { model.systemReport.map { !$0.isSupported } ?? false }
     private var readinessText: String {
-        if systemBlocked { return "环境检查未通过，请查看高级设置" }
-        return "已检测到 \(model.systemReport?.chip ?? "Apple Silicon") · Rosetta 2 已就绪"
+        if systemBlocked { return L("环境检查未通过，请查看高级设置") }
+        return L("已检测到 \(model.systemReport?.chip ?? "Apple Silicon") · Rosetta 2 已就绪")
     }
     private var stageIcon: String {
         switch stage { case .environment: "shield.checkered"; case .steam: "arrow.down.app"; case .game: "gamecontroller"; case .ready: "checkmark.seal" }
     }
     private var stageTitle: String {
-        switch stage { case .environment: "准备游戏环境"; case .steam: "安装 Windows 版 Steam"; case .game: "从 Steam 安装第一个游戏"; case .ready: "你的游戏已经准备好" }
+        switch stage { case .environment: L("准备游戏环境"); case .steam: L("安装 Windows 版 Steam"); case .game: L("从 Steam 安装第一个游戏"); case .ready: L("你的游戏已经准备好") }
     }
     private var stageDescription: String {
         switch stage {
-        case .environment: "Mac Gaming Uncle 会自动下载并验证运行游戏所需的开源兼容组件。\n不会安装 Windows，也不会修改系统安全设置。"
-        case .steam: "环境已经准备完成。接下来 Mac Gaming Uncle 会从 Valve 官方地址下载并打开 Steam 安装程序，你只需完成安装。"
-        case .game: "打开 Steam，登录你的账户，在“游戏库”中选择一款 Windows 游戏并点击“安装”。安装完成后回到 Mac Gaming Uncle 扫描游戏。"
-        case .ready: "已发现 \(model.steamGames.count) 个 Steam 游戏。你可以从游戏库直接启动，Mac Gaming Uncle 会自动选择合适的图形兼容方案。"
+        case .environment: L("Mac Gaming Uncle 会自动下载并验证运行游戏所需的开源兼容组件。\n不会安装 Windows，也不会修改系统安全设置。")
+        case .steam: L("环境已经准备完成。接下来 Mac Gaming Uncle 会从 Valve 官方地址下载并打开 Steam 安装程序，你只需完成安装。")
+        case .game: L("打开 Steam，登录你的账户，在“游戏库”中选择一款 Windows 游戏并点击“安装”。安装完成后回到 Mac Gaming Uncle 扫描游戏。")
+        case .ready: L("已发现 \(model.steamGames.count) 个 Steam 游戏。你可以从游戏库直接启动，Mac Gaming Uncle 会自动选择合适的图形兼容方案。")
         }
     }
     private var primaryTitle: String {
-        switch stage { case .environment: "一键准备环境"; case .steam: "安装 Steam"; case .game: "打开 Steam 安装游戏"; case .ready: "前往游戏库" }
+        switch stage { case .environment: L("一键准备环境"); case .steam: L("安装 Steam"); case .game: L("打开 Steam 安装游戏"); case .ready: L("前往游戏库") }
     }
     private var primaryIcon: String {
         switch stage { case .environment: "sparkles"; case .steam: "arrow.down.app.fill"; case .game: "play.rectangle.fill"; case .ready: "gamecontroller.fill" }
     }
     private var primaryHint: String {
         switch stage {
-        case .environment: "下载并验证 Wine 游戏运行环境"
-        case .steam: "从 Valve 官方地址下载并打开 Steam 安装程序"
-        case .game: "打开 Windows 版 Steam，以便登录并安装游戏"
-        case .ready: "查看已经安装的 Steam 和本地游戏"
+        case .environment: L("下载并验证 Wine 游戏运行环境")
+        case .steam: L("从 Valve 官方地址下载并打开 Steam 安装程序")
+        case .game: L("打开 Windows 版 Steam，以便登录并安装游戏")
+        case .ready: L("查看已经安装的 Steam 和本地游戏")
         }
     }
     private var durationText: String {
         switch stage {
-        case .environment: "首次下载约 190 MB · 大约 3–8 分钟"
-        case .steam: "下载后会出现 Steam 安装窗口"
-        case .game: "游戏安装由 Steam 完成"
-        case .ready: "环境、Steam 与游戏均已就绪"
+        case .environment: L("首次下载约 190 MB · 大约 3–8 分钟")
+        case .steam: L("下载后会出现 Steam 安装窗口")
+        case .game: L("游戏安装由 Steam 完成")
+        case .ready: L("环境、Steam 与游戏均已就绪")
         }
     }
     private func primaryAction() {
@@ -477,15 +477,15 @@ private struct SetupProgressHeader: View {
     let stage: SetupStage
     var body: some View {
         HStack(spacing: 14) {
-            progressItem(number: 1, title: "准备环境")
+            progressItem(number: 1, title: L("准备环境"))
             connector(after: 1)
-            progressItem(number: 2, title: "安装 Steam")
+            progressItem(number: 2, title: L("安装 Steam"))
             connector(after: 2)
-            progressItem(number: 3, title: "选择游戏")
+            progressItem(number: 3, title: L("选择游戏"))
         }
         .frame(maxWidth: 700)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("设置进度，第 \(min(stage.rawValue, 3)) 步，共 3 步")
+        .accessibilityLabel(L("设置进度，第 \(min(stage.rawValue, 3)) 步，共 3 步"))
     }
     private func progressItem(number: Int, title: String) -> some View {
         let current = stage.rawValue == number
@@ -528,8 +528,8 @@ private struct NextStepStrip: View {
                 Text(detail).font(.system(size: 13.5)).foregroundStyle(IndiePalette.secondaryText)
             }
             Spacer()
-            Button("了解详情") { showAdvanced() }.buttonStyle(.bordered)
-            Button("高级设置", systemImage: "chevron.right") { showAdvanced() }.buttonStyle(.plain).foregroundStyle(IndiePalette.secondaryText)
+            Button(L("了解详情")) { showAdvanced() }.buttonStyle(.bordered)
+            Button(L("高级设置"), systemImage: "chevron.right") { showAdvanced() }.buttonStyle(.plain).foregroundStyle(IndiePalette.secondaryText)
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 18)
@@ -537,14 +537,14 @@ private struct NextStepStrip: View {
         .overlay(RoundedRectangle(cornerRadius: 17).stroke(IndiePalette.border))
     }
     private var title: String {
-        switch stage { case .environment: "接下来：安装并登录 Steam"; case .steam: "安装完成后：登录 Steam"; case .game: "在 Steam 中选择并安装游戏"; case .ready: "现在可以开始游戏" }
+        switch stage { case .environment: L("接下来：安装并登录 Steam"); case .steam: L("安装完成后：登录 Steam"); case .game: L("在 Steam 中选择并安装游戏"); case .ready: L("现在可以开始游戏") }
     }
     private var detail: String {
         switch stage {
-        case .environment: "环境准备完成后，Mac Gaming Uncle 将为你打开官方 Steam 安装程序。"
-        case .steam: "Mac Gaming Uncle 不会读取或保存你的 Steam 账户和密码。"
-        case .game: "安装完成后返回 Mac Gaming Uncle，游戏会自动出现在游戏库。"
-        case .ready: "需要更换图形兼容方案时，可在高级设置中调整。"
+        case .environment: L("环境准备完成后，Mac Gaming Uncle 将为你打开官方 Steam 安装程序。")
+        case .steam: L("Mac Gaming Uncle 不会读取或保存你的 Steam 账户和密码。")
+        case .game: L("安装完成后返回 Mac Gaming Uncle，游戏会自动出现在游戏库。")
+        case .ready: L("需要更换图形兼容方案时，可在高级设置中调整。")
         }
     }
 }
@@ -587,13 +587,13 @@ struct LibraryView: View {
         VStack(alignment: .leading, spacing: 22) {
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 7) {
-                    Text("游戏库").font(.system(size: 34, weight: .bold, design: .rounded))
-                    Text("从 Steam 安装游戏，或直接导入本地 Windows 程序。").foregroundStyle(IndiePalette.secondaryText)
+                    Text(L("游戏库")).font(.system(size: 34, weight: .bold, design: .rounded))
+                    Text(L("从 Steam 安装游戏，或直接导入本地 Windows 程序。")).foregroundStyle(IndiePalette.secondaryText)
                     SteamSessionIndicator(manager: model.steamSessionManager)
                 }
                 Spacer()
-                Button("扫描 Steam", systemImage: "arrow.clockwise") { model.rescanSteam() }.disabled(model.steamExecutable == nil || model.isWorking)
-                Button("导入本地游戏", systemImage: "plus") { chooseExecutable() }.buttonStyle(.borderedProminent)
+                Button(L("扫描 Steam"), systemImage: "arrow.clockwise") { model.rescanSteam() }.disabled(model.steamExecutable == nil || model.isWorking)
+                Button(L("导入本地游戏"), systemImage: "plus") { chooseExecutable() }.buttonStyle(.borderedProminent)
             }
             if model.isWorking {
                 HStack(spacing: 10) { ProgressView().controlSize(.small); Text(model.status) }.font(.system(size: 13.5)).foregroundStyle(IndiePalette.secondaryText)
@@ -619,7 +619,7 @@ struct LibraryView: View {
         VStack(spacing: 18) {
             Spacer()
             Image(systemName: "gamecontroller").font(.system(size: 42, weight: .light)).foregroundStyle(IndiePalette.primary)
-            Text("还没有安装游戏").font(.system(size: 22, weight: .semibold))
+            Text(L("还没有安装游戏")).font(.system(size: 22, weight: .semibold))
             Text(emptyDescription).multilineTextAlignment(.center).foregroundStyle(IndiePalette.secondaryText)
             Button(emptyButtonTitle, systemImage: emptyButtonIcon) { emptyAction() }.buttonStyle(.borderedProminent).controlSize(.large)
             Spacer()
@@ -629,32 +629,32 @@ struct LibraryView: View {
 
     private var steamSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Steam 游戏").font(.system(size: 16, weight: .semibold)).padding(18)
+            Text(L("Steam 游戏")).font(.system(size: 16, weight: .semibold)).padding(18)
             Divider().overlay(IndiePalette.border)
             ForEach(model.steamGames) { game in
                 HStack(spacing: 14) {
                     Image(systemName: "gamecontroller.fill").foregroundStyle(IndiePalette.primary).frame(width: 42, height: 42).background(IndiePalette.surface, in: RoundedRectangle(cornerRadius: 11))
                     VStack(alignment: .leading, spacing: 4) {
                         Text(game.name).font(.system(size: 15, weight: .semibold))
-                        Text("Steam 游戏 · 版本 \(game.buildID ?? "未知") · \(model.d3dMetalRuntimeAvailable ? "GPTK 4 / D3DMetal" : "需要 GPTK 4")\(hasCustomSettings(model.configuration(for: game).id) ? " · 已自定义" : "")")
+                        Text(L("Steam 游戏 · 版本 \(game.buildID ?? L("未知")) · \(model.d3dMetalRuntimeAvailable ? "GPTK 4 / D3DMetal" : L("需要 GPTK 4"))\(hasCustomSettings(model.configuration(for: game).id) ? L(" · 已自定义") : "")"))
                             .font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText)
                     }
                     Spacer()
                     if model.d3dMetalRuntimeAvailable {
                         Button { Task { await model.launchSteamGame(game) } } label: {
-                            HStack(spacing: 7) { UncleAppleMark(); Text("智能启动") }
+                            HStack(spacing: 7) { UncleAppleMark(); Text(L("智能启动")) }
                         }
                             .disabled(model.isWorking)
                     } else {
-                        Button("升级 GPTK 4", systemImage: "arrow.down.circle") {
+                        Button(L("升级 GPTK 4"), systemImage: "arrow.down.circle") {
                             model.startGPTKSetup()
                         }
                     }
-                    Button("设置", systemImage: "slider.horizontal.3") { openSettings(for: game) }
-                    .help("配置 \(game.name)")
+                    Button(L("设置"), systemImage: "slider.horizontal.3") { openSettings(for: game) }
+                    .help(L("配置 \(game.name)"))
                     Menu {
-                        Button("游戏设置", systemImage: "slider.horizontal.3") { openSettings(for: game) }
-                        Button("通过 Steam 启动", systemImage: "gamecontroller") {
+                        Button(L("游戏设置"), systemImage: "slider.horizontal.3") { openSettings(for: game) }
+                        Button(L("通过 Steam 启动"), systemImage: "gamecontroller") {
                             Task { await model.launchSteam(appID: game.appID) }
                         }
                     } label: { Image(systemName: "ellipsis") }
@@ -672,25 +672,25 @@ struct LibraryView: View {
 
     private var localSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("本地游戏").font(.system(size: 16, weight: .semibold)).padding(18)
+            Text(L("本地游戏")).font(.system(size: 16, weight: .semibold)).padding(18)
             Divider().overlay(IndiePalette.border)
             ForEach(model.games) { game in
                 HStack(spacing: 14) {
                     Image(systemName: "app.dashed").foregroundStyle(IndiePalette.blue).frame(width: 42, height: 42).background(IndiePalette.surface, in: RoundedRectangle(cornerRadius: 11))
                     VStack(alignment: .leading, spacing: 4) {
                         Text(game.displayName).font(.system(size: 15, weight: .semibold))
-                        Text("\(architectureName(game.analysis.architecture)) · \(directXName(game.analysis.directX))\(hasCustomSettings(model.configuration(for: game).id) ? " · 已自定义" : "")")
+                        Text("\(architectureName(game.analysis.architecture)) · \(directXName(game.analysis.directX))\(hasCustomSettings(model.configuration(for: game).id) ? L(" · 已自定义") : "")")
                             .font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText)
                     }
                     Spacer()
-                    if game.analysis.antiCheat == .kernel { Label("反作弊不兼容", systemImage: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(.orange) }
+                    if game.analysis.antiCheat == .kernel { Label(L("反作弊不兼容"), systemImage: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(.orange) }
                     else {
                         Button { Task { await model.play(game) } } label: {
-                            HStack(spacing: 7) { UncleAppleMark(); Text("运行") }
+                            HStack(spacing: 7) { UncleAppleMark(); Text(L("运行")) }
                         }.disabled(model.isWorking)
                     }
-                    Button("设置", systemImage: "slider.horizontal.3") { openSettings(for: game) }
-                    .help("配置 \(game.displayName)")
+                    Button(L("设置"), systemImage: "slider.horizontal.3") { openSettings(for: game) }
+                    .help(L("配置 \(game.displayName)"))
                 }
                 .padding(.horizontal, 18).padding(.vertical, 13)
             }
@@ -700,14 +700,14 @@ struct LibraryView: View {
     }
 
     private var emptyDescription: String {
-        if !model.environmentReady { return "请先回到“开始”页面，一键准备游戏环境。" }
-        if model.steamExecutable == nil { return "环境已经就绪，下一步安装 Windows 版 Steam。" }
-        return "打开 Steam 登录后，选择游戏并点击安装。完成后回到这里扫描游戏库。"
+        if !model.environmentReady { return L("请先回到“开始”页面，一键准备游戏环境。") }
+        if model.steamExecutable == nil { return L("环境已经就绪，下一步安装 Windows 版 Steam。") }
+        return L("打开 Steam 登录后，选择游戏并点击安装。完成后回到这里扫描游戏库。")
     }
     private var emptyButtonTitle: String {
-        if !model.environmentReady { return "返回开始" }
-        if model.steamExecutable == nil { return "安装 Steam" }
-        return "打开 Steam 安装游戏"
+        if !model.environmentReady { return L("返回开始") }
+        if model.steamExecutable == nil { return L("安装 Steam") }
+        return L("打开 Steam 安装游戏")
     }
     private var emptyButtonIcon: String {
         if !model.environmentReady { return "arrow.left" }
@@ -720,13 +720,13 @@ struct LibraryView: View {
         else { Task { await model.launchSteam() } }
     }
     private func chooseExecutable() {
-        let panel = NSOpenPanel(); panel.allowedContentTypes = [.exe, .item]; panel.allowsMultipleSelection = false; panel.prompt = "导入"
+        let panel = NSOpenPanel(); panel.allowedContentTypes = [.exe, .item]; panel.allowsMultipleSelection = false; panel.prompt = L("导入")
         if panel.runModal() == .OK, let url = panel.url { Task { await model.importExecutable(url) } }
     }
     private func architectureName(_ architecture: CPUArchitecture) -> String {
-        switch architecture { case .i386: "32 位 Intel"; case .x86_64: "64 位 Intel"; case .arm64: "64 位 ARM"; case .arm64ec: "ARM64EC"; case .unknown: "未知架构" }
+        switch architecture { case .i386: L("32 位 Intel"); case .x86_64: L("64 位 Intel"); case .arm64: L("64 位 ARM"); case .arm64ec: "ARM64EC"; case .unknown: L("未知架构") }
     }
-    private func directXName(_ version: DirectXVersion) -> String { version == .none ? "未检测到 DirectX" : version.rawValue.uppercased() }
+    private func directXName(_ version: DirectXVersion) -> String { version == .none ? L("未检测到 DirectX") : version.rawValue.uppercased() }
     private func hasCustomSettings(_ id: String) -> Bool { model.gameConfigurations[id]?.isCustomized == true }
     private func openSettings(for game: SteamGame) {
         let configuration = model.configuration(for: game)
@@ -754,7 +754,7 @@ struct SteamSessionIndicator: View {
     var body: some View {
         if manager.state == .running {
             Label(
-                manager.reuseCount > 0 ? "Steam 已保持登录 · 已快速复用 \(manager.reuseCount) 次" : "Steam 已保持登录",
+                manager.reuseCount > 0 ? L("Steam 已保持登录 · 已快速复用 \(manager.reuseCount) 次") : L("Steam 已保持登录"),
                 systemImage: "bolt.circle.fill"
             )
             .font(.system(size: 12.5, weight: .medium))
@@ -772,15 +772,15 @@ struct AdvancedSettingsView: View {
         VStack(spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("高级设置").font(.system(size: 24, weight: .bold, design: .rounded))
-                    Text("管理兼容组件与查看诊断信息").font(.system(size: 13)).foregroundStyle(.secondary)
+                    Text(L("高级设置")).font(.system(size: 24, weight: .bold, design: .rounded))
+                    Text(L("管理兼容组件与查看诊断信息")).font(.system(size: 13)).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("完成") { dismiss() }.keyboardShortcut(.defaultAction)
+                Button(L("完成")) { dismiss() }.keyboardShortcut(.defaultAction)
             }
             .padding(24)
             Picker("", selection: $section) {
-                Text("运行环境").tag(0); Text("环境诊断").tag(1); Text("偏好设置").tag(2)
+                Text(L("运行环境")).tag(0); Text(L("环境诊断")).tag(1); Text(L("偏好设置")).tag(2)
             }
             .pickerStyle(.segmented).padding(.horizontal, 24).padding(.bottom, 18)
             Divider()
@@ -800,35 +800,35 @@ private struct RuntimeSettingsContent: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                advancedSection(title: "Wine 运行环境", detail: "Mac Gaming Uncle 自行从 LGPL 源码构建 Wine 11 新 WoW64 运行时；不封装或分发 CrossOver 应用。") {
-                    ForEach(model.wineRuntimes) { runtime in componentRow(name: runtime.manifest.displayName, status: "已安装") }
+                advancedSection(title: L("Wine 运行环境"), detail: L("Mac Gaming Uncle 自行从 LGPL 源码构建 Wine 11 新 WoW64 运行时；不封装或分发 CrossOver 应用。")) {
+                    ForEach(model.wineRuntimes) { runtime in componentRow(name: runtime.manifest.displayName, status: L("已安装")) }
                     HStack {
-                        Button("自动安装最新版本") { Task { await model.prepareEnvironment() } }.buttonStyle(.borderedProminent)
-                        Button("导入本地 Wine") { chooseWine() }
+                        Button(L("自动安装最新版本")) { Task { await model.prepareEnvironment() } }.buttonStyle(.borderedProminent)
+                        Button(L("导入本地 Wine")) { chooseWine() }
                     }
                 }
-                advancedSection(title: "Apple D3DMetal", detail: "Apple 官方 GPTK 中的 DirectX 11/12 图形转换组件，适合现代 DX12 游戏。") {
-                    ForEach(model.d3dMetal, id: \.root) { component in componentRow(name: "D3DMetal \(component.version)", status: "Apple 签名已验证") }
+                advancedSection(title: "Apple D3DMetal", detail: L("Apple 官方 GPTK 中的 DirectX 11/12 图形转换组件，适合现代 DX12 游戏。")) {
+                    ForEach(model.d3dMetal, id: \.root) { component in componentRow(name: "D3DMetal \(component.version)", status: L("Apple 签名已验证")) }
                     if let version = model.gptkRuntimeVersion {
-                        componentRow(name: "完整 GPTK 运行时 \(version)", status: model.gptkNeedsUpdate ? "需要升级到 GPTK 4" : "可用于游戏")
+                        componentRow(name: L("完整 GPTK 运行时 \(version)"), status: model.gptkNeedsUpdate ? L("需要升级到 GPTK 4") : L("可用于游戏"))
                     }
                     HStack {
                         if model.isGPTKSetupRunning {
-                            Button("取消等待", role: .cancel) { model.cancelGPTKSetup() }
+                            Button(L("取消等待"), role: .cancel) { model.cancelGPTKSetup() }
                         } else {
-                            Button("一键安装 GPTK 4") { model.startGPTKSetup() }.buttonStyle(.borderedProminent)
+                            Button(L("一键安装 GPTK 4")) { model.startGPTKSetup() }.buttonStyle(.borderedProminent)
                         }
-                        Button("导入 GPTK 镜像") { chooseGPTK() }.buttonStyle(.borderedProminent)
+                        Button(L("导入 GPTK 镜像")) { chooseGPTK() }.buttonStyle(.borderedProminent)
                     }
                     if model.isGPTKSetupRunning {
                         HStack(spacing: 8) { ProgressView().controlSize(.small); Text(model.status) }
                             .font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText)
                     }
                 }
-                advancedSection(title: "开源图形组件", detail: "DXMT 用于 DirectX 10/11；DXVK 与 VKD3D 作为兼容回退或实验路径。") {
-                    ForEach(model.rendererOverlays) { overlay in componentRow(name: "\(overlay.kind.rawValue.uppercased()) \(overlay.version)", status: "已导入") }
+                advancedSection(title: L("开源图形组件"), detail: L("DXMT 用于 DirectX 10/11；DXVK 与 VKD3D 作为兼容回退或实验路径。")) {
+                    ForEach(model.rendererOverlays) { overlay in componentRow(name: "\(overlay.kind.rawValue.uppercased()) \(overlay.version)", status: L("已导入")) }
                     HStack {
-                        Button("导入 DXMT") { chooseRenderer(.dxmt) }; Button("导入 DXVK") { chooseRenderer(.dxvk) }; Button("导入 VKD3D") { chooseRenderer(.vkd3d) }
+                        Button(L("导入 DXMT")) { chooseRenderer(.dxmt) }; Button(L("导入 DXVK")) { chooseRenderer(.dxvk) }; Button(L("导入 VKD3D")) { chooseRenderer(.vkd3d) }
                     }
                 }
             }
@@ -846,15 +846,15 @@ private struct RuntimeSettingsContent: View {
         HStack { Image(systemName: "checkmark.circle.fill").foregroundStyle(IndiePalette.green); Text(name).font(.system(size: 13.5, weight: .medium)); Spacer(); Text(status).font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText) }
     }
     private func chooseGPTK() {
-        let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = true; panel.allowsMultipleSelection = false; panel.allowedContentTypes = [.diskImage, .folder]; panel.prompt = "导入"
+        let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = true; panel.allowsMultipleSelection = false; panel.allowedContentTypes = [.diskImage, .folder]; panel.prompt = L("导入")
         if panel.runModal() == .OK, let url = panel.url { Task { await model.importGPTK(url) } }
     }
     private func chooseWine() {
-        let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = false; panel.allowsMultipleSelection = false; panel.prompt = "导入"
+        let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = false; panel.allowsMultipleSelection = false; panel.prompt = L("导入")
         if panel.runModal() == .OK, let url = panel.url { Task { await model.importWine(url) } }
     }
     private func chooseRenderer(_ kind: RendererKind) {
-        let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = false; panel.allowsMultipleSelection = false; panel.prompt = "导入"
+        let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = false; panel.allowsMultipleSelection = false; panel.prompt = L("导入")
         if panel.runModal() == .OK, let url = panel.url { Task { await model.importRenderer(kind, from: url) } }
     }
 }
@@ -863,7 +863,7 @@ private struct DiagnosticsContent: View {
     @EnvironmentObject private var model: MacGamingUncleAppModel
     var body: some View {
         VStack(spacing: 0) {
-            HStack { Text("这台 Mac").font(.system(size: 18, weight: .semibold)); Spacer(); Button("重新检查", systemImage: "arrow.clockwise") { Task { await model.refresh() } } }.padding(24)
+            HStack { Text(L("这台 Mac")).font(.system(size: 18, weight: .semibold)); Spacer(); Button(L("重新检查"), systemImage: "arrow.clockwise") { Task { await model.refresh() } } }.padding(24)
             List(model.systemReport?.items ?? []) { item in
                 HStack(spacing: 12) {
                     Image(systemName: item.severity == .pass ? "checkmark.circle.fill" : item.severity == .warning ? "exclamationmark.triangle.fill" : "xmark.octagon.fill").foregroundStyle(item.severity == .pass ? IndiePalette.green : item.severity == .warning ? .orange : .red)
@@ -882,19 +882,20 @@ private struct PreferencesContent: View {
     @AppStorage("metal4") private var metal4 = true
     var body: some View {
         Form {
-            Picker("更新通道", selection: $releaseChannel) {
-                Text("稳定版").tag(ReleaseChannel.stable.rawValue); Text("候选版").tag(ReleaseChannel.candidate.rawValue); Text("实验版").tag(ReleaseChannel.experimental.rawValue)
+            LanguagePicker()
+            Picker(L("更新通道"), selection: $releaseChannel) {
+                Text(L("稳定版")).tag(ReleaseChannel.stable.rawValue); Text(L("候选版")).tag(ReleaseChannel.candidate.rawValue); Text(L("实验版")).tag(ReleaseChannel.experimental.rawValue)
             }
-            Toggle("启动游戏时显示 Apple Metal HUD", isOn: $metalHUD)
-            Text("D3DMetal 游戏会在同一个 Mac Gaming Uncle Wine 11 + Steam 会话中显示 Apple 官方 FPS、GPU 时间、内存和帧间隔；非 D3DMetal 兼容回退不会显示该 HUD。")
+            Toggle(L("启动游戏时显示 Apple Metal HUD"), isOn: $metalHUD)
+            Text(L("D3DMetal 游戏会在同一个 Mac Gaming Uncle Wine 11 + Steam 会话中显示 Apple 官方 FPS、GPU 时间、内存和帧间隔；非 D3DMetal 兼容回退不会显示该 HUD。"))
                 .font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText)
-            Toggle("优先使用 Metal 4", isOn: $metal4)
-            Text("GPTK 4 会在支持的 Apple GPU 与 macOS 上使用新的 Metal 4 提交路径；遇到个别游戏异常时可关闭并回退。")
+            Toggle(L("优先使用 Metal 4"), isOn: $metal4)
+            Text(L("GPTK 4 会在支持的 Apple GPU 与 macOS 上使用新的 Metal 4 提交路径；遇到个别游戏异常时可关闭并回退。"))
                 .font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText)
-            Toggle("使用 MetalFX 兼容游戏的 DLSS", isOn: $metalFX)
-            Text("需要 GPTK 4/D3DMetal，且仍需在游戏画面设置中开启 DLSS。Apple GPU 实际执行的是 MetalFX。")
+            Toggle(L("使用 MetalFX 兼容游戏的 DLSS"), isOn: $metalFX)
+            Text(L("需要 GPTK 4/D3DMetal，且仍需在游戏画面设置中开启 DLSS。Apple GPU 实际执行的是 MetalFX。"))
                 .font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText)
-            Text("Mac Gaming Uncle 不收集遥测数据。兼容配方来自可审计的 Git 仓库。").font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText)
+            Text(L("Mac Gaming Uncle 不收集遥测数据。兼容配方来自可审计的 Git 仓库。")).font(.system(size: 12.5)).foregroundStyle(IndiePalette.secondaryText)
         }
         .formStyle(.grouped).padding(12)
     }

@@ -42,10 +42,10 @@ public struct D3DMetalShaderCachePreparation: Sendable, Equatable {
 public enum D3DMetalShaderCacheManager {
     public static func cacheRoot(executableName: String) throws -> URL {
         let length = confstr(_CS_DARWIN_USER_CACHE_DIR, nil, 0)
-        guard length > 0 else { throw IndieError.notFound("无法定位 macOS 用户缓存目录") }
+        guard length > 0 else { throw IndieError.notFound(L("无法定位 macOS 用户缓存目录")) }
         var buffer = [CChar](repeating: 0, count: length)
         guard confstr(_CS_DARWIN_USER_CACHE_DIR, &buffer, length) > 0 else {
-            throw IndieError.notFound("无法读取 macOS 用户缓存目录")
+            throw IndieError.notFound(L("无法读取 macOS 用户缓存目录"))
         }
         let pathBytes = buffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }
         let base = URL(fileURLWithPath: String(decoding: pathBytes, as: UTF8.self), isDirectory: true)
