@@ -7,7 +7,7 @@ public enum GrimDawnCompatibility {
         public var changed: Bool { !changedFiles.isEmpty }
     }
 
-    /// Wine reports and receives pointer coordinates in macOS logical points,
+    /// Under Grim Dawn's Retina-disabled policy, Wine uses logical points,
     /// not Retina backing pixels. Keeping Grim Dawn's render size identical to
     /// that logical surface prevents the image from being stretched while the
     /// hit-test grid remains at the old resolution.
@@ -19,7 +19,7 @@ public enum GrimDawnCompatibility {
     }
 
     /// Enables native gamepad input, selects the classic HUD and uses a
-    /// conservative windowed swap chain. Grim
+    /// display-matched fullscreen swap chain (screenMode=0). Grim
     /// Dawn otherwise rebuilds a 2560x1440 exclusive/borderless surface on a
     /// much smaller logical Mac display when a character starts, which can
     /// detach both the game UI and Metal HUD layers under Wine.
@@ -55,31 +55,37 @@ public enum GrimDawnCompatibility {
                 (key: "syncToRefresh", value: "false"),
             ]
             let valuesByKey = Dictionary(uniqueKeysWithValues: desired.map { ($0.key, $0.value) })
-            var lines = contents.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+            let newline = contents.contains("\r\n") ? "\r\n" : "\n"
+            let lines = contents.replacingOccurrences(of: "\r\n", with: "\n")
+                .replacingOccurrences(of: "\r", with: "\n")
+                .components(separatedBy: "\n")
+            var output: [String] = []
             var found = Set<String>()
-            var modified = false
-            for index in lines.indices {
-                guard let equals = lines[index].firstIndex(of: "=") else { continue }
-                let key = lines[index][..<equals].trimmingCharacters(in: .whitespaces)
-                guard let value = valuesByKey[key] else { continue }
-                found.insert(key)
+            for line in lines {
+                guard let equals = line.firstIndex(of: "=") else { output.append(line); continue }
+                let key = line[..<equals].trimmingCharacters(in: .whitespaces)
+                guard let value = valuesByKey[key] else { output.append(line); continue }
+                // Remove legacy duplicates instead of leaving first/last-wins
+                // interpretation to the game. Unrelated options are preserved.
+                guard found.insert(key).inserted else { continue }
                 let replacement = key.padding(toLength: 27, withPad: " ", startingAt: 0) + "= \(value)"
-                if lines[index] != replacement {
-                    lines[index] = replacement
-                    modified = true
-                }
+                output.append(replacement)
             }
             for setting in desired where !found.contains(setting.key) {
-                lines.append(setting.key.padding(toLength: 27, withPad: " ", startingAt: 0) + "= \(setting.value)")
-                modified = true
+                output.append(setting.key.padding(toLength: 27, withPad: " ", startingAt: 0) + "= \(setting.value)")
             }
-            guard modified else { continue }
+            let updated = output.joined(separator: newline)
+            guard updated != contents else { continue }
+            let repairBackup = options.appendingPathExtension("indie-before-display-repair")
+            if !fileManager.fileExists(atPath: repairBackup.path) {
+                try fileManager.copyItem(at: options, to: repairBackup)
+            }
             let backup = options.deletingLastPathComponent()
                 .appendingPathComponent("options.txt.indie-before-classic-hud")
             if !fileManager.fileExists(atPath: backup.path) {
                 try fileManager.copyItem(at: options, to: backup)
             }
-            contents = lines.joined(separator: "\n")
+            contents = updated
             try contents.write(to: options, atomically: true, encoding: .utf8)
             changed.append(options)
         }

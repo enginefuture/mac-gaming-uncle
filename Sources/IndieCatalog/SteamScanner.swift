@@ -8,9 +8,48 @@ public struct SteamGame: Codable, Identifiable, Sendable, Equatable {
     public let installDirectory: URL
     public let buildID: String?
     public let manifestURL: URL
+    public let stateFlags: UInt64?
+    public let bytesToDownload: UInt64?
+    public let bytesDownloaded: UInt64?
+    public let bytesToStage: UInt64?
+    public let bytesStaged: UInt64?
+
+    public init(appID: UInt64, name: String, installDirectory: URL, buildID: String?, manifestURL: URL,
+                stateFlags: UInt64? = nil, bytesToDownload: UInt64? = nil, bytesDownloaded: UInt64? = nil,
+                bytesToStage: UInt64? = nil, bytesStaged: UInt64? = nil) {
+        self.appID = appID; self.name = name; self.installDirectory = installDirectory
+        self.buildID = buildID; self.manifestURL = manifestURL; self.stateFlags = stateFlags
+        self.bytesToDownload = bytesToDownload; self.bytesDownloaded = bytesDownloaded
+        self.bytesToStage = bytesToStage; self.bytesStaged = bytesStaged
+    }
+
+    /// A manifest exists as soon as installation is requested. Only accept
+    /// Steam's completed state, a committed build, and completed byte counters.
+    /// Unknown or combined flags fail closed until Steam commits its state.
+    public var isReadyToPlay: Bool {
+        guard stateFlags == 4, let buildID, let build = UInt64(buildID), build > 0,
+              !downloadIncomplete, !stagingIncomplete else { return false }
+        var isDirectory: ObjCBool = false
+        return FileManager.default.fileExists(atPath: installDirectory.path, isDirectory: &isDirectory) && isDirectory.boolValue
+    }
+    public var downloadIncomplete: Bool { (bytesToDownload ?? 0) > (bytesDownloaded ?? 0) }
+    public var stagingIncomplete: Bool { (bytesToStage ?? 0) > (bytesStaged ?? 0) }
+    public var downloadProgress: Double? {
+        guard let total = bytesToDownload, total > 0 else { return nil }
+        return min(1, Double(bytesDownloaded ?? 0) / Double(total))
+    }
+    public var installationLabel: String {
+        if isReadyToPlay { return L("已安装") }
+        if downloadIncomplete { return L("下载未完成") }
+        if stagingIncomplete { return L("正在安装文件") }
+        return L("等待 Steam 完成安装或校验")
+    }
 }
 
 public enum SteamScanner {
+    public static func refreshed(_ game: SteamGame) throws -> SteamGame {
+        try parseManifest(game.manifestURL, steamApps: game.manifestURL.deletingLastPathComponent())
+    }
     public static func scan(steamApps root: URL) throws -> [SteamGame] {
         var libraries: Set<URL> = [root.standardizedFileURL]
         let foldersURL = root.appendingPathComponent("libraryfolders.vdf")
@@ -50,7 +89,12 @@ public enum SteamScanner {
             name: name,
             installDirectory: steamApps.appendingPathComponent("common", isDirectory: true).appendingPathComponent(installDir, isDirectory: true),
             buildID: value(caseInsensitive: "buildid", in: appState)?.string,
-            manifestURL: url
+            manifestURL: url,
+            stateFlags: value(caseInsensitive: "StateFlags", in: appState)?.string.flatMap(UInt64.init),
+            bytesToDownload: value(caseInsensitive: "BytesToDownload", in: appState)?.string.flatMap(UInt64.init),
+            bytesDownloaded: value(caseInsensitive: "BytesDownloaded", in: appState)?.string.flatMap(UInt64.init),
+            bytesToStage: value(caseInsensitive: "BytesToStage", in: appState)?.string.flatMap(UInt64.init),
+            bytesStaged: value(caseInsensitive: "BytesStaged", in: appState)?.string.flatMap(UInt64.init)
         )
     }
 

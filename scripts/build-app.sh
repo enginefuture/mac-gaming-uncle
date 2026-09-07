@@ -15,6 +15,11 @@ mkdir -p "$app_destination/Contents/MacOS" "$app_destination/Contents/Resources"
 ditto "$bin_dir/MacGamingUncleApp" "$app_destination/Contents/MacOS/MacGamingUncleApp"
 ditto "$project_root/Config/Info.plist" "$app_destination/Contents/Info.plist"
 ditto "$project_root/Assets/MacGamingUncle.icns" "$app_destination/Contents/Resources/MacGamingUncle.icns"
+for language in en zh-Hans; do
+  mkdir -p "$app_destination/Contents/Resources/$language.lproj"
+  ditto "$project_root/Config/$language.lproj/InfoPlist.strings" "$app_destination/Contents/Resources/$language.lproj/InfoPlist.strings"
+done
+/usr/libexec/PlistBuddy -c 'Print :NSMicrophoneUsageDescription' "$app_destination/Contents/Info.plist" >/dev/null
 
 for resource_bundle in "$bin_dir"/MacGamingUncle_*.bundle(N); do
   ditto "$resource_bundle" "$app_destination/Contents/Resources/${resource_bundle:t}"

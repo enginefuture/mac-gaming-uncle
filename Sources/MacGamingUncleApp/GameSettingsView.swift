@@ -49,6 +49,7 @@ private enum RendererChoice: String, CaseIterable, Identifiable {
 struct GameSettingsView: View {
     @EnvironmentObject private var model: MacGamingUncleAppModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openWindow) private var openWindow
     let target: GameSettingsTarget
 
     @State private var configuration: GameConfiguration
@@ -85,6 +86,13 @@ struct GameSettingsView: View {
             Divider()
 
             Form {
+                Section(L("通用插帧（实验）")) {
+                    Button(L("打开插帧面板")) {
+                        openWindow(id: "frame-interpolation", value: target.id)
+                    }
+                    Text(L("无需游戏支持 DLSS。开启一次后自动跟随游戏窗口，默认关闭；不改变分辨率或鼠标坐标。需要 macOS 26。"))
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 Section(L("显示")) {
                     Toggle(L("使用 Wine 虚拟桌面"), isOn: $useVirtualDesktop)
                     Text(L("为这个游戏创建固定尺寸的 Windows 桌面，可避免 Retina 缩放导致的画面拉伸和鼠标错位。"))
@@ -142,6 +150,9 @@ struct GameSettingsView: View {
         }
         .frame(minWidth: 660, minHeight: 680)
         .preferredColorScheme(.dark)
+        .onChange(of: model.gameConfigurations[target.id]?.frameInterpolation) { _, value in
+            configuration.frameInterpolation = value
+        }
     }
 
     private var rendererChoices: [RendererChoice] {

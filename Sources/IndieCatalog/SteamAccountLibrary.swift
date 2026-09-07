@@ -140,7 +140,7 @@ public enum SteamAccountLibraryScanner {
                     name: installedGame?.name ?? L("Steam 游戏 \(appID)"),
                     playtimeMinutes: playtime,
                     lastPlayed: lastPlayed,
-                    isInstalled: installedGame != nil,
+                    isInstalled: installedGame?.isReadyToPlay == true,
                     localArtworkDirectory: artworkRoot.appendingPathComponent(String(appID), isDirectory: true),
                     headerImageURL: localArtworkURL(appID: appID, name: "header.jpg", root: artworkRoot)
                         ?? URL(string: "https://cdn.akamai.steamstatic.com/steam/apps/\(appID)/header.jpg")
@@ -153,7 +153,7 @@ public enum SteamAccountLibraryScanner {
             entries[game.appID] = SteamAccountGame(
                 appID: game.appID,
                 name: game.name,
-                isInstalled: true,
+                isInstalled: game.isReadyToPlay,
                 localArtworkDirectory: artworkRoot.appendingPathComponent(String(game.appID), isDirectory: true),
                 headerImageURL: localArtworkURL(appID: game.appID, name: "header.jpg", root: artworkRoot)
                     ?? URL(string: "https://cdn.akamai.steamstatic.com/steam/apps/\(game.appID)/header.jpg")

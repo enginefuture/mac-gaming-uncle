@@ -132,11 +132,14 @@ struct NativeSteamStoreView: View {
                 Text(item.name).font(.system(size: 36, weight: .bold, design: .rounded)).lineLimit(2)
                 priceView(item)
                 HStack(spacing: 11) {
-                    if let installed = model.steamGames.first(where: { $0.appID == item.id }) {
+                    if let pending = model.steamDownloads.first(where: { $0.appID == item.id }) {
+                        SteamInstallProgress(game: pending)
+                    } else if let installed = model.steamGames.first(where: { $0.appID == item.id }) {
                         Button { Task { await model.launchSteamGame(installed) } } label: {
-                            HStack(spacing: 8) { UncleAppleMark(size: 24); Text(L("开始游戏")) }
+                            GameLaunchButtonLabel(state: model.gameLaunchStates[item.id] ?? .idle)
                         }
                             .buttonStyle(.borderedProminent).controlSize(.large)
+                            .disabled(model.isWorking || model.gameLaunchStates[item.id]?.blocksLaunch == true)
                     } else {
                         Button(L("添加并安装"), systemImage: "arrow.down.circle.fill") {
                             Task { await model.installSteamGame(appID: item.id) }

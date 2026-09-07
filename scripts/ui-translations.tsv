@@ -1,4 +1,57 @@
 无法完成操作	Unable to complete the operation
+已重新允许自动插帧，等待游戏窗口	Automatic interpolation rearmed; waiting for the game window
+本次运行已手动停止；重新启动游戏或点击重新允许	Stopped for this run; restart the game or click Rearm
+等待录屏授权；请打开插帧面板完成授权，不会自动放行	Waiting for Screen Recording permission; authorize in the interpolation panel. Access is never granted automatically.
+等待游戏启动，之后自动匹配窗口	Waiting for the game to start; its window will be matched automatically
+发现多个同路径进程，暂停自动匹配以免选错	Multiple processes match this path; automatic matching paused to avoid capturing the wrong one
+游戏在后台，返回后自动恢复插帧	Game is in the background; interpolation resumes when you return
+等待可捕获的游戏窗口；支持窗口／无边框模式	Waiting for a capturable game window; windowed/borderless modes supported
+等待游戏窗口尺寸稳定…	Waiting for stable game window dimensions…
+正在自动启动 2× 插帧…	Starting 2× interpolation automatically…
+游戏启动后自动跟随窗口启用 2× 插帧	Automatically follow this game's window and enable 2× interpolation
+支持窗口／无边框模式。启动游戏后自动匹配；切出暂停、返回恢复。手动停止后，本次游戏运行不再自动开启。	Supports windowed/borderless modes. Matches after launch, pauses on focus loss and resumes on return. Manual stop disables automatic restart for this game run.
+开启后等待游戏启动，无需手动选择窗口	Once enabled, waits for the game; no manual window selection required
+授权录屏／刷新	Authorize capture / Refresh
+重新允许本次运行自动启动	Rearm automatic start for this run
+手动选择窗口（备用）	Manual window selection (fallback)
+2× 插帧运行中；切出游戏时暂停	2× interpolation running; pauses when the game loses focus
+已切出游戏，等待返回后恢复插帧	Game lost focus; waiting to resume when you return
+显示器或缩放变化，等待重新匹配窗口	Display or scaling changed; waiting to rematch the window
+画面暂无更新，显示原画面；更新后恢复插帧	No new frames; showing the original until updates resume
+无需游戏支持 DLSS。开启一次后自动跟随游戏窗口，默认关闭；不改变分辨率或鼠标坐标。需要 macOS 26。	No game DLSS support required. Enable once to follow its window automatically; off by default. Does not change resolution or pointer coordinates. Requires macOS 26.
+显示器或缩放变化，插帧停止；请重新选择窗口	Display or scaling changed; interpolation stopped. Select the window again.
+通用插帧（实验）	Universal Frame Interpolation (Experimental)
+为此游戏启用 2× 插帧	Enable 2× interpolation for this game
+只处理游戏画面，不录音、不改 DPI。插帧提高显示流畅度，不提高游戏逻辑帧率；可能增加延迟和 HUD 重影。	Processes video only; no audio capture or DPI changes. Interpolation improves visual smoothness, not game simulation speed, and may add latency or HUD artifacts.
+首版仅支持窗口／无边框模式，不支持独占全屏。先显示游戏窗口，再刷新列表。	This version supports windowed and borderless modes, not exclusive fullscreen. Show the game window before refreshing the list.
+游戏窗口	Game window
+请选择正在显示的游戏窗口	Select a visible game window
+刷新窗口	Refresh windows
+启动 2× 插帧	Start 2× interpolation
+停止插帧	Stop interpolation
+全局紧急停止：Control + Option + Command + F12	Global emergency stop: Control + Option + Command + F12
+提交帧数不是实测显示 FPS。窗口变形、切出游戏或设备处理失败时自动停止；不会静默降低画质。	Submitted frame counts are not measured display FPS. Stops on window changes, focus loss or processing failure; never silently reduces quality.
+插帧已关闭	Interpolation is off
+请在系统设置中允许屏幕录制，然后重新打开应用。无需麦克风权限。	Allow Screen Recording in System Settings, then reopen the app. Microphone access is not needed.
+无法注册紧急停止快捷键，插帧未启动	Emergency stop shortcut unavailable; interpolation did not start
+此设备不支持 VideoToolbox 插帧	VideoToolbox interpolation is unavailable on this device
+正在准备插帧；原游戏画面保持可见…	Preparing interpolation; the original game remains visible…
+游戏窗口已关闭，请重新选择	The game window closed; select it again
+捕获尺寸与窗口比例不一致，已保留原画面	Capture geometry does not match the window; keeping the original image
+插帧失败，已恢复原画面：%@	Interpolation failed; original image restored: %@
+插帧未启动：%@	Interpolation did not start: %@
+无法创建显示帧，已恢复原画面	Could not create display frames; original image restored
+2× 插帧运行中；切出游戏即停止	2× interpolation running; switching away stops it
+处理 %@×%@ · 耗时 %@ ms · 生成 %@ 帧 · 提交 %@ 帧 · 过期丢弃 %@ 帧	Processing %@×%@ · %@ ms · %@ generated · %@ submitted · %@ expired frames
+设备未及时生成插帧，已保留原画面（没有自动降低分辨率）	Device did not generate frames in time; original image retained (resolution was not reduced)
+捕获或插帧停滞，已恢复原画面	Capture or interpolation stalled; original image restored
+已切出游戏，插帧停止	Game lost focus; interpolation stopped
+窗口尺寸或可见性变化，插帧停止	Window size or visibility changed; interpolation stopped
+显示层异常，已恢复原画面	Display layer failed; original image restored
+打开插帧面板	Open interpolation panel
+无需游戏支持 DLSS。手动选择窗口，默认关闭；不改变分辨率或鼠标坐标。需要 macOS 26。	No game DLSS support required. Select a window manually; off by default. Does not change resolution or pointer coordinates. Requires macOS 26.
+通用插帧需要 macOS 26 或更新版本	Universal interpolation requires macOS 26 or later
+请先退出正在运行的游戏，再切换显示或运行环境设置	Exit running games before changing display or runtime settings
 知道了	OK
 打开高级设置	Open Advanced Settings
 主页	Home
@@ -462,3 +515,13 @@ VDF 键 %@ 缺少值	VDF key %@ is missing a value
 VDF 缺少右花括号	Missing closing brace in VDF
 VDF 仅支持带引号的键值	VDF requires quoted keys and values
 VDF 字符串未闭合	Unterminated VDF string
+下载未完成	Download incomplete
+正在安装文件	Installing files
+等待 Steam 完成安装或校验	Waiting for Steam to finish installation or verification
+游戏尚未安装完成，请等待 Steam 完成下载和校验	This game is not ready. Wait for Steam to finish downloading and verifying it.
+安装完成后即可开始游戏	You can play once installation finishes
+正在启动…	Launching…
+等待游戏启动…	Waiting for game…
+游戏运行中	Game Running
+启动失败，重试	Launch Failed — Retry
+启动未确认，重试	Launch Unconfirmed — Retry

@@ -20,7 +20,7 @@
         "gameoverlayrenderer64": "d"
       },
       "environment": {},
-      "highResolution": true,
+      "highResolution": false,
       "metalFX": false,
       "renderer": "d3dmetal",
       "steamLaunchOption": 0,
@@ -34,7 +34,7 @@
         "dxgi": "b"
       },
       "environment": {},
-      "highResolution": true,
+      "highResolution": false,
       "renderer": "dxmt",
       "syncBackend": "msync"
     },
@@ -50,7 +50,7 @@
       "environment": {
         "CX_ACTIVE_GRAPHICS_BACKEND": "wined3d"
       },
-      "highResolution": true,
+      "highResolution": false,
       "renderer": "wined3d",
       "syncBackend": "msync"
     }

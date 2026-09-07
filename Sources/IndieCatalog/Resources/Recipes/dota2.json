@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "indie.steam.570.dota2",
+  "name": "Dota 2",
+  "steamAppIDs": [570],
+  "executableNames": ["dota2.exe"],
+  "antiCheat": "none",
+  "knownIssues": [],
+  "profiles": [
+    {
+      "renderer": "d3dmetal",
+      "syncBackend": "wineserver",
+      "arguments": ["-dx11"],
+      "environment": {},
+      "dllOverrides": {"dxgi": "n,b", "d3d11": "n,b", "d3d10core": "b"},
+      "highResolution": true,
+      "metalFX": false,
+      "metal4": false
+    },
+    {
+      "renderer": "dxmt",
+      "syncBackend": "automatic",
+      "arguments": ["-dx11"],
+      "environment": {},
+      "dllOverrides": {"dxgi": "b", "d3d11": "b", "d3d10core": "b"},
+      "highResolution": true,
+      "metalFX": false
+    }
+  ],
+  "provenance": []
+}

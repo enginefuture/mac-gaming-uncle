@@ -87,7 +87,8 @@ struct SteamShellLibraryView: View {
                 .frame(width: 54, height: 31).clipShape(RoundedRectangle(cornerRadius: 4))
                 VStack(alignment: .leading, spacing: 3) {
                     Text(game.name).lineLimit(1).font(.system(size: 13.5, weight: .medium))
-                    Text(game.isInstalled ? L("已安装") : playtime(game.playtimeMinutes))
+                    Text(model.steamDownloads.first(where: { $0.appID == game.appID })?.installationLabel
+                         ?? (game.isInstalled ? L("已安装") : playtime(game.playtimeMinutes)))
                         .font(.caption2).foregroundStyle(game.isInstalled ? IndiePalette.green : IndiePalette.secondaryText)
                 }
             }
@@ -121,11 +122,14 @@ struct SteamShellLibraryView: View {
                     .padding(28)
                 }
                 HStack(spacing: 12) {
-                    if let installed = model.steamGames.first(where: { $0.appID == game.appID }) {
+                    if let pending = model.steamDownloads.first(where: { $0.appID == game.appID }) {
+                        SteamInstallProgress(game: pending)
+                    } else if let installed = model.steamGames.first(where: { $0.appID == game.appID }) {
                         Button { Task { await model.launchSteamGame(installed) } } label: {
-                            HStack(spacing: 8) { UncleAppleMark(size: 24); Text(L("开始游戏")) }
+                            GameLaunchButtonLabel(state: model.gameLaunchStates[game.appID] ?? .idle)
                         }
-                        .buttonStyle(.borderedProminent).controlSize(.large).disabled(model.isWorking)
+                        .buttonStyle(.borderedProminent).controlSize(.large)
+                        .disabled(model.isWorking || model.gameLaunchStates[game.appID]?.blocksLaunch == true)
                         Button(L("游戏设置"), systemImage: "slider.horizontal.3") { showSettings(installed) }
                     } else {
                         Button(L("安装"), systemImage: "arrow.down.circle.fill") {

@@ -325,6 +325,7 @@ public struct GameConfiguration: Codable, Hashable, Sendable, Identifiable {
     public var metal4: GameSettingOverride
     public var controllerMode: ControllerMode
     public var controllerRumble: Bool
+    public var frameInterpolation: Bool?
     public var arguments: [String]
     public var updatedAt: Date
 
@@ -338,6 +339,7 @@ public struct GameConfiguration: Codable, Hashable, Sendable, Identifiable {
         metal4: GameSettingOverride = .inherit,
         controllerMode: ControllerMode = .automatic,
         controllerRumble: Bool = true,
+        frameInterpolation: Bool? = nil,
         arguments: [String] = [],
         updatedAt: Date = Date()
     ) {
@@ -350,6 +352,7 @@ public struct GameConfiguration: Codable, Hashable, Sendable, Identifiable {
         self.metal4 = metal4
         self.controllerMode = controllerMode
         self.controllerRumble = controllerRumble
+        self.frameInterpolation = frameInterpolation
         self.arguments = arguments
         self.updatedAt = updatedAt
     }
@@ -360,7 +363,7 @@ public struct GameConfiguration: Codable, Hashable, Sendable, Identifiable {
     public var isCustomized: Bool {
         virtualDesktop != nil || preferredRenderer != nil || syncBackend != .automatic ||
             metalHUD != .inherit || metalFX != .inherit || metal4 != .inherit ||
-            controllerMode != .automatic || !controllerRumble || !arguments.isEmpty
+            controllerMode != .automatic || !controllerRumble || frameInterpolation == true || !arguments.isEmpty
     }
 }
 
@@ -369,17 +372,20 @@ public struct SteamSessionDescriptor: Codable, Equatable, Sendable {
     public let runtimeID: String
     public let environment: [String: String]
     public let virtualDesktop: GameResolution?
+    public let displayPolicy: SteamDisplayPolicy?
 
     public init(
         bottleID: UUID,
         runtimeID: String,
         environment: [String: String],
-        virtualDesktop: GameResolution?
+        virtualDesktop: GameResolution?,
+        displayPolicy: SteamDisplayPolicy? = nil
     ) {
         self.bottleID = bottleID
         self.runtimeID = runtimeID
         self.environment = environment
         self.virtualDesktop = virtualDesktop
+        self.displayPolicy = displayPolicy
     }
 }
 

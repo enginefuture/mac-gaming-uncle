@@ -10,6 +10,9 @@ final class MacGamingUncleAppModel: ObservableObject {
     @Published var systemReport: SystemReport?
     @Published var games: [GameRecord] = []
     @Published var steamGames: [SteamGame] = []
+    @Published var steamDownloads: [SteamGame] = []
+    @Published var gameLaunchStates: [UInt64: GameLaunchState] = [:]
+    private var gameLaunchMonitors: [UInt64: Task<Void, Never>] = [:]
     @Published var steamAccountGames: [SteamAccountGame] = []
     @Published var steamActivities: [UInt64: SteamGameActivity] = [:]
     @Published var steamStoreCatalog: SteamStoreCatalog?
@@ -113,6 +116,8 @@ final class MacGamingUncleAppModel: ObservableObject {
     var onboardingDXMTReady: Bool { rendererOverlays.contains { $0.kind == .dxmt } }
 
     func shutdownManagedSteam() async {
+        for monitor in gameLaunchMonitors.values { monitor.cancel() }
+        gameLaunchMonitors.removeAll()
         onboardingTask?.cancel()
         gptkSetupTask?.cancel()
         steamMetadataTask?.cancel()
@@ -364,7 +369,9 @@ final class MacGamingUncleAppModel: ObservableObject {
 
     func scanSteam(_ steamApps: URL) async {
         await perform(L("正在扫描 Steam 游戏库…")) {
-            self.steamGames = try SteamScanner.scan(steamApps: steamApps)
+            let records = try SteamScanner.scan(steamApps: steamApps)
+            self.steamGames = records.filter(\.isReadyToPlay)
+            self.steamDownloads = records.filter { !$0.isReadyToPlay && $0.appID != 228980 }
             self.status = L("发现 \(self.steamGames.count) 个 Steam 游戏")
         }
     }
@@ -406,7 +413,9 @@ final class MacGamingUncleAppModel: ObservableObject {
             self.bottles = try await self.store.bottles()
             let steamApps = bottle.root.appendingPathComponent("drive_c/Program Files (x86)/Steam/steamapps", isDirectory: true)
             if FileManager.default.fileExists(atPath: steamApps.path) {
-                self.steamGames = try SteamScanner.scan(steamApps: steamApps)
+                let records = try SteamScanner.scan(steamApps: steamApps)
+                self.steamGames = records.filter(\.isReadyToPlay)
+                self.steamDownloads = records.filter { !$0.isReadyToPlay && $0.appID != 228980 }
             }
             self.status = L("Steam 安装流程已结束")
         }
@@ -473,7 +482,13 @@ final class MacGamingUncleAppModel: ObservableObject {
     }
 
     func launchSteamGame(_ game: SteamGame) async {
+        guard !isWorking, gameLaunchStates[game.appID]?.blocksLaunch != true else { return }
+        gameLaunchStates[game.appID] = .preparing
         await perform(L("正在为 \(game.name) 选择最佳图形后端…")) {
+            guard (try? SteamScanner.refreshed(game).isReadyToPlay) == true else {
+                try self.scanDefaultSteamLibrary()
+                throw IndieError.invalidData(L("游戏尚未安装完成，请等待 Steam 完成下载和校验"))
+            }
             guard let bottle = self.steamBottle else {
                 throw IndieError.notFound(L("尚未完成 Steam 安装"))
             }
@@ -482,25 +497,18 @@ final class MacGamingUncleAppModel: ObservableObject {
             }
             let gamingProvider = WineRuntimeProvider(manifest: gamingRuntime.manifest, root: gamingRuntime.root)
             let executable = try SteamExecutableResolver.shippingExecutable(for: game)
+            let runningPath = try WinePath.windowsPath(for: executable, in: bottle)
+            if try await GameProcessProbe.isRunning(windowsPath: runningPath) {
+                self.gameLaunchStates[game.appID] = .running
+                self.monitorGameLaunch(appID: game.appID, windowsPath: runningPath)
+                return
+            }
             self.status = L("正在快速检查游戏兼容性…")
             let analysis = try await Task.detached(priority: .userInitiated) {
                 try PEAnalyzer.analyze(at: executable, steamAppID: game.appID)
             }.value
             let configuration = self.configuration(for: game)
             let recipe = self.recipeRepository.match(analysis)
-            if game.appID == 219990 {
-                self.status = L("正在应用 Grim Dawn 1.3 HUD 兼容配置…")
-                let screen = NSScreen.main?.frame.size
-                let safeResolution = configuration.virtualDesktop?.label.replacingOccurrences(of: " × ", with: " ")
-                    ?? GrimDawnCompatibility.logicalDisplayResolution(
-                        width: screen.map { Double($0.width) },
-                        height: screen.map { Double($0.height) }
-                    )
-                _ = try GrimDawnCompatibility.prepare(
-                    bottleRoot: bottle.root,
-                    safeResolution: safeResolution
-                )
-            }
             if (configuration.preferredRenderer == .dxmt || recipe?.profiles.first?.renderer == .dxmt),
                !self.rendererOverlays.contains(where: { $0.kind == .dxmt }) {
                 self.status = L("正在安装 \(game.name) 所需的 DXMT 0.80…")
@@ -528,6 +536,17 @@ final class MacGamingUncleAppModel: ObservableObject {
             )
             let recipeProfile = recipe?.profiles.first { $0.renderer == resolution.renderer }
             let recipeArguments = recipeProfile?.arguments ?? []
+            let displayPolicy = GameDisplaySnapshot.policy(
+                retinaEnabled: game.appID == 219990 ? false : (recipeProfile?.highResolution ?? true)
+            )
+            // Dota's cooperative fullscreen keeps the desktop mode unchanged.
+            // Keep this game-specific; other games have different DPI semantics.
+            if game.appID == 570, resolution.renderer == .d3dMetal,
+               configuration.virtualDesktop == nil {
+                _ = try Dota2Compatibility.prepare(
+                    steamRoot: SteamCompatibilityManager.steamRoot(in: bottle)
+                )
+            }
 
             let wantsMetalHUD = configuration.metalHUD.resolve(
                 default: UserDefaults.standard.bool(forKey: "metalHUD")
@@ -594,6 +613,13 @@ final class MacGamingUncleAppModel: ObservableObject {
             // compatibility switches here. Positional launcher shims are for
             // direct EXE execution and would corrupt Steam launch options.
             var gameArguments = configuration.arguments
+            if game.appID == 570 {
+                // Respect explicit per-game limits; do not inherit the launcher's
+                // previous diagnostic 60 FPS cap or Steam's default legacy VSync.
+                for (key, value) in [("+fps_max", "120"), ("+fps_max_ui", "120"), ("+r_legacy_vsync", "0")] {
+                    if !gameArguments.contains(key) { gameArguments += [key, value] }
+                }
+            }
             if needsWarmupProtection,
                executable.lastPathComponent.lowercased().contains("-win64-shipping") {
                 // D3DMetal may need more than UE's 120-second RenderThread
@@ -652,14 +678,33 @@ final class MacGamingUncleAppModel: ObservableObject {
                 bottleID: bottle.id,
                 runtimeID: gamingRuntime.manifest.id,
                 environment: steamPlan.environment,
-                virtualDesktop: configuration.virtualDesktop
+                virtualDesktop: configuration.virtualDesktop,
+                displayPolicy: displayPolicy
             )
             let reusingSteam = self.steamSessionManager.canReuse(descriptor) &&
                 SteamCompatibilityManager.isLoggedOn(in: bottle)
             if !reusingSteam {
+                // A DPI/topology change requires stopping the shared prefix.
+                // Never silently interrupt another game, including one opened in Steam.
+                for installedGame in self.steamGames {
+                    guard let otherExecutable = try? SteamExecutableResolver.shippingExecutable(for: installedGame) else { continue }
+                    let otherPath = try WinePath.windowsPath(for: otherExecutable, in: bottle)
+                    if try await GameProcessProbe.isRunning(windowsPath: otherPath) {
+                        throw IndieError.invalidArgument(L("请先退出正在运行的游戏，再切换显示或运行环境设置"))
+                    }
+                }
                 self.steamSessionManager.didStop()
                 self.status = L("正在准备全局 Steam 会话…")
                 try await gamingProvider.prepareBottleForInstaller(bottle)
+                // Apply only after all old Wine processes have stopped. The reg
+                // helper itself starts Wine, so stop it before creating Steam.
+                _ = try await Subprocess().run(
+                    gamingProvider.wineBinary, arguments: displayPolicy.registryArguments,
+                    environment: ["WINEPREFIX": bottle.root.path,
+                                  "DYLD_LIBRARY_PATH": gamingRuntime.root.appendingPathComponent("lib").path,
+                                  "WINEDEBUG": "-all"], timeout: .seconds(30)
+                )
+                await gamingProvider.stopBottle(bottle)
                 try await gamingProvider.configureControllerSupport(in: bottle)
                 guard let wrapper = SteamCompatibilityManager.bundledWrapperURL() else {
                     throw IndieError.notFound(L("Mac Gaming Uncle 缺少 Steam 界面兼容组件，请重新安装应用"))
@@ -680,6 +725,20 @@ final class MacGamingUncleAppModel: ObservableObject {
                     try await gamingProvider.configureWineD3DGraphics(in: bottle)
                 }
             }
+            if game.appID == 219990 {
+                self.status = L("正在应用 Grim Dawn 1.3 HUD 兼容配置…")
+                // Wine uses the primary monitor; NSScreen.main may instead be
+                // the screen containing the launcher's key window.
+                // screenMode=0 is fullscreen in Grim Dawn. The render size
+                // must match the full monitor, not its desktop work area.
+                let screen = NSScreen.screens.first?.frame.size
+                let safeResolution = configuration.virtualDesktop?.label.replacingOccurrences(of: " × ", with: " ")
+                    ?? GrimDawnCompatibility.logicalDisplayResolution(
+                        width: screen.map { Double($0.width) },
+                        height: screen.map { Double($0.height) }
+                    )
+                _ = try GrimDawnCompatibility.prepare(bottleRoot: bottle.root, safeResolution: safeResolution)
+            }
             let launchPlan = reusingSteam ? steamPlan.withoutVirtualDesktop() : steamPlan
             let log = self.paths.logs.appendingPathComponent("\(launchPlan.id.uuidString)-steam-\(resolution.renderer.rawValue).log")
             let architecture = analysis.architecture == .x86_64 ? "x64" : analysis.architecture.rawValue
@@ -690,6 +749,46 @@ final class MacGamingUncleAppModel: ObservableObject {
                 : L("正在由 Steam 启动 \(game.name) · \(architecture) + \(resolution.renderer.rawValue.uppercased())\(metal4Enabled ? " + Metal 4" : "")")
             _ = try await gamingProvider.launchDetached(launchPlan, logURL: log)
             self.steamSessionManager.didLaunch(descriptor, reused: reusingSteam)
+            self.monitorGameLaunch(appID: game.appID, windowsPath: try WinePath.windowsPath(for: executable, in: bottle))
+        }
+        if gameLaunchStates[game.appID] == .preparing { gameLaunchStates[game.appID] = .failed }
+    }
+
+    private func monitorGameLaunch(appID: UInt64, windowsPath: String) {
+        gameLaunchMonitors[appID]?.cancel()
+        gameLaunchStates[appID] = .waiting
+        gameLaunchMonitors[appID] = Task { [weak self] in
+            let deadline = Date().addingTimeInterval(120)
+            var didRun = false
+            var consecutiveMissing = 0
+            while !Task.isCancelled {
+                do {
+                    let running = try await GameProcessProbe.isRunning(windowsPath: windowsPath)
+                    guard let self, !Task.isCancelled else { return }
+                    if running {
+                        didRun = true
+                        consecutiveMissing = 0
+                        self.gameLaunchStates[appID] = .running
+                    } else if didRun {
+                        consecutiveMissing += 1
+                        if consecutiveMissing >= 2 {
+                            self.gameLaunchStates[appID] = .idle
+                            self.gameLaunchMonitors[appID] = nil
+                            return
+                        }
+                    } else if Date() >= deadline {
+                        self.gameLaunchStates[appID] = .unconfirmed
+                        self.gameLaunchMonitors[appID] = nil
+                        return
+                    }
+                    try await Task.sleep(for: .seconds(2))
+                } catch {
+                    if Task.isCancelled { return }
+                    self?.gameLaunchStates[appID] = .unconfirmed
+                    self?.gameLaunchMonitors[appID] = nil
+                    return
+                }
+            }
         }
     }
 
@@ -973,11 +1072,13 @@ final class MacGamingUncleAppModel: ObservableObject {
         guard let bottle = steamBottle else { return }
         let previousIDs = steamAccountGames.map(\.appID)
         let steamApps = bottle.root.appendingPathComponent("drive_c/Program Files (x86)/Steam/steamapps", isDirectory: true)
-        steamGames = FileManager.default.fileExists(atPath: steamApps.path)
+        let records = FileManager.default.fileExists(atPath: steamApps.path)
             ? try SteamScanner.scan(steamApps: steamApps) : []
+        steamGames = records.filter(\.isReadyToPlay)
+        steamDownloads = records.filter { !$0.isReadyToPlay && $0.appID != 228980 }
         steamAccountGames = try SteamAccountLibraryScanner.scan(
             steamRoot: SteamCompatibilityManager.steamRoot(in: bottle),
-            installed: steamGames
+            installed: records
         )
         steamActivities = SteamActivityScanner.scan(
             steamRoot: SteamCompatibilityManager.steamRoot(in: bottle)
