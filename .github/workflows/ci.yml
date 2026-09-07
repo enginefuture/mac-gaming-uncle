@@ -10,11 +10,17 @@ permissions:
 
 jobs:
   macos:
-    runs-on: macos-15
+    # The app still targets macOS 15; compiling optional macOS 26 APIs needs SDK 26+.
+    runs-on: macos-26
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
     steps:
       - uses: actions/checkout@v4
       - name: Show toolchain
-        run: swift --version
+        run: |
+          xcodebuild -version
+          xcrun --sdk macosx --show-sdk-version
+          swift --version
       - name: Test
         run: swift test
       - name: Build release binaries
